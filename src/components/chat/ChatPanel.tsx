@@ -17,7 +17,6 @@ export function ChatPanel() {
     error,
     tokenCount,
     streamingContent,
-    conversation,
     sendMessage,
     cancelStream,
     retryLastMessage,

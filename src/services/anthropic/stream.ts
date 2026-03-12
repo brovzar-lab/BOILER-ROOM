@@ -62,8 +62,8 @@ export async function sendStreamingMessage(
     // Handle completion with usage stats
     stream.on('finalMessage', (message) => {
       const fullText = message.content
-        .filter((block): block is { type: 'text'; text: string } => block.type === 'text')
-        .map((block) => block.text)
+        .filter((block) => block.type === 'text')
+        .map((block) => ('text' in block ? block.text : ''))
         .join('');
 
       callbacks.onComplete(fullText, message.usage);

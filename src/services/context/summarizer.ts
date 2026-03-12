@@ -81,8 +81,8 @@ export async function summarizeConversation(
 
     // Extract summary text from response
     const summaryText = response.content
-      .filter((block): block is { type: 'text'; text: string } => block.type === 'text')
-      .map((block) => block.text)
+      .filter((block) => block.type === 'text')
+      .map((block) => ('text' in block ? block.text : ''))
       .join('');
 
     const summaryTokens = estimateTokens(summaryText);

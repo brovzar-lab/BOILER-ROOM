@@ -1,4 +1,7 @@
+import { useEffect, useRef } from 'react';
 import type { Message } from '@/types/chat';
+import { MessageBubble } from './MessageBubble';
+import { StreamingIndicator } from './StreamingIndicator';
 
 interface MessageListProps {
   messages: Message[];
@@ -7,17 +10,36 @@ interface MessageListProps {
 }
 
 /**
- * Scrollable message container. Stub for Task 1 typecheck.
- * Full implementation in Task 2.
+ * Scrollable message container with auto-scroll-to-bottom
+ * on new messages and during streaming.
  */
 export function MessageList({ messages, isStreaming, streamingContent }: MessageListProps) {
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when messages change or streaming content updates
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages.length, streamingContent]);
+
+  if (messages.length === 0 && !isStreaming) {
+    return (
+      <div className="flex-1 overflow-y-auto flex items-center justify-center">
+        <p className="text-[--color-text-muted] text-lg">Start a conversation with Diana</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1 overflow-y-auto p-4">
-      {messages.length === 0 && !isStreaming && (
-        <div className="flex items-center justify-center h-full">
-          <p className="text-[--color-text-muted]">Start a conversation with Diana</p>
-        </div>
-      )}
+    <div className="flex-1 overflow-y-auto px-4 py-6">
+      <div className="max-w-3xl mx-auto">
+        {messages.map((msg) => (
+          <MessageBubble key={msg.id} message={msg} />
+        ))}
+
+        {isStreaming && <StreamingIndicator content={streamingContent} />}
+
+        <div ref={bottomRef} />
+      </div>
     </div>
   );
 }

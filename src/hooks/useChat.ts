@@ -86,7 +86,7 @@ export function useChat(agentId: AgentId = 'diana') {
             accumulated += token;
             useChatStore.getState().updateStreamingContent(accumulated);
           },
-          onComplete: async (fullContent: string, usage) => {
+          onComplete: async (fullContent: string, _usage) => {
             const s = useChatStore.getState();
             s.stopStreaming();
 
@@ -161,8 +161,9 @@ export function useChat(agentId: AgentId = 'diana') {
     // Find the last user message
     let lastUserContent: string | null = null;
     for (let i = conv.messages.length - 1; i >= 0; i--) {
-      if (conv.messages[i].role === 'user') {
-        lastUserContent = conv.messages[i].content;
+      const msg = conv.messages[i];
+      if (msg && msg.role === 'user') {
+        lastUserContent = msg.content;
         break;
       }
     }
