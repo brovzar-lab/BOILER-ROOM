@@ -1,17 +1,45 @@
+import { useEffect, useState } from 'react';
+import { useChatStore } from '@/store/chatStore';
+import { Header } from '@/components/ui/Header';
+import { ChatPanel } from '@/components/chat/ChatPanel';
+
+/**
+ * Root application component.
+ *
+ * Full viewport height with dark background. Hydrates conversations
+ * from IndexedDB on mount, then renders the Header and ChatPanel.
+ */
 function App() {
-  return (
-    <div className="min-h-screen bg-[--color-surface-bg] flex flex-col items-center justify-center">
-      <h1 className="text-4xl font-bold text-[--color-lemon-400] mb-4">
-        Lemon Command Center
-      </h1>
-      <p className="text-[--color-text-secondary] text-lg">
-        Multi-agent AI advisory workspace
-      </p>
-      <div className="mt-8 px-6 py-3 rounded-lg border border-[--color-surface-border] bg-[--color-surface-card]">
-        <p className="text-[--color-text-muted] text-sm">
-          Ready for agent integration
-        </p>
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const init = async () => {
+      // Hydrate conversations from IndexedDB
+      await useChatStore.getState().loadConversations();
+      setReady(true);
+
+      // Request persistent storage (fire-and-forget)
+      if (navigator.storage?.persist) {
+        navigator.storage.persist().then((granted) => {
+          console.log(`Persistent storage ${granted ? 'granted' : 'denied'}`);
+        });
+      }
+    };
+    void init();
+  }, []);
+
+  if (!ready) {
+    return (
+      <div className="h-screen bg-[--color-surface-bg] flex items-center justify-center">
+        <p className="text-[--color-text-muted] text-lg animate-pulse">Loading...</p>
       </div>
+    );
+  }
+
+  return (
+    <div className="h-screen bg-[--color-surface-bg] flex flex-col">
+      <Header />
+      <ChatPanel />
     </div>
   );
 }
