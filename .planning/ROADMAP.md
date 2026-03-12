@@ -12,7 +12,7 @@ Lemon Command Center delivers a multi-agent AI advisory workspace through 8 phas
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation + Single-Agent Chat** - React/Vite scaffold, streaming chat with Diana (CFO), IndexedDB persistence, context window management, dark theme
+- [x] **Phase 1: Foundation + Single-Agent Chat** - React/Vite scaffold, streaming chat with Diana (CFO), IndexedDB persistence, context window management, dark theme
 - [ ] **Phase 2: Canvas Engine** - Isometric pixel art office rendering, BILLY avatar with pathfinding, placeholder agent sprites, camera with integer zoom
 - [ ] **Phase 3: Integration + All Agents** - Wire Canvas navigation to chat, expand to 5 agent personas, agent status indicators synced to streaming
 - [ ] **Phase 4: War Room** - Broadcast to all agents simultaneously, parallel color-coded streaming, rate-limit-aware concurrency, partial failure handling
@@ -37,9 +37,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Project scaffold, types, PersistenceAdapter + IndexedDB, 5 Zustand stores, dark theme
-- [ ] 01-02-PLAN.md — Anthropic API proxy + streaming service, Diana persona, system prompt layering, token counter, auto-summarizer
-- [ ] 01-03-PLAN.md — Chat UI components, markdown rendering, useChat hook wiring, persistence loading, human verification
+- [x] 01-01-PLAN.md — Project scaffold, types, PersistenceAdapter + IndexedDB, 5 Zustand stores, dark theme
+- [x] 01-02-PLAN.md — Anthropic API proxy + streaming service, Diana persona, system prompt layering, token counter, auto-summarizer
+- [x] 01-03-PLAN.md — Chat UI components, markdown rendering, useChat hook wiring, persistence loading, human verification
 
 ### Phase 2: Canvas Engine
 **Goal**: Isometric pixel art office renders at 60fps with BILLY walking between rooms via BFS pathfinding, entirely independent of the chat system
@@ -171,7 +171,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation + Single-Agent Chat | 1/3 | In Progress | - |
+| 1. Foundation + Single-Agent Chat | 3/3 | Complete | 2026-03-12 |
 | 2. Canvas Engine | 0/3 | Not started | - |
 | 3. Integration + All Agents | 0/3 | Not started | - |
 | 4. War Room | 0/3 | Not started | - |

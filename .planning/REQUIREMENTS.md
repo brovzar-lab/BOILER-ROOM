@@ -10,11 +10,11 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Chat & Streaming
 
 - [x] **CHAT-01**: User can send a message and receive a streaming token-by-token response from Claude
-- [ ] **CHAT-02**: Messages render with markdown formatting (headers, lists, bold, code blocks)
-- [ ] **CHAT-03**: Conversation history persists across browser sessions (survives refresh/close)
-- [ ] **CHAT-04**: Token count is tracked per conversation and displayed to user
-- [ ] **CHAT-05**: When conversation approaches 80% of context window, old messages are auto-summarized while preserving recent messages verbatim
-- [ ] **CHAT-06**: Full conversation history is stored in IndexedDB even after summarization
+- [x] **CHAT-02**: Messages render with markdown formatting (headers, lists, bold, code blocks)
+- [x] **CHAT-03**: Conversation history persists across browser sessions (survives refresh/close)
+- [x] **CHAT-04**: Token count is tracked per conversation and displayed to user
+- [x] **CHAT-05**: When conversation approaches 80% of context window, old messages are auto-summarized while preserving recent messages verbatim
+- [x] **CHAT-06**: Full conversation history is stored in IndexedDB even after summarization
 - [x] **CHAT-07**: Streaming can be cancelled mid-response by the user
 - [x] **CHAT-08**: API errors display user-friendly messages with retry option
 
@@ -143,11 +143,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | CHAT-01 | Phase 1 | Complete |
-| CHAT-02 | Phase 1 | Pending |
-| CHAT-03 | Phase 1 | Pending |
-| CHAT-04 | Phase 1 | Pending |
-| CHAT-05 | Phase 1 | Pending |
-| CHAT-06 | Phase 1 | Pending |
+| CHAT-02 | Phase 1 | Complete |
+| CHAT-03 | Phase 1 | Complete |
+| CHAT-04 | Phase 1 | Complete |
+| CHAT-05 | Phase 1 | Complete |
+| CHAT-06 | Phase 1 | Complete |
 | CHAT-07 | Phase 1 | Complete |
 | CHAT-08 | Phase 1 | Complete |
 | AGNT-01 | Phase 1 | Complete |

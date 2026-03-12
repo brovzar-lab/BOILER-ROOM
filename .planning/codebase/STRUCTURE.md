@@ -144,22 +144,68 @@ BOILER-ROOM/                    # Project root (3-layer agent architecture)
 - Generated: Partially (settings.local.json may be auto-generated)
 - Committed: Yes
 
-## Planned Target Structure (Lemon Command Center)
+## Implemented Structure (Phase 1 Complete)
 
-The project specification (`LEMON-COMMAND-CENTER-PROMPT.md` in main branch) defines a React/TypeScript application to be built. The planned structure for that application uses:
+```
+src/
+├── App.tsx                          # Root app component (Header + ChatPanel + IndexedDB hydration)
+├── main.tsx                         # React 19 createRoot entry point
+├── index.css                        # Tailwind v4 @theme with Lemon Studios brand tokens
+├── vite-env.d.ts                    # Vite client type definitions
+├── components/
+│   ├── chat/
+│   │   ├── ChatPanel.tsx            # Main chat container (flex column layout)
+│   │   ├── ChatInput.tsx            # Textarea with Enter-to-send, Stop button
+│   │   ├── MessageList.tsx          # Scrollable message container with auto-scroll
+│   │   ├── MessageBubble.tsx        # Message display with react-markdown
+│   │   ├── StreamingIndicator.tsx   # Live streaming content with pulsing cursor
+│   │   ├── TokenCounter.tsx         # Token usage with color thresholds
+│   │   └── ErrorBanner.tsx          # Error display with Retry/Dismiss
+│   └── ui/
+│       └── Header.tsx               # App header with branding and status
+├── config/
+│   ├── agents/
+│   │   ├── diana.ts                 # Diana CFO persona definition
+│   │   └── index.ts                 # Agent registry with getAgent() accessor
+│   └── prompts/
+│       ├── base.ts                  # Base system prompt
+│       └── index.ts                 # Prompt re-exports
+├── hooks/
+│   └── useChat.ts                   # Chat orchestration hook
+├── services/
+│   ├── anthropic/
+│   │   ├── client.ts                # Singleton Anthropic SDK client
+│   │   └── stream.ts               # Streaming service with callbacks
+│   ├── context/
+│   │   ├── builder.ts               # Layered system prompt assembly
+│   │   ├── tokenCounter.ts          # Token estimation and limits
+│   │   └── summarizer.ts            # Auto-summarization with history preservation
+│   └── persistence/
+│       ├── adapter.ts               # Singleton accessor for PersistenceAdapter
+│       └── indexeddb.ts             # IndexedDB implementation (5 stores)
+├── store/
+│   ├── chatStore.ts                 # Chat state with CRUD, streaming, tokens
+│   ├── officeStore.ts               # Skeleton (Phase 2)
+│   ├── dealStore.ts                 # Skeleton (Phase 5)
+│   ├── fileStore.ts                 # Skeleton (Phase 6)
+│   └── memoryStore.ts              # Skeleton (Phase 7)
+└── types/
+    ├── agent.ts                     # AgentId, AgentPersona, AgentStatus
+    ├── chat.ts                      # Message, Conversation, StreamingState
+    └── persistence.ts               # PersistenceAdapter interface, StoreName
+```
 
-- `src/config/` -- Agent definitions, deal templates, theme tokens
-- `src/engine/` -- Canvas 2D isometric rendering engine (GameLoop, Renderer, Pathfinding, SpriteSheet, CharacterStateMachine, Camera, TileMap)
-- `src/components/` -- React components organized by domain: `office/`, `chat/`, `deals/`, `memory/`, `ui/`
-- `src/agents/` -- Individual agent persona definitions with system prompts
-- `src/store/` -- Zustand stores: chatStore, officeStore, dealStore, fileStore, memoryStore
-- `src/services/` -- API wrapper, context builder, summarizer, file parser, memory extractor, persistence
-- `src/hooks/` -- React hooks: useAgent, useWarRoom, useFileUpload, useOfficeNavigation, useDeal
-- `src/types/` -- TypeScript type definitions: agent, chat, deal, office
-- `public/assets/` -- Sprites, tiles, UI icons, audio
+## Remaining Planned Directories
 
-This structure does not exist yet. When implementation begins, new files should follow this layout as defined in the project spec.
+Not yet implemented (future phases):
+
+- `src/engine/` -- Canvas 2D isometric rendering engine (Phase 2)
+- `src/components/office/` -- Office/canvas React components (Phase 2-3)
+- `src/components/deals/` -- Deal room components (Phase 5)
+- `src/components/memory/` -- Memory panel components (Phase 7)
+- `public/assets/` -- Sprites, tiles, UI icons, audio (Phase 2, 8)
 
 ---
 
 *Structure analysis: 2026-03-12*
+*Updated: 2026-03-12 after Phase 1 completion*
