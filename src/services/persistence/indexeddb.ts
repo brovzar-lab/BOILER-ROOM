@@ -63,8 +63,9 @@ export class IndexedDBAdapter implements PersistenceAdapter {
     return db.get(store, key) as Promise<T | undefined>;
   }
 
-  async set<T>(store: StoreName, key: string, value: T): Promise<void> {
+  async set<T>(store: StoreName, _key: string, value: T): Promise<void> {
     const db = await this.dbPromise;
+    // Key is embedded in value via keyPath on all object stores
     await db.put(store, value);
   }
 
