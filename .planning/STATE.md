@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 ## Current Position
 
 Phase: 1 of 8 (Foundation + Single-Agent Chat)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: Executing
-Last activity: 2026-03-12 -- Completed 01-01-PLAN.md
+Last activity: 2026-03-12 -- Completed 01-02-PLAN.md
 
-Progress: [█░░░░░░░░░] 4%
+Progress: [██░░░░░░░░] 8%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
+- Total plans completed: 2
 - Average duration: 4 min
-- Total execution time: 0.07 hours
+- Total execution time: 0.13 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01 Foundation | 1/3 | 4 min | 4 min |
+| 01 Foundation | 2/3 | 8 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (4 min)
-- Trend: N/A (first plan)
+- Last 5 plans: 01-01 (4 min), 01-02 (4 min)
+- Trend: Stable
 
 *Updated after each plan completion*
 
@@ -52,6 +52,9 @@ Recent decisions affecting current work:
 - ESM-compatible vite.config.ts using fileURLToPath
 - Conversation messages stored in separate IndexedDB store, joined by conversationId index
 - PersistenceAdapter singleton via getPersistence() accessor
+- SDK client uses dummy apiKey='proxy-handled' -- real key injected by Vite proxy server-side
+- Token estimation at 4 chars/token avoids heavy tiktoken dependency
+- Summarizer keeps last 10 messages verbatim, stores full history as {id}-full in IndexedDB
 
 ### Research Flags
 
@@ -72,5 +75,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-12
-Stopped at: Completed 01-01-PLAN.md (project scaffold, types, persistence, stores)
+Stopped at: Completed 01-02-PLAN.md (Anthropic SDK streaming, Diana persona, context management)
 Resume file: None

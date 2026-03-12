@@ -9,19 +9,19 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Chat & Streaming
 
-- [ ] **CHAT-01**: User can send a message and receive a streaming token-by-token response from Claude
+- [x] **CHAT-01**: User can send a message and receive a streaming token-by-token response from Claude
 - [ ] **CHAT-02**: Messages render with markdown formatting (headers, lists, bold, code blocks)
 - [ ] **CHAT-03**: Conversation history persists across browser sessions (survives refresh/close)
 - [ ] **CHAT-04**: Token count is tracked per conversation and displayed to user
 - [ ] **CHAT-05**: When conversation approaches 80% of context window, old messages are auto-summarized while preserving recent messages verbatim
 - [ ] **CHAT-06**: Full conversation history is stored in IndexedDB even after summarization
-- [ ] **CHAT-07**: Streaming can be cancelled mid-response by the user
-- [ ] **CHAT-08**: API errors display user-friendly messages with retry option
+- [x] **CHAT-07**: Streaming can be cancelled mid-response by the user
+- [x] **CHAT-08**: API errors display user-friendly messages with retry option
 
 ### Agent Personas
 
-- [ ] **AGNT-01**: Each agent has a unique system prompt with base rules + persona + domain expertise
-- [ ] **AGNT-02**: Diana (CFO) responds with financial analysis, P&L focus, Mexican film finance context
+- [x] **AGNT-01**: Each agent has a unique system prompt with base rules + persona + domain expertise
+- [x] **AGNT-02**: Diana (CFO) responds with financial analysis, P&L focus, Mexican film finance context
 - [ ] **AGNT-03**: Marcos (Counsel) responds with legal analysis, contract focus, Mexican entertainment law context
 - [ ] **AGNT-04**: Sasha (Deals) responds with deal strategy, negotiation focus, Latin American content market context
 - [ ] **AGNT-05**: Roberto (Accounting) responds with tax/incentive analysis, compliance focus, EFICINE/Decreto 2026 context
@@ -87,8 +87,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **INFR-01**: All data persists via a PersistenceAdapter abstraction (interface, not concrete implementation)
 - [x] **INFR-02**: Initial PersistenceAdapter implementation uses IndexedDB (via idb wrapper)
-- [ ] **INFR-03**: API key is stored in .env and proxied through Vite dev server (never exposed to client bundle)
-- [ ] **INFR-04**: System prompt is layered: base → persona → deal context → file summaries → memory → conversation history
+- [x] **INFR-03**: API key is stored in .env and proxied through Vite dev server (never exposed to client bundle)
+- [x] **INFR-04**: System prompt is layered: base → persona → deal context → file summaries → memory → conversation history
 - [x] **INFR-05**: App uses dark theme with warm amber/gold Lemon Studios brand accents
 - [x] **INFR-06**: State is managed via 5 independent Zustand stores (office, chat, deal, file, memory)
 
@@ -142,20 +142,20 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CHAT-01 | Phase 1 | Pending |
+| CHAT-01 | Phase 1 | Complete |
 | CHAT-02 | Phase 1 | Pending |
 | CHAT-03 | Phase 1 | Pending |
 | CHAT-04 | Phase 1 | Pending |
 | CHAT-05 | Phase 1 | Pending |
 | CHAT-06 | Phase 1 | Pending |
-| CHAT-07 | Phase 1 | Pending |
-| CHAT-08 | Phase 1 | Pending |
-| AGNT-01 | Phase 1 | Pending |
-| AGNT-02 | Phase 1 | Pending |
+| CHAT-07 | Phase 1 | Complete |
+| CHAT-08 | Phase 1 | Complete |
+| AGNT-01 | Phase 1 | Complete |
+| AGNT-02 | Phase 1 | Complete |
 | INFR-01 | Phase 1 | Complete |
 | INFR-02 | Phase 1 | Complete |
-| INFR-03 | Phase 1 | Pending |
-| INFR-04 | Phase 1 | Pending |
+| INFR-03 | Phase 1 | Complete |
+| INFR-04 | Phase 1 | Complete |
 | INFR-05 | Phase 1 | Complete |
 | INFR-06 | Phase 1 | Complete |
 | ENGN-01 | Phase 2 | Pending |
