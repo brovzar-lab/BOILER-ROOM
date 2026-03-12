@@ -34,12 +34,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User sees token count updating per conversation and auto-summarization triggers when context window approaches 80% capacity
   4. User can cancel a streaming response mid-generation and retry after API errors
   5. App renders in a dark theme with warm amber/gold Lemon Studios branding
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
-- [ ] 01-03: TBD
+- [ ] 01-01-PLAN.md — Project scaffold, types, PersistenceAdapter + IndexedDB, 5 Zustand stores, dark theme
+- [ ] 01-02-PLAN.md — Anthropic API proxy + streaming service, Diana persona, system prompt layering, token counter, auto-summarizer
+- [ ] 01-03-PLAN.md — Chat UI components, markdown rendering, useChat hook wiring, persistence loading, human verification
 
 ### Phase 2: Canvas Engine
 **Goal**: Isometric pixel art office renders at 60fps with BILLY walking between rooms via BFS pathfinding, entirely independent of the chat system
@@ -171,7 +171,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation + Single-Agent Chat | 0/3 | Not started | - |
+| 1. Foundation + Single-Agent Chat | 0/3 | Planning complete | - |
 | 2. Canvas Engine | 0/3 | Not started | - |
 | 3. Integration + All Agents | 0/3 | Not started | - |
 | 4. War Room | 0/3 | Not started | - |
