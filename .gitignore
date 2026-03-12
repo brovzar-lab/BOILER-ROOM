@@ -1,8 +1,14 @@
 # Intermediates — always regenerated
 .tmp/
+dist/
+*.tsbuildinfo
+
+# Dependencies
+node_modules/
 
 # Secrets
 .env
+.env.local
 credentials.json
 token.json
 
