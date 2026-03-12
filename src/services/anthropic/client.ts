@@ -18,7 +18,7 @@ export function getAnthropicClient(): Anthropic {
       // API key is injected by the Vite proxy, so we pass a dummy value here.
       // The SDK requires apiKey to be set, but the proxy overwrites the header.
       apiKey: 'proxy-handled',
-      baseURL: '/api/anthropic',
+      baseURL: `${window.location.origin}/api/anthropic`,
       dangerouslyAllowBrowser: true,
     });
   }
