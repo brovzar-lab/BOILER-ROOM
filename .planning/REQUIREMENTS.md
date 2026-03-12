@@ -207,10 +207,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PLSH-05 | Phase 8 | Pending |
 
 **Coverage:**
-- v1 requirements: 55 total
-- Mapped to phases: 55
-- Unmapped: 0 ✓
+- v1 requirements: 63 total
+- Mapped to phases: 63
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-12*
-*Last updated: 2026-03-12 after initial definition*
+*Last updated: 2026-03-12 after roadmap creation*
