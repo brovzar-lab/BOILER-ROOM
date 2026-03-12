@@ -85,12 +85,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Persistence & Infrastructure
 
-- [ ] **INFR-01**: All data persists via a PersistenceAdapter abstraction (interface, not concrete implementation)
-- [ ] **INFR-02**: Initial PersistenceAdapter implementation uses IndexedDB (via idb wrapper)
+- [x] **INFR-01**: All data persists via a PersistenceAdapter abstraction (interface, not concrete implementation)
+- [x] **INFR-02**: Initial PersistenceAdapter implementation uses IndexedDB (via idb wrapper)
 - [ ] **INFR-03**: API key is stored in .env and proxied through Vite dev server (never exposed to client bundle)
 - [ ] **INFR-04**: System prompt is layered: base → persona → deal context → file summaries → memory → conversation history
-- [ ] **INFR-05**: App uses dark theme with warm amber/gold Lemon Studios brand accents
-- [ ] **INFR-06**: State is managed via 5 independent Zustand stores (office, chat, deal, file, memory)
+- [x] **INFR-05**: App uses dark theme with warm amber/gold Lemon Studios brand accents
+- [x] **INFR-06**: State is managed via 5 independent Zustand stores (office, chat, deal, file, memory)
 
 ### Polish & Visual
 
@@ -152,12 +152,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CHAT-08 | Phase 1 | Pending |
 | AGNT-01 | Phase 1 | Pending |
 | AGNT-02 | Phase 1 | Pending |
-| INFR-01 | Phase 1 | Pending |
-| INFR-02 | Phase 1 | Pending |
+| INFR-01 | Phase 1 | Complete |
+| INFR-02 | Phase 1 | Complete |
 | INFR-03 | Phase 1 | Pending |
 | INFR-04 | Phase 1 | Pending |
-| INFR-05 | Phase 1 | Pending |
-| INFR-06 | Phase 1 | Pending |
+| INFR-05 | Phase 1 | Complete |
+| INFR-06 | Phase 1 | Complete |
 | ENGN-01 | Phase 2 | Pending |
 | ENGN-02 | Phase 2 | Pending |
 | ENGN-03 | Phase 2 | Pending |
