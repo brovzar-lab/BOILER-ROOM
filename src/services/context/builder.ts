@@ -4,6 +4,7 @@ import { BASE_SYSTEM_PROMPT } from '@/config/prompts/base';
 import { getAgent } from '@/config/agents';
 import { estimateTokens } from './tokenCounter';
 import { useDealStore } from '@/store/dealStore';
+import { useFileStore } from '@/store/fileStore';
 
 export interface BuiltContext {
   systemPrompt: string;
@@ -20,7 +21,7 @@ export interface BuiltContext {
  * 2. Agent persona prompt
  * 2.5. (Optional) Cross-visibility block for War Room follow-ups
  * 3. Deal context (name + description of active deal)
- * 4. (Future) File summaries -- Phase 6
+ * 4. File summaries (uploaded documents per agent/deal)
  * 5. (Future) Agent memory -- Phase 7
  * 6. Conversation history (with summary support)
  */
@@ -57,7 +58,33 @@ export function buildContext(
     }
   }
 
-  // Layers 4-5: Reserved for future phases (file summaries, memory)
+  // Layer 4: File summaries
+  const FILE_TOKEN_CAP = 2000;       // ~8000 chars per file
+  const TOTAL_FILE_TOKEN_CAP = 8000; // max tokens for all files combined
+
+  const { files } = useFileStore.getState();
+  const agentFiles = files.filter(f => f.agentId === agentId && f.dealId === activeDealId);
+
+  if (agentFiles.length > 0) {
+    let fileBlock = '## Uploaded Documents\n\n';
+    let usedTokens = 0;
+
+    for (const file of agentFiles) {
+      const maxChars = FILE_TOKEN_CAP * 4;
+      let text = file.extractedText;
+      if (text.length > maxChars) {
+        text = text.slice(0, maxChars) + '\n\n[... truncated, showing first portion of document]';
+      }
+      const tokens = estimateTokens(text);
+      if (usedTokens + tokens > TOTAL_FILE_TOKEN_CAP) break;
+      fileBlock += `### ${file.name}\n${text}\n\n`;
+      usedTokens += tokens;
+    }
+
+    layers.push(fileBlock);
+  }
+
+  // Layer 5: Reserved for agent memory (Phase 7)
 
   const systemPrompt = layers.join('\n\n');
 

@@ -16,8 +16,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Canvas Engine** - Top-down pixel art office rendering, BILLY avatar with pathfinding, placeholder agent sprites, camera with integer zoom
 - [x] **Phase 3: Integration + All Agents** - Wire Canvas navigation to chat, expand to 5 agent personas, agent status indicators synced to streaming (completed 2026-03-13)
 - [x] **Phase 4: War Room** - Broadcast to all agents simultaneously, parallel color-coded streaming, rate-limit-aware concurrency, partial failure handling (completed 2026-03-13)
-- [x] **Phase 5: Deal Rooms** - Named deal entities, per-deal conversation/file/memory scoping, atomic context switching (completed 2026-03-13)
-- [ ] **Phase 6: File Handling** - Drag-and-drop PDF/DOCX, Web Worker text extraction, file content injected into agent context
+- [ ] **Phase 5: Deal Rooms** - Named deal entities, per-deal conversation/file/memory scoping, atomic context switching
+- [x] **Phase 6: File Handling** - Drag-and-drop PDF/DOCX, Web Worker text extraction, file content injected into agent context (completed 2026-03-13)
 - [ ] **Phase 7: Agent Memory** - Structured fact extraction from conversations, memory panel, cross-agent knowledge sharing with attribution
 - [ ] **Phase 8: Polish** - Production pixel art sprites, personality animations, ambient sound, responsive design, bundle optimization
 
@@ -108,8 +108,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [x] 05-01-PLAN.md — Deal types, dealStore CRUD, chatStore deal-scoping, buildContext Layer 3 injection, migration utility (TDD)
-- [x] 05-02-PLAN.md — Deal sidebar UI, deal cards with agent dots, Header deal badge, App.tsx initialization, hook deal-awareness, fade transition, human verification
+- [ ] 05-01-PLAN.md — Deal types, dealStore CRUD, chatStore deal-scoping, buildContext Layer 3 injection, migration utility (TDD)
+- [ ] 05-02-PLAN.md — Deal sidebar UI, deal cards with agent dots, Header deal badge, App.tsx initialization, hook deal-awareness, fade transition, human verification
 
 ### Phase 6: File Handling
 **Goal**: User can drag-and-drop PDF and DOCX files onto agent desks, with extracted text injected into the agent's conversation context
@@ -133,19 +133,19 @@ Plans:
 **Goal**: Agents automatically extract and retain structured facts from conversations, building persistent knowledge per deal that informs future responses and can be shared across agents
 **Depends on**: Phase 5 (deal-scoped storage), Phase 1 (context window management -- memory must not be summarized)
 **Requirements**: MEM-01, MEM-02, MEM-03, MEM-04, MEM-05, MEM-06
-**Research**: NEEDED -- memory extraction prompt engineering, structured fact extraction from financial domain conversations
+**Research**: COMPLETE -- memory extraction prompt engineering, structured fact extraction from financial domain conversations
 **Success Criteria** (what must be TRUE):
   1. After a conversation, key facts (decisions, dollar amounts, dates, action items) are automatically extracted without user intervention
   2. User can open a memory panel and see structured facts an agent "knows" about the current deal
   3. Structured memory is prepended to the agent's system prompt and visibly influences response quality
   4. Structured memory persists permanently and is never auto-summarized (only narrative history is summarizable)
   5. Agents can reference facts from other agents' memory with clear attribution (e.g., "Per Diana's financial analysis...")
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
-- [ ] 07-03: TBD
+- [ ] 07-01-PLAN.md — MemoryFact types, LLM extraction service, memoryStore CRUD with IndexedDB persistence (TDD)
+- [ ] 07-02-PLAN.md — buildContext Layer 5 memory injection, cross-agent attribution, useChat/useWarRoom extraction wiring
+- [ ] 07-03-PLAN.md — MemoryPanel slide-over UI, ChatPanel memory button, Header fact count, human verification
 
 ### Phase 8: Polish
 **Goal**: Production-quality visual and audio experience with polished sprites, personality-driven animations, ambient sound, and responsive layout
@@ -174,7 +174,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 2. Canvas Engine | 3/3 | Complete | 2026-03-13 |
 | 3. Integration + All Agents | 3/3 | Complete   | 2026-03-13 |
 | 4. War Room | 3/3 | Complete | 2026-03-13 |
-| 5. Deal Rooms | 2/2 | Complete | 2026-03-13 |
-| 6. File Handling | 0/3 | Not started | - |
+| 5. Deal Rooms | 1/2 | In Progress|  |
+| 6. File Handling | 3/3 | Complete   | 2026-03-13 |
 | 7. Agent Memory | 0/3 | Not started | - |
 | 8. Polish | 0/2 | Not started | - |

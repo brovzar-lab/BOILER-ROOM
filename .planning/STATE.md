@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 6 context gathered
-last_updated: "2026-03-13T19:00:15.171Z"
-last_activity: 2026-03-13 -- Phase 5 Plan 02 complete (deal sidebar UI, header badge, fade transitions)
+stopped_at: Completed 06-03-PLAN.md
+last_updated: "2026-03-13T18:36:30Z"
+last_activity: 2026-03-13 -- Phase 6 Plan 03 complete (FileViewer UI, chat drop zone, header file count)
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 17
-  completed_plans: 14
-  percent: 82
+  completed_plans: 16
+  percent: 100
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Multi-perspective, context-aware AI advisory for complex production deals -- type one question, get informed responses from five domain specialists who already know the deal history.
-**Current focus:** Phase 5 complete -- Deal rooms fully shipped (data layer + UI). Phase 6 next.
+**Current focus:** Phase 6 complete -- All file handling features delivered, ready for Phase 7
 
 ## Current Position
 
 Phase: 6 of 8 (File Handling)
-Plan: 1 of 3
+Plan: 3 of 3
 Status: executing
-Last activity: 2026-03-13 -- Phase 5 Plan 02 complete (deal sidebar UI, header badge, fade transitions)
+Last activity: 2026-03-13 -- Phase 6 Plan 03 complete (FileViewer UI, chat drop zone, header file count)
 
-Progress: [████████████████░░░░] 82% (14/17 plans complete)
+Progress: [█████████░] 94% (16/17 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 14
+- Total plans completed: 13
 - Average duration: 7 min
-- Total execution time: 1.7 hours
+- Total execution time: 1.5 hours
 
 **By Phase:**
 
@@ -47,11 +47,12 @@ Progress: [████████████████░░░░] 82% (14
 | 02 Canvas Engine | 3/3 | 27 min | 9 min |
 | 03 Integration | 3/3 | 7 min | 2 min |
 | 04 War Room | 3/3 | 25 min | 8 min |
-| 05 Deal Rooms | 2/2 | 16 min | 8 min |
+| 05 Deal Rooms | 1/2 | 4 min | 4 min |
+| 06 File Handling | 3/3 | 13 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-02 (5 min), 04-03 (15 min), 05-01 (4 min), 05-02 (12 min)
-- Trend: 05-02 UI plan with checkpoint verification, steady velocity
+- Last 5 plans: 04-01 (5 min), 04-02 (5 min), 04-03 (15 min), 05-01 (4 min)
+- Trend: 06-01 fast TDD data layer continues established pattern
 
 *Updated after each plan completion*
 | Phase 03 P03 | 2min | 1 task | 3 files |
@@ -59,7 +60,9 @@ Progress: [████████████████░░░░] 82% (14
 | Phase 04 P02 | 5min | 1 task | 3 files |
 | Phase 04 P03 | 15min | 3 tasks | 12 files |
 | Phase 05 P01 | 4min | 2 tasks | 8 files |
-| Phase 05 P02 | 12min | 3 tasks | 9 files |
+| Phase 06 P01 | 4min | 2 tasks | 8 files |
+| Phase 06 P02 | 6min | 2 tasks | 5 files |
+| Phase 06 P03 | 3min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -118,9 +121,16 @@ Recent decisions affecting current work:
 - [Phase 05]: loadConversations with null activeDealId returns empty state (no conversations loaded)
 - [Phase 05]: migrateConversationsToDeals uses bulkSet for efficient orphan stamping
 - [Phase 05]: Layer 3 deal context positioned after crossVisibilityBlock (Layer 2.5)
-- [Phase 05]: Sidebar opens by default on app load for intentional deal selection
-- [Phase 05]: CSS transitions only for deal UI animations (no framer-motion)
-- [Phase 05]: Agent dots use PersonaConfig colors with opacity-100/30 for active/inactive
+- [Phase 06]: pdfjs-dist worker configured via Vite ?url import pattern for non-blocking PDF parsing
+- [Phase 06]: Store extracted text only (not raw file blobs) in IndexedDB for storage efficiency
+- [Phase 06]: shareFileWithAllAgents creates independent copies per agent with new UUIDs
+- [Phase 06]: File icons on desk area (1 row above seatTile, 2 tiles wide) matching furniture layout
+- [Phase 06]: Desk-area-only drop zone highlight with amber dashed border (not full room)
+- [Phase 06]: Per-file cap 2000 tokens, total cap 8000 tokens for context budget
+- [Phase 06]: onFileClickCallback pattern for clean React file viewer integration
+- [Phase 06]: FileViewer overlays chat panel with absolute inset-0 z-50 within chat column container
+- [Phase 06]: Only Close and Delete buttons in FileViewer (no Share/Copy/Re-extract) per locked user decision
+- [Phase 06]: Three-column flexbox layout (DealSidebar left, OfficeCanvas center, ChatPanel right)
 
 ### Research Flags
 
@@ -140,6 +150,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T19:01:00.000Z
-Stopped at: Completed 05-02-PLAN.md (Deal Room UI)
-Resume file: .planning/phases/06-file-handling/06-01-PLAN.md
+Last session: 2026-03-13T18:36:30Z
+Stopped at: Completed 06-03-PLAN.md
+Resume file: .planning/phases/06-file-handling/06-03-SUMMARY.md

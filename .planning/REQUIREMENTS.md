@@ -62,17 +62,17 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **DEAL-02**: Each deal has its own conversation histories per agent
 - [x] **DEAL-03**: Each deal has its own uploaded files and agent memory
 - [x] **DEAL-04**: Switching deals atomically switches all agent contexts (history, files, memory)
-- [x] **DEAL-05**: Deal switcher UI shows deal name, last activity, and per-agent activity summary
-- [x] **DEAL-06**: Active deal name is prominently displayed in the interface
+- [ ] **DEAL-05**: Deal switcher UI shows deal name, last activity, and per-agent activity summary
+- [ ] **DEAL-06**: Active deal name is prominently displayed in the interface
 
 ### File Handling
 
-- [ ] **FILE-01**: User can drag-and-drop PDF files onto an agent's room/desk
-- [ ] **FILE-02**: User can drag-and-drop DOCX files onto an agent's room/desk
-- [ ] **FILE-03**: Extracted text from files is injected into the agent's conversation context
-- [ ] **FILE-04**: Uploaded files appear as pixel document icons on the agent's desk
-- [ ] **FILE-05**: User can click a file on a desk to view its contents
-- [ ] **FILE-06**: File metadata is stored: name, size, date, associated agent, associated deal
+- [x] **FILE-01**: User can drag-and-drop PDF files onto an agent's room/desk
+- [x] **FILE-02**: User can drag-and-drop DOCX files onto an agent's room/desk
+- [x] **FILE-03**: Extracted text from files is injected into the agent's conversation context
+- [x] **FILE-04**: Uploaded files appear as pixel document icons on the agent's desk
+- [x] **FILE-05**: User can click a file on a desk to view its contents
+- [x] **FILE-06**: File metadata is stored: name, size, date, associated agent, associated deal
 
 ### Agent Memory
 
@@ -186,14 +186,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEAL-02 | Phase 5 | Complete |
 | DEAL-03 | Phase 5 | Complete |
 | DEAL-04 | Phase 5 | Complete |
-| DEAL-05 | Phase 5 | Complete |
-| DEAL-06 | Phase 5 | Complete |
-| FILE-01 | Phase 6 | Pending |
-| FILE-02 | Phase 6 | Pending |
-| FILE-03 | Phase 6 | Pending |
-| FILE-04 | Phase 6 | Pending |
-| FILE-05 | Phase 6 | Pending |
-| FILE-06 | Phase 6 | Pending |
+| DEAL-05 | Phase 5 | Pending |
+| DEAL-06 | Phase 5 | Pending |
+| FILE-01 | Phase 6 | Complete |
+| FILE-02 | Phase 6 | Complete |
+| FILE-03 | Phase 6 | Complete |
+| FILE-04 | Phase 6 | Complete |
+| FILE-05 | Phase 6 | Complete |
+| FILE-06 | Phase 6 | Complete |
 | MEM-01 | Phase 7 | Pending |
 | MEM-02 | Phase 7 | Pending |
 | MEM-03 | Phase 7 | Pending |
