@@ -150,6 +150,14 @@ export function buildContext(
     }
   }
 
+  // Layer 5.5: Deal creation capability (only when deal context is active)
+  if (activeDealId) {
+    layers.push(`## Deal Creation Capability
+When the user asks you to create a deal (e.g. "create a deal for this contract", "set up a deal", "make a deal for this"), respond naturally and include this exact tag on its own line:
+<create-deal name="Short Deal Name" description="One sentence summary of the deal"/>
+Use the contract name or a concise descriptive title for \`name\`. Write a clear one-sentence summary for \`description\`. Do not wrap the tag in backticks or code blocks.`);
+  }
+
   const systemPrompt = layers.join('\n\n');
 
   // Layer 6: Conversation history with summary support

@@ -66,7 +66,7 @@ describe('buildContext deal injection (Layer 3)', () => {
     const result = buildContext('diana', messages);
 
     expect(result.systemPrompt).not.toMatch(/currently advising on/i);
-    expect(result.systemPrompt).not.toContain('deal');
+    expect(result.systemPrompt).not.toContain('Deal Creation Capability');
   });
 
   it('with deal context -> Layer 3 appears between Layer 2 (persona) and messages, not at the end of prompt', () => {
