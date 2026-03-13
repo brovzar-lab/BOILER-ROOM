@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation + Single-Agent Chat** - React/Vite scaffold, streaming chat with Diana (CFO), IndexedDB persistence, context window management, dark theme
 - [x] **Phase 2: Canvas Engine** - Top-down pixel art office rendering, BILLY avatar with pathfinding, placeholder agent sprites, camera with integer zoom
 - [x] **Phase 3: Integration + All Agents** - Wire Canvas navigation to chat, expand to 5 agent personas, agent status indicators synced to streaming (completed 2026-03-13)
-- [ ] **Phase 4: War Room** - Broadcast to all agents simultaneously, parallel color-coded streaming, rate-limit-aware concurrency, partial failure handling
+- [x] **Phase 4: War Room** - Broadcast to all agents simultaneously, parallel color-coded streaming, rate-limit-aware concurrency, partial failure handling (completed 2026-03-13)
 - [ ] **Phase 5: Deal Rooms** - Named deal entities, per-deal conversation/file/memory scoping, atomic context switching
 - [ ] **Phase 6: File Handling** - Drag-and-drop PDF/DOCX, Web Worker text extraction, file content injected into agent context
 - [ ] **Phase 7: Agent Memory** - Structured fact extraction from conversations, memory panel, cross-agent knowledge sharing with attribution
@@ -90,9 +90,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — chatStore multi-stream expansion, Message source field, cross-visibility summary builder, retry backoff utility
-- [ ] 04-02-PLAN.md — Agent gathering/dispersal animations, War Room entry detection, 'w' key shortcut, WAR_ROOM_SEATS positions
-- [ ] 04-03-PLAN.md — useWarRoom hook, WarRoomPanel + WarRoomMessage + WarRoomBadge components, ChatPanel routing, human verification
+- [x] 04-01-PLAN.md — chatStore multi-stream expansion, Message source field, cross-visibility summary builder, retry backoff utility
+- [x] 04-02-PLAN.md — Agent gathering/dispersal animations, War Room entry detection, 'w' key shortcut, WAR_ROOM_SEATS positions
+- [x] 04-03-PLAN.md — useWarRoom hook, WarRoomPanel + WarRoomMessage + WarRoomBadge components, ChatPanel routing, human verification
 
 ### Phase 5: Deal Rooms
 **Goal**: User can create named deals and switch between them, with every agent's context (history, files, memory) atomically scoping to the active deal
@@ -174,7 +174,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 1. Foundation + Single-Agent Chat | 3/3 | Complete | 2026-03-12 |
 | 2. Canvas Engine | 3/3 | Complete | 2026-03-13 |
 | 3. Integration + All Agents | 3/3 | Complete   | 2026-03-13 |
-| 4. War Room | 0/3 | Not started | - |
+| 4. War Room | 3/3 | Complete | 2026-03-13 |
 | 5. Deal Rooms | 0/3 | Not started | - |
 | 6. File Handling | 0/3 | Not started | - |
 | 7. Agent Memory | 0/3 | Not started | - |

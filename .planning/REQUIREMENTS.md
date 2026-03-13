@@ -50,10 +50,10 @@ Requirements for initial release. Each maps to roadmap phases.
 ### War Room
 
 - [x] **WAR-01**: Entering the War Room causes all agent characters to walk to the central table
-- [ ] **WAR-02**: User can type a message that is sent to ALL 5 agents simultaneously
+- [x] **WAR-02**: User can type a message that is sent to ALL 5 agents simultaneously
 - [x] **WAR-03**: Responses stream in parallel, labeled and color-coded by agent
 - [x] **WAR-04**: Each War Room response feeds back into that agent's individual conversation history
-- [ ] **WAR-05**: War Room handles partial failures gracefully (if 1 agent errors, other 4 still display)
+- [x] **WAR-05**: War Room handles partial failures gracefully (if 1 agent errors, other 4 still display)
 - [x] **WAR-06**: API rate limits are respected via staggered requests and concurrency control
 
 ### Deal Rooms
