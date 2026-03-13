@@ -66,7 +66,7 @@ describe('fileStore', () => {
     it('defaults to "default" dealId when activeDealId is null', async () => {
       // Override dealStore mock for this test
       const dealStore = await import('@/store/dealStore');
-      vi.spyOn(dealStore.useDealStore, 'getState').mockReturnValue({
+      const spy = vi.spyOn(dealStore.useDealStore, 'getState').mockReturnValue({
         activeDealId: null,
       } as ReturnType<typeof dealStore.useDealStore.getState>);
 
@@ -76,6 +76,8 @@ describe('fileStore', () => {
       await useFileStore.getState().addFile(mockFile, 'diana');
 
       expect(mockProcessDroppedFile).toHaveBeenCalledWith(mockFile, 'diana', 'default');
+
+      spy.mockRestore();
     });
 
     it('resets isProcessing on error', async () => {
