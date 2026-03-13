@@ -4,13 +4,14 @@ interface ChatInputProps {
   onSend: (content: string) => void;
   onCancel: () => void;
   isStreaming: boolean;
+  placeholder?: string;
 }
 
 /**
  * Chat input area with auto-growing textarea, Enter-to-send, and
  * a Send/Stop toggle button.
  */
-export function ChatInput({ onSend, onCancel, isStreaming }: ChatInputProps) {
+export function ChatInput({ onSend, onCancel, isStreaming, placeholder = 'Type a message...' }: ChatInputProps) {
   const [value, setValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -65,7 +66,7 @@ export function ChatInput({ onSend, onCancel, isStreaming }: ChatInputProps) {
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask Diana about financials..."
+          placeholder={placeholder}
           rows={1}
           disabled={isStreaming}
           className="flex-1 resize-none rounded-lg border border-[--color-surface-border] bg-[--color-surface-bg] px-4 py-3 text-[--color-text-primary] placeholder-[--color-text-muted] focus:outline-none focus:border-[--color-lemon-500] disabled:opacity-50 disabled:cursor-not-allowed"

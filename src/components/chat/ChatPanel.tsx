@@ -65,6 +65,9 @@ export function ChatPanel() {
  * Clears 'needs-attention' status when the user enters the room.
  */
 function AgentChatPanel({ agentId }: { agentId: AgentId }) {
+  const agent = getAgent(agentId);
+  const agentName = agent?.name ?? agentId;
+
   const {
     messages,
     isStreaming,
@@ -89,6 +92,7 @@ function AgentChatPanel({ agentId }: { agentId: AgentId }) {
         messages={messages}
         isStreaming={isStreaming}
         streamingContent={streamingContent}
+        agentName={agentName}
       />
 
       {/* Token counter bar */}
@@ -111,6 +115,7 @@ function AgentChatPanel({ agentId }: { agentId: AgentId }) {
         onSend={sendMessage}
         onCancel={cancelStream}
         isStreaming={isStreaming}
+        placeholder={`Ask ${agentName} something...`}
       />
     </>
   );

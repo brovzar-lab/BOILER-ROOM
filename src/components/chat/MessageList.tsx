@@ -7,13 +7,14 @@ interface MessageListProps {
   messages: Message[];
   isStreaming: boolean;
   streamingContent: string;
+  agentName?: string;
 }
 
 /**
  * Scrollable message container with auto-scroll-to-bottom
  * on new messages and during streaming.
  */
-export function MessageList({ messages, isStreaming, streamingContent }: MessageListProps) {
+export function MessageList({ messages, isStreaming, streamingContent, agentName = 'your agent' }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when messages change or streaming content updates
@@ -24,7 +25,7 @@ export function MessageList({ messages, isStreaming, streamingContent }: Message
   if (messages.length === 0 && !isStreaming) {
     return (
       <div className="flex-1 overflow-y-auto flex items-center justify-center">
-        <p className="text-[--color-text-muted] text-lg">Start a conversation with Diana</p>
+        <p className="text-[--color-text-muted] text-lg">Start a conversation with {agentName}</p>
       </div>
     );
   }
