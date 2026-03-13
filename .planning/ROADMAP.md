@@ -13,7 +13,7 @@ Lemon Command Center delivers a multi-agent AI advisory workspace through 8 phas
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation + Single-Agent Chat** - React/Vite scaffold, streaming chat with Diana (CFO), IndexedDB persistence, context window management, dark theme
-- [ ] **Phase 2: Canvas Engine** - Top-down pixel art office rendering, BILLY avatar with pathfinding, placeholder agent sprites, camera with integer zoom
+- [x] **Phase 2: Canvas Engine** - Top-down pixel art office rendering, BILLY avatar with pathfinding, placeholder agent sprites, camera with integer zoom
 - [ ] **Phase 3: Integration + All Agents** - Wire Canvas navigation to chat, expand to 5 agent personas, agent status indicators synced to streaming
 - [ ] **Phase 4: War Room** - Broadcast to all agents simultaneously, parallel color-coded streaming, rate-limit-aware concurrency, partial failure handling
 - [ ] **Phase 5: Deal Rooms** - Named deal entities, per-deal conversation/file/memory scoping, atomic context switching
@@ -55,8 +55,8 @@ Plans:
 
 Plans:
 - [x] 02-01-PLAN.md — Engine core: types, tile map with BFS pathfinding, 7-room office layout, renderer, camera, game loop, officeStore expansion, vitest setup
-- [ ] 02-02-PLAN.md — Character state machine, BILLY movement with speed ramping, agent idle/work animations, click-to-walk input, knock animation
-- [ ] 02-03-PLAN.md — React OfficeCanvas component, RoomLabel overlay, ZoomControls, App.tsx wiring, human visual verification
+- [x] 02-02-PLAN.md — Character state machine, BILLY movement with speed ramping, agent idle/work animations, click-to-walk input, knock animation
+- [x] 02-03-PLAN.md — React OfficeCanvas component, RoomLabel overlay, ZoomControls, App.tsx wiring, human visual verification
 
 ### Phase 3: Integration + All Agents
 **Goal**: Walking to an agent's room opens their unique chat panel, all 5 agents have distinct personas, and agent status is visible in the office
@@ -172,7 +172,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation + Single-Agent Chat | 3/3 | Complete | 2026-03-12 |
-| 2. Canvas Engine | 2/3 | In Progress|  |
+| 2. Canvas Engine | 3/3 | Complete | 2026-03-13 |
 | 3. Integration + All Agents | 0/3 | Not started | - |
 | 4. War Room | 0/3 | Not started | - |
 | 5. Deal Rooms | 0/3 | Not started | - |

@@ -33,7 +33,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **ENGN-01**: Isometric pixel art office renders on HTML5 Canvas 2D at 60fps
 - [x] **ENGN-02**: Office contains 7 distinct rooms: 5 agent offices, 1 War Room, 1 BILLY corner office
-- [ ] **ENGN-03**: Rooms have furniture and decoration appropriate to each agent's personality
+- [x] **ENGN-03**: Rooms have furniture and decoration appropriate to each agent's personality
 - [x] **ENGN-04**: Canvas supports integer zoom levels with pixel-perfect rendering (no anti-aliasing)
 - [x] **ENGN-05**: Canvas renders correctly on HiDPI displays (Retina)
 - [x] **ENGN-06**: Game loop runs independently of React render cycle (requestAnimationFrame)
@@ -160,7 +160,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFR-06 | Phase 1 | Complete |
 | ENGN-01 | Phase 2 | Complete |
 | ENGN-02 | Phase 2 | Complete |
-| ENGN-03 | Phase 2 | Pending |
+| ENGN-03 | Phase 2 | Complete |
 | ENGN-04 | Phase 2 | Complete |
 | ENGN-05 | Phase 2 | Complete |
 | ENGN-06 | Phase 2 | Complete |
