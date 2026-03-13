@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-02-PLAN.md
-last_updated: "2026-03-13T17:21:49Z"
-last_activity: 2026-03-13 -- Phase 6 Plan 02 complete (context injection, canvas drag-and-drop, file icons)
+stopped_at: Completed 06-03-PLAN.md
+last_updated: "2026-03-13T18:36:30Z"
+last_activity: 2026-03-13 -- Phase 6 Plan 03 complete (FileViewer UI, chat drop zone, header file count)
 progress:
   total_phases: 8
   completed_phases: 5
-  total_plans: 15
-  completed_plans: 15
+  total_plans: 17
+  completed_plans: 16
   percent: 100
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Multi-perspective, context-aware AI advisory for complex production deals -- type one question, get informed responses from five domain specialists who already know the deal history.
-**Current focus:** Phase 6 in progress -- Context injection and canvas interaction complete, file viewer UI next
+**Current focus:** Phase 6 complete -- All file handling features delivered, ready for Phase 7
 
 ## Current Position
 
 Phase: 6 of 8 (File Handling)
-Plan: 2 of 3
+Plan: 3 of 3
 Status: executing
-Last activity: 2026-03-13 -- Phase 6 Plan 02 complete (context injection, canvas drag-and-drop, file icons)
+Last activity: 2026-03-13 -- Phase 6 Plan 03 complete (FileViewer UI, chat drop zone, header file count)
 
-Progress: [████████████████████] 100% (15/15 plans complete)
+Progress: [█████████░] 94% (16/17 plans complete)
 
 ## Performance Metrics
 
@@ -48,7 +48,7 @@ Progress: [████████████████████] 100% (1
 | 03 Integration | 3/3 | 7 min | 2 min |
 | 04 War Room | 3/3 | 25 min | 8 min |
 | 05 Deal Rooms | 1/2 | 4 min | 4 min |
-| 06 File Handling | 2/3 | 10 min | 5 min |
+| 06 File Handling | 3/3 | 13 min | 4 min |
 
 **Recent Trend:**
 - Last 5 plans: 04-01 (5 min), 04-02 (5 min), 04-03 (15 min), 05-01 (4 min)
@@ -62,6 +62,7 @@ Progress: [████████████████████] 100% (1
 | Phase 05 P01 | 4min | 2 tasks | 8 files |
 | Phase 06 P01 | 4min | 2 tasks | 8 files |
 | Phase 06 P02 | 6min | 2 tasks | 5 files |
+| Phase 06 P03 | 3min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -127,6 +128,9 @@ Recent decisions affecting current work:
 - [Phase 06]: Desk-area-only drop zone highlight with amber dashed border (not full room)
 - [Phase 06]: Per-file cap 2000 tokens, total cap 8000 tokens for context budget
 - [Phase 06]: onFileClickCallback pattern for clean React file viewer integration
+- [Phase 06]: FileViewer overlays chat panel with absolute inset-0 z-50 within chat column container
+- [Phase 06]: Only Close and Delete buttons in FileViewer (no Share/Copy/Re-extract) per locked user decision
+- [Phase 06]: Three-column flexbox layout (DealSidebar left, OfficeCanvas center, ChatPanel right)
 
 ### Research Flags
 
@@ -146,6 +150,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T17:21:49Z
-Stopped at: Completed 06-02-PLAN.md
-Resume file: .planning/phases/06-file-handling/06-02-SUMMARY.md
+Last session: 2026-03-13T18:36:30Z
+Stopped at: Completed 06-03-PLAN.md
+Resume file: .planning/phases/06-file-handling/06-03-SUMMARY.md
