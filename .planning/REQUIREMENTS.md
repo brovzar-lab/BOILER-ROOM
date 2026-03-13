@@ -22,10 +22,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **AGNT-01**: Each agent has a unique system prompt with base rules + persona + domain expertise
 - [x] **AGNT-02**: Diana (CFO) responds with financial analysis, P&L focus, Mexican film finance context
-- [ ] **AGNT-03**: Marcos (Counsel) responds with legal analysis, contract focus, Mexican entertainment law context
-- [ ] **AGNT-04**: Sasha (Deals) responds with deal strategy, negotiation focus, Latin American content market context
-- [ ] **AGNT-05**: Roberto (Accounting) responds with tax/incentive analysis, compliance focus, EFICINE/Decreto 2026 context
-- [ ] **AGNT-06**: Valentina (Development) responds with creative/market analysis, slate strategy, platform buyer preferences
+- [x] **AGNT-03**: Marcos (Counsel) responds with legal analysis, contract focus, Mexican entertainment law context
+- [x] **AGNT-04**: Sasha (Deals) responds with deal strategy, negotiation focus, Latin American content market context
+- [x] **AGNT-05**: Roberto (Accounting) responds with tax/incentive analysis, compliance focus, EFICINE/Decreto 2026 context
+- [x] **AGNT-06**: Valentina (Development) responds with creative/market analysis, slate strategy, platform buyer preferences
 - [ ] **AGNT-07**: Each agent maintains independent conversation history
 - [ ] **AGNT-08**: Agent status is visible: idle, thinking (API call in progress), needs-attention (unread response)
 
@@ -167,10 +167,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | NAV-01 | Phase 2 | Complete |
 | NAV-02 | Phase 2 | Complete |
 | NAV-04 | Phase 2 | Complete |
-| AGNT-03 | Phase 3 | Pending |
-| AGNT-04 | Phase 3 | Pending |
-| AGNT-05 | Phase 3 | Pending |
-| AGNT-06 | Phase 3 | Pending |
+| AGNT-03 | Phase 3 | Complete |
+| AGNT-04 | Phase 3 | Complete |
+| AGNT-05 | Phase 3 | Complete |
+| AGNT-06 | Phase 3 | Complete |
 | AGNT-07 | Phase 3 | Pending |
 | AGNT-08 | Phase 3 | Pending |
 | NAV-03 | Phase 3 | Pending |

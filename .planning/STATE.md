@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in-progress
-stopped_at: Completed Phase 2 Canvas Engine (all 3 plans, 73 tests, visual verification passed)
-last_updated: "2026-03-13T01:42:00Z"
+status: completed
+stopped_at: Completed 03-01-PLAN.md (Agent Personas)
+last_updated: "2026-03-13T02:36:36.089Z"
 last_activity: 2026-03-13 -- Completed Phase 2 Canvas Engine
 progress:
   total_phases: 8
   completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 9
+  completed_plans: 7
   percent: 25
 ---
 
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Multi-perspective, context-aware AI advisory for complex production deals -- type one question, get informed responses from five domain specialists who already know the deal history.
-**Current focus:** Phase 2 Complete — Ready for Phase 3
+**Current focus:** Phase 3 In Progress — Integration + All Agents
 
 ## Current Position
 
-Phase: 2 of 8 (Canvas Engine) — COMPLETE
-Next: Phase 3 (Integration + All Agents)
-Status: Phase 2 Complete
-Last activity: 2026-03-13 -- Completed Phase 2 Canvas Engine
+Phase: 3 of 8 (Integration + All Agents) — Plan 1/3 COMPLETE
+Next: Phase 3 Plan 02 (Canvas-to-Chat Integration)
+Status: Phase 3 In Progress
+Last activity: 2026-03-13 -- Completed 03-01 Agent Personas
 
-Progress: [██████░░░░] 25%
+Progress: [████████░░] 78%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
+- Total plans completed: 7
 - Average duration: 7 min
-- Total execution time: 0.75 hours
+- Total execution time: 0.8 hours
 
 **By Phase:**
 
@@ -46,9 +46,11 @@ Progress: [██████░░░░] 25%
 | 01 Foundation | 3/3 | 20 min | 7 min |
 | 02 Canvas Engine | 3/3 | 27 min | 9 min |
 
+| 03 Integration | 1/3 | 2 min | 2 min |
+
 **Recent Trend:**
-- Last 5 plans: 01-03 (12 min), 02-01 (6 min), 02-02 (6 min), 02-03 (15 min)
-- Trend: Stable (02-03 longer due to human verification + bug fixes)
+- Last 5 plans: 01-03 (12 min), 02-01 (6 min), 02-02 (6 min), 02-03 (15 min), 03-01 (2 min)
+- Trend: Fast plan (config-only, no logic)
 
 *Updated after each plan completion*
 
@@ -86,6 +88,8 @@ Recent decisions affecting current work:
 - FurnitureItem with roomId string key for per-room filtering and hallway decorations
 - Tailwind manages CSS canvas sizing (w-full h-full) -- never set canvas.style.width/height
 - Brightened placeholder colors for dark-theme visibility (floor #6e, wall #45, hallway #58)
+- [Phase 03]: Persona prompts use bilingual-natural style with Spanish terms of art and cross-agent references
+- [Phase 03]: Agent registry upgraded from Partial<Record> to full Record<AgentId, PersonaConfig> with PersonaConfig exported
 
 ### Research Flags
 
@@ -105,6 +109,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13
-Stopped at: Completed Phase 2 Canvas Engine (all 3 plans, 73 tests, visual verification passed)
+Last session: 2026-03-13T02:36:36.086Z
+Stopped at: Completed 03-01-PLAN.md (Agent Personas)
 Resume file: None
