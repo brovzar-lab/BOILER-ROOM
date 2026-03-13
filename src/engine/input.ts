@@ -70,6 +70,24 @@ export function setupInputHandlers(canvas: HTMLCanvasElement): () => void {
       return;
     }
 
+    // Escape: navigate BILLY back to his office
+    if (e.key === 'Escape') {
+      const state = useOfficeStore.getState();
+      if (state.activeRoomId === 'billy') return;
+
+      const billyRoom = ROOMS.find((r) => r.id === 'billy');
+      if (!billyRoom) return;
+
+      state.setTargetRoom('billy');
+      startWalk(
+        'billy',
+        billyRoom.billyStandTile.col,
+        billyRoom.billyStandTile.row,
+        OFFICE_TILE_MAP,
+      );
+      return;
+    }
+
     // Number keys 1-5: navigate BILLY to agent rooms
     const agentId = KEY_TO_AGENT[e.key];
     if (agentId) {

@@ -220,11 +220,12 @@ export function updateAllCharacters(
   if (billy && (billy.tileCol !== prevBillyCol || billy.tileRow !== prevBillyRow)) {
     const room = getRoomAtTile(billy.tileCol, billy.tileRow);
 
-    if (room && room.id !== 'billy') {
-      // BILLY entered an agent's room
-      // Check if BILLY arrived at the billyStandTile (path exhausted)
-      if (billy.state === 'idle' && billy.path.length === 0) {
-        // Start knock pause
+    if (room && billy.state === 'idle' && billy.path.length === 0) {
+      if (room.id === 'billy') {
+        // BILLY returned to his own office — show overview panel
+        state.setActiveRoom('billy');
+      } else {
+        // BILLY entered an agent's room — start knock pause
         knockTimers.set('billy', KNOCK_DURATION);
 
         // Make agent face BILLY
