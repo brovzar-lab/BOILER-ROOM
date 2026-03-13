@@ -62,8 +62,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **DEAL-02**: Each deal has its own conversation histories per agent
 - [x] **DEAL-03**: Each deal has its own uploaded files and agent memory
 - [x] **DEAL-04**: Switching deals atomically switches all agent contexts (history, files, memory)
-- [ ] **DEAL-05**: Deal switcher UI shows deal name, last activity, and per-agent activity summary
-- [ ] **DEAL-06**: Active deal name is prominently displayed in the interface
+- [x] **DEAL-05**: Deal switcher UI shows deal name, last activity, and per-agent activity summary
+- [x] **DEAL-06**: Active deal name is prominently displayed in the interface
 
 ### File Handling
 
@@ -186,8 +186,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEAL-02 | Phase 5 | Complete |
 | DEAL-03 | Phase 5 | Complete |
 | DEAL-04 | Phase 5 | Complete |
-| DEAL-05 | Phase 5 | Pending |
-| DEAL-06 | Phase 5 | Pending |
+| DEAL-05 | Phase 5 | Complete |
+| DEAL-06 | Phase 5 | Complete |
 | FILE-01 | Phase 6 | Pending |
 | FILE-02 | Phase 6 | Pending |
 | FILE-03 | Phase 6 | Pending |

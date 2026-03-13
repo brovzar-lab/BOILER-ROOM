@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Canvas Engine** - Top-down pixel art office rendering, BILLY avatar with pathfinding, placeholder agent sprites, camera with integer zoom
 - [x] **Phase 3: Integration + All Agents** - Wire Canvas navigation to chat, expand to 5 agent personas, agent status indicators synced to streaming (completed 2026-03-13)
 - [x] **Phase 4: War Room** - Broadcast to all agents simultaneously, parallel color-coded streaming, rate-limit-aware concurrency, partial failure handling (completed 2026-03-13)
-- [ ] **Phase 5: Deal Rooms** - Named deal entities, per-deal conversation/file/memory scoping, atomic context switching
+- [x] **Phase 5: Deal Rooms** - Named deal entities, per-deal conversation/file/memory scoping, atomic context switching (completed 2026-03-13)
 - [ ] **Phase 6: File Handling** - Drag-and-drop PDF/DOCX, Web Worker text extraction, file content injected into agent context
 - [ ] **Phase 7: Agent Memory** - Structured fact extraction from conversations, memory panel, cross-agent knowledge sharing with attribution
 - [ ] **Phase 8: Polish** - Production pixel art sprites, personality animations, ambient sound, responsive design, bundle optimization
@@ -108,8 +108,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Deal types, dealStore CRUD, chatStore deal-scoping, buildContext Layer 3 injection, migration utility (TDD)
-- [ ] 05-02-PLAN.md — Deal sidebar UI, deal cards with agent dots, Header deal badge, App.tsx initialization, hook deal-awareness, fade transition, human verification
+- [x] 05-01-PLAN.md — Deal types, dealStore CRUD, chatStore deal-scoping, buildContext Layer 3 injection, migration utility (TDD)
+- [x] 05-02-PLAN.md — Deal sidebar UI, deal cards with agent dots, Header deal badge, App.tsx initialization, hook deal-awareness, fade transition, human verification
 
 ### Phase 6: File Handling
 **Goal**: User can drag-and-drop PDF and DOCX files onto agent desks, with extracted text injected into the agent's conversation context
@@ -174,7 +174,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 2. Canvas Engine | 3/3 | Complete | 2026-03-13 |
 | 3. Integration + All Agents | 3/3 | Complete   | 2026-03-13 |
 | 4. War Room | 3/3 | Complete | 2026-03-13 |
-| 5. Deal Rooms | 1/2 | In Progress|  |
+| 5. Deal Rooms | 2/2 | Complete | 2026-03-13 |
 | 6. File Handling | 0/3 | Not started | - |
 | 7. Agent Memory | 0/3 | Not started | - |
 | 8. Polish | 0/2 | Not started | - |
