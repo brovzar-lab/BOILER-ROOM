@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 07-01-PLAN.md
-last_updated: "2026-03-13T19:45:40.820Z"
-last_activity: 2026-03-13 -- Phase 7 Plan 01 complete (MemoryFact types, extraction service, memoryStore CRUD)
+stopped_at: Completed 07-02-PLAN.md
+last_updated: "2026-03-13T19:51:06.965Z"
+last_activity: 2026-03-13 -- Phase 7 Plan 02 complete (Layer 5 memory injection + extraction wiring)
 progress:
   total_phases: 8
   completed_phases: 6
   total_plans: 20
-  completed_plans: 18
-  percent: 85
+  completed_plans: 19
+  percent: 95
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 ## Current Position
 
 Phase: 7 of 8 (Agent Memory)
-Plan: 1 of 3
+Plan: 2 of 3
 Status: executing
-Last activity: 2026-03-13 -- Phase 7 Plan 01 complete (MemoryFact types, extraction service, memoryStore CRUD)
+Last activity: 2026-03-13 -- Phase 7 Plan 02 complete (Layer 5 memory injection + extraction wiring)
 
-Progress: [████████░░] 85% (17/20 plans complete)
+Progress: [██████████] 95% (19/20 plans complete)
 
 ## Performance Metrics
 
@@ -64,6 +64,7 @@ Progress: [████████░░] 85% (17/20 plans complete)
 | Phase 06 P02 | 6min | 2 tasks | 5 files |
 | Phase 06 P03 | 3min | 2 tasks | 5 files |
 | Phase 07 P01 | 3min | 2 tasks | 5 files |
+| Phase 07 P02 | 3min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -135,6 +136,9 @@ Recent decisions affecting current work:
 - [Phase 07]: Prompt-based JSON extraction with code fence fallback over SDK structured outputs
 - [Phase 07]: Word overlap >50% threshold for memory fact deduplication
 - [Phase 07]: loadFacts replaces state (not appends) to prevent stale data on deal switch
+- [Phase 07]: Memory token budget 2000+2000 enforced via estimateTokens per-line accumulation
+- [Phase 07]: Cross-agent facts grouped by agent name with getAgent() display name lookup
+- [Phase 07]: Extraction uses void prefix for non-blocking fire-and-forget in both hooks
 
 ### Research Flags
 
@@ -154,6 +158,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T19:45:40.818Z
-Stopped at: Completed 07-01-PLAN.md
+Last session: 2026-03-13T19:51:06.963Z
+Stopped at: Completed 07-02-PLAN.md
 Resume file: None
