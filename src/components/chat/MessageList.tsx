@@ -34,7 +34,7 @@ export function MessageList({ messages, isStreaming, streamingContent, agentName
     <div className="flex-1 overflow-y-auto px-4 py-6">
       <div className="max-w-3xl mx-auto">
         {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} />
+          <MessageBubble key={msg.id} message={msg} agentName={agentName} />
         ))}
 
         {isStreaming && <StreamingIndicator content={streamingContent} />}

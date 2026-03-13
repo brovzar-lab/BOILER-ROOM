@@ -3,9 +3,11 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import type { Message } from '@/types/chat';
+import { WarRoomBadge } from './WarRoomBadge';
 
 interface MessageBubbleProps {
   message: Message;
+  agentName?: string;
 }
 
 /**
@@ -15,7 +17,7 @@ interface MessageBubbleProps {
  * Assistant messages: left-aligned on dark card with "Diana" label.
  * Summary messages: collapsed with subtle visual indicator.
  */
-export const MessageBubble = memo(function MessageBubble({ message }: MessageBubbleProps) {
+export const MessageBubble = memo(function MessageBubble({ message, agentName = 'Diana' }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const isSummary = message.isSummary === true;
 
@@ -43,6 +45,11 @@ export const MessageBubble = memo(function MessageBubble({ message }: MessageBub
     return (
       <div className="flex justify-end mb-4">
         <div className="max-w-[85%]">
+          {message.source === 'war-room' && (
+            <div className="flex justify-end mb-1">
+              <WarRoomBadge />
+            </div>
+          )}
           <div className="rounded-lg px-4 py-3 bg-[--color-lemon-600]/20 border border-[--color-lemon-600]/30">
             <p className="text-[--color-text-primary] whitespace-pre-wrap">{message.content}</p>
           </div>
@@ -54,11 +61,16 @@ export const MessageBubble = memo(function MessageBubble({ message }: MessageBub
     );
   }
 
+  const isWarRoom = message.source === 'war-room';
+
   // Assistant message
   return (
     <div className="flex justify-start mb-4">
       <div className="max-w-[85%]">
-        <div className="text-xs text-[--color-lemon-500] mb-1 font-medium">Diana</div>
+        <div className="flex items-center gap-2 text-xs text-[--color-lemon-500] mb-1 font-medium">
+          <span>{agentName}</span>
+          {isWarRoom && <WarRoomBadge />}
+        </div>
         <div className="rounded-lg px-4 py-3 bg-[--color-surface-card] border border-[--color-surface-border]">
           <div className="prose prose-invert prose-sm max-w-none">
             <MarkdownContent content={message.content} />

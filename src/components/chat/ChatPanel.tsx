@@ -7,6 +7,7 @@ import { ChatInput } from './ChatInput';
 import { TokenCounter } from './TokenCounter';
 import { ErrorBanner } from './ErrorBanner';
 import { OverviewPanel } from './OverviewPanel';
+import { WarRoomPanel } from './WarRoomPanel';
 import type { AgentId } from '@/types/agent';
 
 /** Valid agent room IDs (excludes 'billy' and 'war-room') */
@@ -25,6 +26,14 @@ function isAgentRoom(id: string | null): id is AgentId {
  */
 export function ChatPanel() {
   const activeRoomId = useOfficeStore((s) => s.activeRoomId);
+
+  if (activeRoomId === 'war-room') {
+    return (
+      <div className="flex flex-col flex-1 min-h-0 bg-[--color-surface-bg]">
+        <WarRoomPanel />
+      </div>
+    );
+  }
 
   if (isAgentRoom(activeRoomId)) {
     const agent = getAgent(activeRoomId);
