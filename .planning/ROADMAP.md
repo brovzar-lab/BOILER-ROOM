@@ -13,7 +13,7 @@ Lemon Command Center delivers a multi-agent AI advisory workspace through 8 phas
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation + Single-Agent Chat** - React/Vite scaffold, streaming chat with Diana (CFO), IndexedDB persistence, context window management, dark theme
-- [ ] **Phase 2: Canvas Engine** - Isometric pixel art office rendering, BILLY avatar with pathfinding, placeholder agent sprites, camera with integer zoom
+- [ ] **Phase 2: Canvas Engine** - Top-down pixel art office rendering, BILLY avatar with pathfinding, placeholder agent sprites, camera with integer zoom
 - [ ] **Phase 3: Integration + All Agents** - Wire Canvas navigation to chat, expand to 5 agent personas, agent status indicators synced to streaming
 - [ ] **Phase 4: War Room** - Broadcast to all agents simultaneously, parallel color-coded streaming, rate-limit-aware concurrency, partial failure handling
 - [ ] **Phase 5: Deal Rooms** - Named deal entities, per-deal conversation/file/memory scoping, atomic context switching
@@ -42,21 +42,21 @@ Plans:
 - [x] 01-03-PLAN.md — Chat UI components, markdown rendering, useChat hook wiring, persistence loading, human verification
 
 ### Phase 2: Canvas Engine
-**Goal**: Isometric pixel art office renders at 60fps with BILLY walking between rooms via BFS pathfinding, entirely independent of the chat system
+**Goal**: Top-down pixel art office renders at 60fps with BILLY walking between rooms via BFS pathfinding, entirely independent of the chat system
 **Depends on**: Phase 1 (shares Zustand store infrastructure and app shell)
 **Requirements**: ENGN-01, ENGN-02, ENGN-03, ENGN-04, ENGN-05, ENGN-06, NAV-01, NAV-02, NAV-04
-**Research**: NEEDED -- sprite sheet format, tile dimensions, office floor plan layout, pixel-agents repo study
+**Research**: COMPLETE -- pixel-agents repo study, sprite sheet format, tile dimensions, office floor plan layout
 **Success Criteria** (what must be TRUE):
-  1. Isometric office with 7 distinct rooms (5 agent offices, 1 War Room, 1 BILLY corner) renders on Canvas at stable 60fps
+  1. Top-down office with 7 distinct rooms (5 agent offices, 1 War Room, 1 BILLY corner) renders on Canvas at stable 60fps
   2. User clicks a room and BILLY walks there along a BFS-computed path (not teleporting)
   3. Agent placeholder sprites display idle animations at their desks (typing, reading, coffee)
   4. Canvas supports pixel-perfect integer zoom levels and renders correctly on HiDPI/Retina displays
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
-- [ ] 02-03: TBD
+- [ ] 02-01-PLAN.md — Engine core: types, tile map with BFS pathfinding, 7-room office layout, renderer, camera, game loop, officeStore expansion, vitest setup
+- [ ] 02-02-PLAN.md — Character state machine, BILLY movement with speed ramping, agent idle/work animations, click-to-walk input, knock animation
+- [ ] 02-03-PLAN.md — React OfficeCanvas component, RoomLabel overlay, ZoomControls, App.tsx wiring, human visual verification
 
 ### Phase 3: Integration + All Agents
 **Goal**: Walking to an agent's room opens their unique chat panel, all 5 agents have distinct personas, and agent status is visible in the office
