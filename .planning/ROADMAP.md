@@ -133,19 +133,19 @@ Plans:
 **Goal**: Agents automatically extract and retain structured facts from conversations, building persistent knowledge per deal that informs future responses and can be shared across agents
 **Depends on**: Phase 5 (deal-scoped storage), Phase 1 (context window management -- memory must not be summarized)
 **Requirements**: MEM-01, MEM-02, MEM-03, MEM-04, MEM-05, MEM-06
-**Research**: NEEDED -- memory extraction prompt engineering, structured fact extraction from financial domain conversations
+**Research**: COMPLETE -- memory extraction prompt engineering, structured fact extraction from financial domain conversations
 **Success Criteria** (what must be TRUE):
   1. After a conversation, key facts (decisions, dollar amounts, dates, action items) are automatically extracted without user intervention
   2. User can open a memory panel and see structured facts an agent "knows" about the current deal
   3. Structured memory is prepended to the agent's system prompt and visibly influences response quality
   4. Structured memory persists permanently and is never auto-summarized (only narrative history is summarizable)
   5. Agents can reference facts from other agents' memory with clear attribution (e.g., "Per Diana's financial analysis...")
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
-- [ ] 07-03: TBD
+- [ ] 07-01-PLAN.md — MemoryFact types, LLM extraction service, memoryStore CRUD with IndexedDB persistence (TDD)
+- [ ] 07-02-PLAN.md — buildContext Layer 5 memory injection, cross-agent attribution, useChat/useWarRoom extraction wiring
+- [ ] 07-03-PLAN.md — MemoryPanel slide-over UI, ChatPanel memory button, Header fact count, human verification
 
 ### Phase 8: Polish
 **Goal**: Production-quality visual and audio experience with polished sprites, personality-driven animations, ambient sound, and responsive layout
