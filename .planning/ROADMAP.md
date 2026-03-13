@@ -69,12 +69,12 @@ Plans:
   3. Each agent maintains independent conversation history that persists separately
   4. Agent sprites animate in sync with their status: idle at desk, typing animation while API streams, visual indicator for unread messages
   5. Room indicators show which agents have active conversations and unread responses
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
-- [ ] 03-03: TBD
+- [ ] 03-01-PLAN.md — 4 agent personas (Marcos, Sasha, Roberto, Valentina) + agent registry expansion
+- [ ] 03-02-PLAN.md — Canvas-chat integration bridge: status sync, chat panel agent switching, keyboard shortcuts, speech bubbles
+- [ ] 03-03-PLAN.md — Overview panel at BILLY's office, dynamic Header, gameLoop wiring, human visual verification
 
 ### Phase 4: War Room
 **Goal**: User can broadcast a question to all 5 agents simultaneously and see parallel streaming responses, each feeding back into individual agent histories
