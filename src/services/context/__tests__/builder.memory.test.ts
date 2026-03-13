@@ -145,15 +145,16 @@ describe('buildContext Layer 5 memory injection', () => {
   });
 
   it('caps own-agent memory at ~2000 tokens (excess facts omitted)', () => {
-    // Each fact ~200 chars = ~50 tokens. 50 facts = ~2500 tokens, should cap at ~40 facts
+    // Each fact ~400 chars = ~100 tokens. 25 facts = ~2500 tokens, should cap before all 25
+    const padding = 'Y'.repeat(350);
     mockFacts = [];
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 25; i++) {
       mockFacts.push({
         id: `f${i}`,
         agentId: 'diana',
         dealId: 'deal-1',
         category: 'financial',
-        content: `Fact number ${i} with some padding text to make it longer for token counting purposes here`,
+        content: `Fact number ${i} ${padding}`,
         confidence: 'high',
         sourceAgentId: 'diana',
         createdAt: 1000,
@@ -162,12 +163,12 @@ describe('buildContext Layer 5 memory injection', () => {
     }
 
     const result = buildContext('diana', messages);
-    // Should not contain ALL 50 facts
-    const factCount = (result.systemPrompt.match(/- \[financial\]/g) || []).length;
-    expect(factCount).toBeLessThan(50);
+    // Should not contain ALL 25 facts
+    const factCount = (result.systemPrompt.match(/- \[financial\] Fact number/g) || []).length;
+    expect(factCount).toBeLessThan(25);
     expect(factCount).toBeGreaterThan(0);
-    // Fact 49 (lowest updatedAt) should be omitted
-    expect(result.systemPrompt).not.toContain('Fact number 49');
+    // Last fact (lowest updatedAt) should be omitted
+    expect(result.systemPrompt).not.toContain('Fact number 24');
   });
 
   it('includes cross-agent facts as "## Other Advisors\' Notes" grouped by agent name', () => {
@@ -206,14 +207,15 @@ describe('buildContext Layer 5 memory injection', () => {
 
   it('caps cross-agent memory at ~2000 tokens independently', () => {
     mockFacts = [];
-    // Add many cross-agent facts that exceed 2000 tokens
-    for (let i = 0; i < 50; i++) {
+    // Each fact ~400 chars = ~100 tokens. 25 facts = ~2500 tokens, should cap before all 25
+    const padding = 'X'.repeat(350);
+    for (let i = 0; i < 25; i++) {
       mockFacts.push({
         id: `cf${i}`,
         agentId: 'marcos',
         dealId: 'deal-1',
         category: 'financial',
-        content: `Cross fact ${i} with padding text to increase token count for budget testing purposes`,
+        content: `Cross fact ${i} ${padding}`,
         confidence: 'high',
         sourceAgentId: 'marcos',
         createdAt: 1000,
@@ -223,7 +225,7 @@ describe('buildContext Layer 5 memory injection', () => {
 
     const result = buildContext('diana', messages);
     const crossFactCount = (result.systemPrompt.match(/- \[financial\] Cross fact/g) || []).length;
-    expect(crossFactCount).toBeLessThan(50);
+    expect(crossFactCount).toBeLessThan(25);
     expect(crossFactCount).toBeGreaterThan(0);
   });
 

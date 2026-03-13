@@ -5,6 +5,7 @@ import { getAgent } from '@/config/agents';
 import { estimateTokens } from './tokenCounter';
 import { useDealStore } from '@/store/dealStore';
 import { useFileStore } from '@/store/fileStore';
+import { useMemoryStore } from '@/store/memoryStore';
 
 export interface BuiltContext {
   systemPrompt: string;
@@ -22,7 +23,7 @@ export interface BuiltContext {
  * 2.5. (Optional) Cross-visibility block for War Room follow-ups
  * 3. Deal context (name + description of active deal)
  * 4. File summaries (uploaded documents per agent/deal)
- * 5. (Future) Agent memory -- Phase 7
+ * 5. Agent memory (own-agent + cross-agent facts)
  * 6. Conversation history (with summary support)
  */
 export function buildContext(
@@ -84,7 +85,70 @@ export function buildContext(
     layers.push(fileBlock);
   }
 
-  // Layer 5: Reserved for agent memory (Phase 7)
+  // Layer 5: Agent memory (own-agent + cross-agent facts)
+  const MEMORY_TOKEN_CAP = 2000;
+  const CROSS_AGENT_TOKEN_CAP = 2000;
+
+  const { facts: allFacts } = useMemoryStore.getState();
+  const currentDealId = activeDealId;
+
+  // Own-agent facts
+  if (currentDealId) {
+    const ownFacts = allFacts
+      .filter((f) => f.agentId === agentId && f.dealId === currentDealId)
+      .sort((a, b) => b.updatedAt - a.updatedAt);
+
+    if (ownFacts.length > 0) {
+      let memoryBlock = '## Your Memory\n\n';
+      let usedTokens = 0;
+
+      for (const fact of ownFacts) {
+        const line = `- [${fact.category}] ${fact.content}\n`;
+        const lineTokens = estimateTokens(line);
+        if (usedTokens + lineTokens > MEMORY_TOKEN_CAP) break;
+        memoryBlock += line;
+        usedTokens += lineTokens;
+      }
+
+      layers.push(memoryBlock);
+    }
+
+    // Cross-agent facts
+    const crossFacts = allFacts
+      .filter((f) => f.agentId !== agentId && f.dealId === currentDealId)
+      .sort((a, b) => b.updatedAt - a.updatedAt);
+
+    if (crossFacts.length > 0) {
+      // Group by agentId
+      const grouped: Record<string, typeof crossFacts> = {};
+      let crossUsedTokens = 0;
+
+      for (const fact of crossFacts) {
+        const line = `- [${fact.category}] ${fact.content}\n`;
+        const lineTokens = estimateTokens(line);
+        if (crossUsedTokens + lineTokens > CROSS_AGENT_TOKEN_CAP) break;
+
+        if (!grouped[fact.agentId]) {
+          grouped[fact.agentId] = [];
+        }
+        grouped[fact.agentId].push(fact);
+        crossUsedTokens += lineTokens;
+      }
+
+      let crossBlock = "## Other Advisors' Notes\n\n";
+      for (const [aid, facts] of Object.entries(grouped)) {
+        const agentConfig = getAgent(aid as AgentId);
+        const agentName = agentConfig?.name ?? aid.charAt(0).toUpperCase() + aid.slice(1);
+        crossBlock += `### ${agentName}\n`;
+        for (const fact of facts) {
+          crossBlock += `- [${fact.category}] ${fact.content}\n`;
+        }
+        crossBlock += '\n';
+      }
+
+      layers.push(crossBlock);
+    }
+  }
 
   const systemPrompt = layers.join('\n\n');
 
