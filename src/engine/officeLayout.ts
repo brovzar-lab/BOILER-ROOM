@@ -185,8 +185,8 @@ export const ROOMS: Room[] = [
     name: 'War Room',
     tileRect: { col: 16, row: 11, width: 10, height: 10 },
     doorTile: { col: 20, row: 11 },
-    seatTile: { col: 20, row: 15 },
-    billyStandTile: { col: 21, row: 15 },
+    seatTile: { col: 20, row: 13 },
+    billyStandTile: { col: 20, row: 13 },
   },
   {
     id: 'marcos',

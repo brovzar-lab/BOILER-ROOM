@@ -380,11 +380,11 @@ describe('updateAllCharacters - War Room entry', () => {
     const billyChar = makeCharacter({
       id: 'billy',
       state: 'walk',
-      tileCol: 21,
+      tileCol: 20,
       tileRow: 14,
-      x: 21 * TILE_SIZE,
+      x: 20 * TILE_SIZE,
       y: 14 * TILE_SIZE,
-      path: [{ col: 21, row: 15 }], // billyStandTile for war-room
+      path: [{ col: 20, row: 13 }], // billyStandTile for war-room
       speed: WALK_SPEED,
       moveProgress: 0.99,
     });
@@ -418,8 +418,8 @@ describe('updateAllCharacters - War Room entry', () => {
           name: 'War Room',
           tileRect: { col: 16, row: 11, width: 10, height: 10 },
           doorTile: { col: 20, row: 11 },
-          seatTile: { col: 20, row: 15 },
-          billyStandTile: { col: 21, row: 15 },
+          seatTile: { col: 20, row: 13 },
+          billyStandTile: { col: 20, row: 13 },
         },
         {
           id: 'diana',
@@ -506,7 +506,7 @@ describe("'w' key shortcut", () => {
         ...actual,
         findPath: vi.fn(() => [
           { col: 21, row: 10 },
-          { col: 21, row: 15 },
+          { col: 20, row: 13 },
         ]),
       };
     });
