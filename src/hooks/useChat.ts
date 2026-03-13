@@ -6,6 +6,7 @@ import { useOfficeStore } from '@/store/officeStore';
 import { sendStreamingMessage } from '@/services/anthropic/stream';
 import { buildContext } from '@/services/context/builder';
 import { summarizeConversation } from '@/services/context/summarizer';
+import { extractAndStoreMemory } from '@/services/memory/extractMemory';
 import { SUMMARIZE_THRESHOLD, TOKEN_LIMITS, DEFAULT_MODEL } from '@/services/context/tokenCounter';
 
 /**
@@ -114,6 +115,10 @@ export function useChat(agentId: AgentId = 'diana') {
               role: 'assistant',
               content: fullContent,
             });
+
+            // Fire-and-forget memory extraction (non-blocking, non-fatal)
+            const currentDealId = useDealStore.getState().activeDealId ?? 'default';
+            void extractAndStoreMemory(agentId, content, fullContent, currentDealId);
 
             // Update token count from context builder
             const updatedConversation = useChatStore.getState().conversations[convId];

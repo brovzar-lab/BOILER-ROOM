@@ -5,6 +5,8 @@ import { useOfficeStore } from '@/store/officeStore';
 import { sendStreamingMessage } from '@/services/anthropic/stream';
 import { retryWithBackoff } from '@/services/anthropic/retryBackoff';
 import { buildCrossVisibilityBlock } from '@/services/context/warRoomSummary';
+import { useDealStore } from '@/store/dealStore';
+import { extractAndStoreMemory } from '@/services/memory/extractMemory';
 
 const AGENT_IDS: AgentId[] = ['diana', 'marcos', 'sasha', 'roberto', 'valentina'];
 
@@ -133,6 +135,10 @@ export function useWarRoom() {
                 content: fullContent,
                 source: 'war-room',
               });
+
+              // Fire-and-forget memory extraction per agent
+              const currentDealId = useDealStore.getState().activeDealId ?? 'default';
+              void extractAndStoreMemory(agentId, content, fullContent, currentDealId);
             },
             onError: (error: Error) => {
               // Check if it's a 429 retryable error
