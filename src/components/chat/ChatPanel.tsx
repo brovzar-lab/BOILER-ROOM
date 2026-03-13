@@ -6,6 +6,7 @@ import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { TokenCounter } from './TokenCounter';
 import { ErrorBanner } from './ErrorBanner';
+import { OverviewPanel } from './OverviewPanel';
 import type { AgentId } from '@/types/agent';
 
 /** Valid agent room IDs (excludes 'billy' and 'war-room') */
@@ -53,9 +54,7 @@ export function ChatPanel() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 bg-[--color-surface-bg]">
-      <div className="flex-1 flex items-center justify-center text-[--color-text-muted]">
-        Visit an agent's office to start chatting
-      </div>
+      <OverviewPanel />
     </div>
   );
 }
