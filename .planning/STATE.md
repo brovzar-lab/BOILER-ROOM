@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 03-01-PLAN.md (Agent Personas)
-last_updated: "2026-03-13T02:36:36.089Z"
-last_activity: 2026-03-13 -- Completed Phase 2 Canvas Engine
+status: executing
+stopped_at: Completed 03-02-PLAN.md (Canvas-to-Chat Integration)
+last_updated: "2026-03-13T02:43:44.702Z"
+last_activity: 2026-03-13 -- Completed 03-02 Canvas-to-Chat Integration
 progress:
   total_phases: 8
   completed_phases: 2
   total_plans: 9
-  completed_plans: 7
-  percent: 25
+  completed_plans: 8
+  percent: 89
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 
 ## Current Position
 
-Phase: 3 of 8 (Integration + All Agents) — Plan 1/3 COMPLETE
-Next: Phase 3 Plan 02 (Canvas-to-Chat Integration)
+Phase: 3 of 8 (Integration + All Agents) -- Plan 2/3 COMPLETE
+Next: Phase 3 Plan 03 (Overview Panel)
 Status: Phase 3 In Progress
-Last activity: 2026-03-13 -- Completed 03-01 Agent Personas
+Last activity: 2026-03-13 -- Completed 03-02 Canvas-to-Chat Integration
 
-Progress: [████████░░] 78%
+Progress: [█████████░] 89%
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Progress: [████████░░] 78%
 - Trend: Fast plan (config-only, no logic)
 
 *Updated after each plan completion*
+| Phase 03 P02 | 3min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,8 @@ Recent decisions affecting current work:
 - Brightened placeholder colors for dark-theme visibility (floor #6e, wall #45, hallway #58)
 - [Phase 03]: Persona prompts use bilingual-natural style with Spanish terms of art and cross-agent references
 - [Phase 03]: Agent registry upgraded from Partial<Record> to full Record<AgentId, PersonaConfig> with PersonaConfig exported
+- [Phase 03]: ChatPanel split into outer (room-aware router) + inner (AgentChatPanel) for clean useChat initialization per agent via React key prop
+- [Phase 03]: Agent status flows through Zustand bridge: chatStore streaming -> officeStore agentStatuses -> engine reads via getState() -> canvas renders overlays
 
 ### Research Flags
 
@@ -109,6 +112,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T02:36:36.086Z
-Stopped at: Completed 03-01-PLAN.md (Agent Personas)
+Last session: 2026-03-13T02:43:44.699Z
+Stopped at: Completed 03-02-PLAN.md (Canvas-to-Chat Integration)
 Resume file: None

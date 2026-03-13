@@ -26,8 +26,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **AGNT-04**: Sasha (Deals) responds with deal strategy, negotiation focus, Latin American content market context
 - [x] **AGNT-05**: Roberto (Accounting) responds with tax/incentive analysis, compliance focus, EFICINE/Decreto 2026 context
 - [x] **AGNT-06**: Valentina (Development) responds with creative/market analysis, slate strategy, platform buyer preferences
-- [ ] **AGNT-07**: Each agent maintains independent conversation history
-- [ ] **AGNT-08**: Agent status is visible: idle, thinking (API call in progress), needs-attention (unread response)
+- [x] **AGNT-07**: Each agent maintains independent conversation history
+- [x] **AGNT-08**: Agent status is visible: idle, thinking (API call in progress), needs-attention (unread response)
 
 ### Canvas Engine
 
@@ -42,10 +42,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **NAV-01**: BILLY (user avatar) is a pixel character that walks between rooms using BFS pathfinding
 - [x] **NAV-02**: Clicking a room causes BILLY to walk there (not instant teleport)
-- [ ] **NAV-03**: When BILLY arrives at an agent's room, the chat panel slides open for that agent
+- [x] **NAV-03**: When BILLY arrives at an agent's room, the chat panel slides open for that agent
 - [x] **NAV-04**: Agent characters have idle animations at their desks (typing, reading, coffee)
-- [ ] **NAV-05**: Agent characters animate in sync with their status (typing animation when API is streaming)
-- [ ] **NAV-06**: Visual indicators show which rooms have active conversations and unread messages
+- [x] **NAV-05**: Agent characters animate in sync with their status (typing animation when API is streaming)
+- [x] **NAV-06**: Visual indicators show which rooms have active conversations and unread messages
 
 ### War Room
 
@@ -171,11 +171,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AGNT-04 | Phase 3 | Complete |
 | AGNT-05 | Phase 3 | Complete |
 | AGNT-06 | Phase 3 | Complete |
-| AGNT-07 | Phase 3 | Pending |
-| AGNT-08 | Phase 3 | Pending |
-| NAV-03 | Phase 3 | Pending |
-| NAV-05 | Phase 3 | Pending |
-| NAV-06 | Phase 3 | Pending |
+| AGNT-07 | Phase 3 | Complete |
+| AGNT-08 | Phase 3 | Complete |
+| NAV-03 | Phase 3 | Complete |
+| NAV-05 | Phase 3 | Complete |
+| NAV-06 | Phase 3 | Complete |
 | WAR-01 | Phase 4 | Pending |
 | WAR-02 | Phase 4 | Pending |
 | WAR-03 | Phase 4 | Pending |
