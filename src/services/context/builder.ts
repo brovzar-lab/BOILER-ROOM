@@ -3,6 +3,7 @@ import type { MessageRole, Conversation } from '@/types/chat';
 import { BASE_SYSTEM_PROMPT } from '@/config/prompts/base';
 import { getAgent } from '@/config/agents';
 import { estimateTokens } from './tokenCounter';
+import { useDealStore } from '@/store/dealStore';
 
 export interface BuiltContext {
   systemPrompt: string;
@@ -18,7 +19,7 @@ export interface BuiltContext {
  * 1. Base system prompt (shared rules)
  * 2. Agent persona prompt
  * 2.5. (Optional) Cross-visibility block for War Room follow-ups
- * 3. (Future) Deal context -- Phase 5
+ * 3. Deal context (name + description of active deal)
  * 4. (Future) File summaries -- Phase 6
  * 5. (Future) Agent memory -- Phase 7
  * 6. Conversation history (with summary support)
@@ -43,7 +44,20 @@ export function buildContext(
     layers.push(crossVisibilityBlock);
   }
 
-  // Layers 3-5: Reserved for future phases (deal context, file summaries, memory)
+  // Layer 3: Deal context
+  const { activeDealId, deals } = useDealStore.getState();
+  if (activeDealId) {
+    const activeDeal = deals.find(d => d.id === activeDealId);
+    if (activeDeal) {
+      let dealContext = `You are currently advising on the deal: ${activeDeal.name}.`;
+      if (activeDeal.description) {
+        dealContext += ` Description: ${activeDeal.description}`;
+      }
+      layers.push(dealContext);
+    }
+  }
+
+  // Layers 4-5: Reserved for future phases (file summaries, memory)
 
   const systemPrompt = layers.join('\n\n');
 
