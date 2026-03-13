@@ -157,11 +157,12 @@ Plans:
   2. Each agent's office has personality-specific decorations (Sasha stands at a whiteboard, Roberto barely moves, Valentina has Post-its everywhere)
   3. Ambient sounds play contextually: office hum, keyboard clicks while agents type, paper shuffle on file drops
   4. Application renders usably on screen sizes from 1280px to ultrawide, with Canvas and chat panel adapting proportionally
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
+- [ ] 08-01-PLAN.md — Pixel art sprite sheets (characters + environment), sprite atlas definitions, renderer upgrade from colored rectangles to sprites, personality office decorations
+- [ ] 08-02-PLAN.md — Audio system: AudioManager with lazy loading, ambient loop with room-aware volume, SFX triggers (footsteps, knock, paper, chime), Header mute controls
+- [ ] 08-03-PLAN.md — Responsive side-by-side layout, collapsible chat panel at narrow widths, auto-fit zoom calculation, ultrawide support
 
 ## Progress
 
@@ -177,4 +178,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 5. Deal Rooms | 1/2 | In Progress|  |
 | 6. File Handling | 3/3 | Complete   | 2026-03-13 |
 | 7. Agent Memory | 4/4 | Complete   | 2026-03-13 |
-| 8. Polish | 0/2 | Not started | - |
+| 8. Polish | 0/3 | Not started | - |
