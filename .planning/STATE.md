@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-03-13T18:36:30Z"
-last_activity: 2026-03-13 -- Phase 6 Plan 03 complete (FileViewer UI, chat drop zone, header file count)
+stopped_at: Completed 07-01-PLAN.md
+last_updated: "2026-03-13T19:45:40.820Z"
+last_activity: 2026-03-13 -- Phase 7 Plan 01 complete (MemoryFact types, extraction service, memoryStore CRUD)
 progress:
   total_phases: 8
-  completed_phases: 5
-  total_plans: 17
-  completed_plans: 16
-  percent: 100
+  completed_phases: 6
+  total_plans: 20
+  completed_plans: 18
+  percent: 85
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Multi-perspective, context-aware AI advisory for complex production deals -- type one question, get informed responses from five domain specialists who already know the deal history.
-**Current focus:** Phase 6 complete -- All file handling features delivered, ready for Phase 7
+**Current focus:** Phase 7 in progress -- Agent memory extraction and persistence
 
 ## Current Position
 
-Phase: 6 of 8 (File Handling)
-Plan: 3 of 3
+Phase: 7 of 8 (Agent Memory)
+Plan: 1 of 3
 Status: executing
-Last activity: 2026-03-13 -- Phase 6 Plan 03 complete (FileViewer UI, chat drop zone, header file count)
+Last activity: 2026-03-13 -- Phase 7 Plan 01 complete (MemoryFact types, extraction service, memoryStore CRUD)
 
-Progress: [█████████░] 94% (16/17 plans complete)
+Progress: [████████░░] 85% (17/20 plans complete)
 
 ## Performance Metrics
 
@@ -63,6 +63,7 @@ Progress: [█████████░] 94% (16/17 plans complete)
 | Phase 06 P01 | 4min | 2 tasks | 8 files |
 | Phase 06 P02 | 6min | 2 tasks | 5 files |
 | Phase 06 P03 | 3min | 2 tasks | 5 files |
+| Phase 07 P01 | 3min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -131,6 +132,9 @@ Recent decisions affecting current work:
 - [Phase 06]: FileViewer overlays chat panel with absolute inset-0 z-50 within chat column container
 - [Phase 06]: Only Close and Delete buttons in FileViewer (no Share/Copy/Re-extract) per locked user decision
 - [Phase 06]: Three-column flexbox layout (DealSidebar left, OfficeCanvas center, ChatPanel right)
+- [Phase 07]: Prompt-based JSON extraction with code fence fallback over SDK structured outputs
+- [Phase 07]: Word overlap >50% threshold for memory fact deduplication
+- [Phase 07]: loadFacts replaces state (not appends) to prevent stale data on deal switch
 
 ### Research Flags
 
@@ -150,6 +154,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T18:36:30Z
-Stopped at: Completed 06-03-PLAN.md
-Resume file: .planning/phases/06-file-handling/06-03-SUMMARY.md
+Last session: 2026-03-13T19:45:40.818Z
+Stopped at: Completed 07-01-PLAN.md
+Resume file: None
