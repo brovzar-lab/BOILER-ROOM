@@ -1,0 +1,110 @@
+/**
+ * Canvas engine type definitions.
+ * Contract for the entire tile-based top-down office renderer.
+ */
+
+// ── Tile Types ──────────────────────────────────────────────────────────────
+// Numeric enum for fast tile map lookups in 2D array
+export const enum TileType {
+  VOID = 0,
+  FLOOR = 1,
+  WALL = 2,
+  DOOR = 3,
+}
+
+// ── Constants ───────────────────────────────────────────────────────────────
+/** Native tile size in pixels (displayed at 2x zoom as 32x32) */
+export const TILE_SIZE = 16;
+
+/** Base walk speed in pixels/sec (~4 tiles/sec at 16px tiles) */
+export const WALK_SPEED = 64;
+
+/** Fast walk speed for long-distance traversals */
+export const WALK_SPEED_FAST = 128;
+
+/** Tile distance threshold before ramping to fast speed */
+export const SPEED_RAMP_TILES = 8;
+
+/** Seconds per walk animation frame */
+export const WALK_FRAME_DURATION = 0.15;
+
+/** Seconds per work animation frame */
+export const WORK_FRAME_DURATION = 0.5;
+
+// ── Coordinate Types ────────────────────────────────────────────────────────
+export interface TileCoord {
+  col: number;
+  row: number;
+}
+
+// ── Direction & State ───────────────────────────────────────────────────────
+export type Direction = 'up' | 'down' | 'left' | 'right';
+export type CharacterState = 'idle' | 'walk' | 'work';
+
+// ── Room ────────────────────────────────────────────────────────────────────
+export interface Room {
+  id: string;
+  name: string;
+  tileRect: {
+    col: number;
+    row: number;
+    width: number;
+    height: number;
+  };
+  doorTile: TileCoord;
+  seatTile: TileCoord;
+  billyStandTile: TileCoord;
+}
+
+// ── Character ───────────────────────────────────────────────────────────────
+export interface Character {
+  id: string;
+  /** Interpolated pixel X position */
+  x: number;
+  /** Interpolated pixel Y position */
+  y: number;
+  /** Current grid column */
+  tileCol: number;
+  /** Current grid row */
+  tileRow: number;
+  state: CharacterState;
+  direction: Direction;
+  /** Current animation frame index */
+  frame: number;
+  /** Seconds since last frame change */
+  frameTimer: number;
+  /** BFS path to walk (array of tile coords, excluding start) */
+  path: TileCoord[];
+  /** Lerp progress 0..1 between current tile and next tile in path */
+  moveProgress: number;
+  /** Current walk speed in pixels/sec */
+  speed: number;
+}
+
+// ── Camera ──────────────────────────────────────────────────────────────────
+export interface Camera {
+  /** Current camera X offset (pixels) */
+  x: number;
+  /** Current camera Y offset (pixels) */
+  y: number;
+  /** Integer zoom level: 1 = overview, 2 = follow */
+  zoom: number;
+  /** Target X for smooth lerp */
+  targetX: number;
+  /** Target Y for smooth lerp */
+  targetY: number;
+  /** Character ID that camera follows, or null for free camera */
+  followTarget: string | null;
+}
+
+// ── Sprite ──────────────────────────────────────────────────────────────────
+export interface SpriteFrame {
+  /** Source X in sprite sheet */
+  x: number;
+  /** Source Y in sprite sheet */
+  y: number;
+  /** Frame width in pixels */
+  w: number;
+  /** Frame height in pixels */
+  h: number;
+}
