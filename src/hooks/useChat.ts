@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useMemo } from 'react';
 import type { AgentId } from '@/types/agent';
 import { useChatStore } from '@/store/chatStore';
+import { useDealStore } from '@/store/dealStore';
 import { useOfficeStore } from '@/store/officeStore';
 import { sendStreamingMessage } from '@/services/anthropic/stream';
 import { buildContext } from '@/services/context/builder';
@@ -15,20 +16,29 @@ import { SUMMARIZE_THRESHOLD, TOKEN_LIMITS, DEFAULT_MODEL } from '@/services/con
  */
 export function useChat(agentId: AgentId = 'diana') {
   const initializedRef = useRef(false);
+  const prevKeyRef = useRef<string>('');
 
   const conversations = useChatStore((s) => s.conversations);
   const activeConversationId = useChatStore((s) => s.activeConversationId);
   const streaming = useChatStore((s) => s.streaming);
   const storeError = useChatStore((s) => s.error);
+  const activeDealId = useDealStore((s) => s.activeDealId);
 
-  // Initialize on mount: get or create conversation for this agent.
+  // Initialize on mount and re-initialize when agentId or activeDealId changes.
   // loadConversations is already called once in App.tsx on mount.
   useEffect(() => {
+    const key = `${agentId}:${activeDealId}`;
+    if (prevKeyRef.current !== key) {
+      // Reset initialized flag when agent or deal changes
+      initializedRef.current = false;
+      prevKeyRef.current = key;
+    }
+
     if (initializedRef.current) return;
     initializedRef.current = true;
 
     void useChatStore.getState().getOrCreateConversation(agentId);
-  }, [agentId]);
+  }, [agentId, activeDealId]);
 
   // Derive active conversation
   const conversation = activeConversationId

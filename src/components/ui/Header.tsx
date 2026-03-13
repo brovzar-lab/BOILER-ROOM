@@ -1,4 +1,5 @@
 import { useOfficeStore } from '@/store/officeStore';
+import { useDealStore } from '@/store/dealStore';
 import { getAgent } from '@/config/agents';
 import type { AgentId, AgentStatus } from '@/types/agent';
 
@@ -9,16 +10,28 @@ function isAgentId(id: string | null): id is AgentId {
   return id !== null && AGENT_IDS.includes(id as AgentId);
 }
 
+interface HeaderProps {
+  sidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
+}
+
 /**
- * App header with Lemon Command Center branding and dynamic agent indicator.
+ * App header with Lemon Command Center branding, active deal name badge,
+ * sidebar toggle button, and dynamic agent indicator.
  *
  * Shows the current agent's name, title, and status dot when BILLY is
  * in an agent's room. Shows "Command Center" at BILLY's office and
  * "War Room" for the war room.
  */
-export function Header() {
+export function Header({ sidebarOpen, onToggleSidebar }: HeaderProps) {
   const activeRoomId = useOfficeStore((s) => s.activeRoomId);
   const agentStatuses = useOfficeStore((s) => s.agentStatuses);
+
+  // Read active deal for header display
+  const activeDealId = useDealStore((s) => s.activeDealId);
+  const deals = useDealStore((s) => s.deals);
+  const activeDeal = deals.find((d) => d.id === activeDealId);
+  const activeDealName = activeDeal?.name ?? null;
 
   // Determine what to display on the right side
   let label: string;
@@ -59,11 +72,31 @@ export function Header() {
 
   return (
     <header className="flex items-center justify-between px-6 py-3 border-b border-[--color-lemon-600]/30 bg-[--color-surface-bg]">
-      {/* Left: app name */}
+      {/* Left: sidebar toggle + app name + deal name */}
       <div className="flex items-center gap-2">
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className="text-[--color-text-muted] hover:text-[--color-text] p-1 transition-colors"
+            aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+          >
+            {/* Simple panel icon using CSS -- no icon library */}
+            <span className="block w-4 h-3 border border-current rounded-sm relative">
+              <span className="absolute left-0 top-0 bottom-0 w-1 bg-current rounded-l-sm" />
+            </span>
+          </button>
+        )}
         <span className="text-lg font-bold text-[--color-lemon-400] tracking-tight">
           Lemon Command Center
         </span>
+        {activeDealName && (
+          <>
+            <span className="text-[--color-text-muted]">/</span>
+            <span className="text-sm font-medium text-[--color-text-secondary] truncate max-w-[200px]">
+              {activeDealName}
+            </span>
+          </>
+        )}
       </div>
 
       {/* Right: agent indicator */}

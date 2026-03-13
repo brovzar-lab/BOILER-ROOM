@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useChat } from '@/hooks/useChat';
 import { useOfficeStore } from '@/store/officeStore';
+import { useDealStore } from '@/store/dealStore';
 import { getAgent } from '@/config/agents';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
@@ -26,10 +27,21 @@ function isAgentRoom(id: string | null): id is AgentId {
  */
 export function ChatPanel() {
   const activeRoomId = useOfficeStore((s) => s.activeRoomId);
+  const activeDealId = useDealStore((s) => s.activeDealId);
+  const [fadeClass, setFadeClass] = useState('opacity-100 transition-opacity duration-200');
+
+  // Fade out and back in when the active deal changes
+  useEffect(() => {
+    setFadeClass('opacity-0 transition-opacity duration-150');
+    const timer = setTimeout(() => {
+      setFadeClass('opacity-100 transition-opacity duration-200');
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [activeDealId]);
 
   if (activeRoomId === 'war-room') {
     return (
-      <div className="flex flex-col flex-1 min-h-0 bg-[--color-surface-bg]">
+      <div className={`flex flex-col flex-1 min-h-0 bg-[--color-surface-bg] ${fadeClass}`}>
         <WarRoomPanel />
       </div>
     );
@@ -38,7 +50,7 @@ export function ChatPanel() {
   if (isAgentRoom(activeRoomId)) {
     const agent = getAgent(activeRoomId);
     return (
-      <div className="flex flex-col flex-1 min-h-0 bg-[--color-surface-bg]">
+      <div className={`flex flex-col flex-1 min-h-0 bg-[--color-surface-bg] ${fadeClass}`}>
         {/* Agent identity header */}
         {agent && (
           <div className="flex items-center gap-3 px-4 py-2 border-b border-[--color-border]">
@@ -56,13 +68,13 @@ export function ChatPanel() {
             </div>
           </div>
         )}
-        <AgentChatPanel key={activeRoomId} agentId={activeRoomId} />
+        <AgentChatPanel key={`${activeRoomId}-${activeDealId}`} agentId={activeRoomId} />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 bg-[--color-surface-bg]">
+    <div className={`flex flex-col flex-1 min-h-0 bg-[--color-surface-bg] ${fadeClass}`}>
       <OverviewPanel />
     </div>
   );
