@@ -65,6 +65,24 @@ export function setupInputHandlers(canvas: HTMLCanvasElement): () => void {
     const tag = document.activeElement?.tagName;
     if (tag === 'TEXTAREA' || tag === 'INPUT') return;
 
+    // 'w' key: navigate BILLY to the War Room
+    if (e.key === 'w' || e.key === 'W') {
+      const state = useOfficeStore.getState();
+      if (state.activeRoomId === 'war-room') return;
+
+      const warRoom = ROOMS.find((r) => r.id === 'war-room');
+      if (!warRoom) return;
+
+      state.setTargetRoom('war-room');
+      startWalk(
+        'billy',
+        warRoom.billyStandTile.col,
+        warRoom.billyStandTile.row,
+        OFFICE_TILE_MAP,
+      );
+      return;
+    }
+
     if (e.key === 'z' || e.key === 'Z') {
       toggleZoom();
       return;

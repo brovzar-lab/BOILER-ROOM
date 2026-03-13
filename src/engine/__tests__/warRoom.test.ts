@@ -186,25 +186,30 @@ describe('gatherAgentsToWarRoom', () => {
 
     const { gatherAgentsToWarRoom, WAR_ROOM_SEATS } = await import('../characters');
 
+    // Mock Math.random to return 0 for deterministic stagger delays
+    // delay = index * (500 + 0) = 0, 500, 1000, 1500, 2000ms
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0);
+
     gatherAgentsToWarRoom(tileMap);
 
-    // After 0ms, first agent (diana) should not yet be walking (minimum delay 0 * 500 = 0, but Math.random adds some)
-    // Actually first agent delay = 0 * (500 + Math.random()*500) = 0ms, so diana walks immediately
-    // Second agent delay = 1 * (500 + Math.random()*500) >= 500ms
+    // First agent delay = 0 * 500 = 0ms, so diana walks immediately
+    // Second agent delay = 1 * 500 = 500ms
     // Advance by 100ms: first agent should be walking, second should NOT
     await vi.advanceTimersByTimeAsync(100);
 
     const diana = characters.find((c) => c.id === 'diana')!;
     expect(diana.state).toBe('walk'); // First agent starts immediately (index=0)
 
-    // At 100ms, marcos (index=1) should NOT be walking yet (min delay 500ms)
+    // At 100ms, marcos (index=1) should NOT be walking yet (delay 500ms)
     const marcos = characters.find((c) => c.id === 'marcos')!;
     expect(marcos.state).toBe('idle');
 
-    // Advance to 600ms -- marcos should now be walking
+    // Advance to 600ms -- marcos should now be walking (passed 500ms delay)
     await vi.advanceTimersByTimeAsync(500);
 
     expect(marcos.state).toBe('walk');
+
+    randomSpy.mockRestore();
   });
 
   it('resolves when all agents reach idle state at their seats', async () => {

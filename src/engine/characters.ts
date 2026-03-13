@@ -3,7 +3,8 @@
  *
  * Core update functions called by the game loop each frame.
  * Handles BILLY walking between rooms via BFS pathfinding with speed ramping,
- * agent idle/work animations, and knock pause on room arrival.
+ * agent idle/work animations, knock pause on room arrival, and War Room
+ * agent gathering/dispersal orchestration.
  */
 import {
   TILE_SIZE,
@@ -27,6 +28,28 @@ const WORK_FRAMES = 3;
 
 /** Knock pause duration in seconds */
 const KNOCK_DURATION = 0.5;
+
+/** All 5 agent IDs */
+const AGENT_IDS = ['diana', 'marcos', 'sasha', 'roberto', 'valentina'] as const;
+
+/**
+ * Conference table seat tiles for the 5 agents.
+ * Positioned adjacent to the 5x3 table at (18,14)-(22,16) within
+ * the War Room interior (cols 17-24, rows 12-19).
+ */
+export const WAR_ROOM_SEATS: Record<string, TileCoord> = {
+  diana:     { col: 19, row: 13 },  // top-left of table
+  marcos:    { col: 21, row: 13 },  // top-right of table
+  sasha:     { col: 17, row: 15 },  // left side of table
+  roberto:   { col: 23, row: 15 },  // right side of table
+  valentina: { col: 20, row: 17 },  // bottom-center of table
+};
+
+/** Whether agents are currently walking to the War Room (prevents re-triggering) */
+let isGathering = false;
+
+/** Whether agents have been dispersed from War Room (prevents re-triggering every frame) */
+let hasDispersed = false;
 
 /**
  * Tracks the knock timer per character.
@@ -199,7 +222,7 @@ export function updateAllCharacters(
   }
 
   // Drive agent character animations from agentStatuses (Zustand bridge)
-  const { agentStatuses } = state;
+  const agentStatuses = state.agentStatuses ?? {};
   for (const ch of characters) {
     if (ch.id === 'billy') continue;
     const status = agentStatuses[ch.id];
@@ -216,6 +239,17 @@ export function updateAllCharacters(
     }
   }
 
+  // Detect leaving War Room: targetRoomId changed away from war-room
+  if (
+    state.targetRoomId != null &&
+    state.targetRoomId !== 'war-room' &&
+    state.activeRoomId === 'war-room' &&
+    !hasDispersed
+  ) {
+    hasDispersed = true;
+    disperseAgentsToOffices(tileMap);
+  }
+
   // Check if BILLY entered a new tile
   if (billy && (billy.tileCol !== prevBillyCol || billy.tileRow !== prevBillyRow)) {
     const room = getRoomAtTile(billy.tileCol, billy.tileRow);
@@ -224,6 +258,12 @@ export function updateAllCharacters(
       if (room.id === 'billy') {
         // BILLY returned to his own office — show overview panel
         state.setActiveRoom('billy');
+      } else if (room.id === 'war-room') {
+        // BILLY entered the War Room — skip knock, trigger gathering
+        state.setActiveRoom('war-room');
+        gatherAgentsToWarRoom(tileMap);
+        // Reset dispersal flag since we are entering
+        hasDispersed = false;
       } else {
         // BILLY entered an agent's room — start knock pause
         knockTimers.set('billy', KNOCK_DURATION);
@@ -245,6 +285,65 @@ export function updateAllCharacters(
     // Update BILLY's position in the store
     state.setBillyPosition(billy.tileCol, billy.tileRow);
   }
+}
+
+/**
+ * Walk all 5 agents to their War Room seats with staggered starts.
+ * Returns a Promise that resolves when all agents are seated at their
+ * assigned positions (state === 'idle', path empty, matching seat tile).
+ */
+export function gatherAgentsToWarRoom(tileMap: TileType[][]): Promise<void> {
+  if (isGathering) return Promise.resolve();
+  isGathering = true;
+  hasDispersed = false;
+
+  return new Promise((resolve) => {
+    AGENT_IDS.forEach((agentId, index) => {
+      const delay = index * (500 + Math.random() * 500);
+      setTimeout(() => {
+        const seat = WAR_ROOM_SEATS[agentId];
+        startWalk(agentId, seat.col, seat.row, tileMap);
+      }, delay);
+    });
+
+    // Poll for all agents seated at their War Room positions
+    const checkInterval = setInterval(() => {
+      const { characters } = useOfficeStore.getState();
+      const allSeated = AGENT_IDS.every((id) => {
+        const ch = characters.find((c) => c.id === id);
+        if (!ch) return false;
+        const seat = WAR_ROOM_SEATS[id];
+        return (
+          ch.state === 'idle' &&
+          ch.path.length === 0 &&
+          ch.tileCol === seat.col &&
+          ch.tileRow === seat.row
+        );
+      });
+
+      if (allSeated) {
+        clearInterval(checkInterval);
+        isGathering = false;
+        resolve();
+      }
+    }, 100);
+  });
+}
+
+/**
+ * Walk all 5 agents back to their office seats with staggered starts.
+ * Fire-and-forget -- no Promise needed. Agents walk back in background.
+ */
+export function disperseAgentsToOffices(tileMap: TileType[][]): void {
+  AGENT_IDS.forEach((agentId, index) => {
+    const delay = index * (300 + Math.random() * 400);
+    setTimeout(() => {
+      const room = ROOMS.find((r) => r.id === agentId);
+      if (room) {
+        startWalk(agentId, room.seatTile.col, room.seatTile.row, tileMap);
+      }
+    }, delay);
+  });
 }
 
 /**
