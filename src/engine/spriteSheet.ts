@@ -1,14 +1,13 @@
 /**
- * Sprite loading, caching, and Phase 2 placeholder colors.
+ * Sprite loading, caching, and Phase 2 placeholder colors (fallback).
  *
- * For Phase 2: The renderer draws colored rectangles instead of sprite sheets.
- * This module provides the caching infrastructure that Phase 8 will use for
- * real sprite sheet assets. The PLACEHOLDER_COLORS map uses the project's
- * warm/cool palette.
+ * Phase 8: Loads real PNG sprite sheets for characters and environment.
+ * Falls back to PLACEHOLDER_COLORS if sheets haven't loaded yet.
  */
 import type { SpriteFrame } from './types';
+import { CHARACTER_SHEET_NAMES } from './spriteAtlas';
 
-// ── Placeholder Colors (Phase 2) ───────────────────────────────────────────
+// ── Placeholder Colors (Phase 2 fallback) ────────────────────────────────────
 // Warm tones in offices, cool tones in hallways and War Room
 export const PLACEHOLDER_COLORS: Record<string, string> = {
   floor: '#6e665e',
@@ -23,6 +22,11 @@ export const PLACEHOLDER_COLORS: Record<string, string> = {
   valentina: '#fb923c',
   'war-room-floor': '#4a5060',
 };
+
+// ── Sprite Sheet Storage ─────────────────────────────────────────────────────
+
+const characterSheets: Map<string, HTMLImageElement> = new Map();
+let environmentSheet: HTMLImageElement | null = null;
 
 // ── Sprite Sheet Loading ────────────────────────────────────────────────────
 
@@ -40,12 +44,44 @@ export function loadSpriteSheet(src: string): Promise<HTMLImageElement> {
 }
 
 /**
- * Loads all required sprite sheets. For Phase 2, this is a no-op since we
- * use placeholder colored rectangles. Phase 8 will add real sprite loading here.
+ * Loads all required sprite sheets: 6 character sheets + 1 environment sheet.
+ * Called during app initialization. Renderer falls back to colored rectangles
+ * if this hasn't completed yet.
  */
 export async function loadAllAssets(): Promise<void> {
-  // Phase 2: No sprite sheets to load. Renderer uses PLACEHOLDER_COLORS.
-  // Phase 8 will add: await Promise.all([loadSpriteSheet('tiles.png'), ...])
+  const promises: Promise<void>[] = [];
+
+  for (const name of CHARACTER_SHEET_NAMES) {
+    promises.push(
+      loadSpriteSheet(`/sprites/${name}.png`).then((img) => {
+        characterSheets.set(name, img);
+      }),
+    );
+  }
+
+  promises.push(
+    loadSpriteSheet('/sprites/environment.png').then((img) => {
+      environmentSheet = img;
+    }),
+  );
+
+  await Promise.all(promises);
+}
+
+// ── Sheet Getters ────────────────────────────────────────────────────────────
+
+/**
+ * Returns the loaded sprite sheet for a character, or null if not yet loaded.
+ */
+export function getCharacterSheet(characterId: string): HTMLImageElement | null {
+  return characterSheets.get(characterId) ?? null;
+}
+
+/**
+ * Returns the loaded environment sprite sheet, or null if not yet loaded.
+ */
+export function getEnvironmentSheet(): HTMLImageElement | null {
+  return environmentSheet;
 }
 
 // ── Sprite Cache ────────────────────────────────────────────────────────────
@@ -68,7 +104,8 @@ export function getCachedSprite(
     spriteCache.set(zoom, zoomCache);
   }
 
-  const key = `${frame.x},${frame.y},${frame.w},${frame.h}`;
+  // Include sheet src in cache key so different sheets with same frame coords don't collide
+  const key = `${sheet.src}:${frame.x},${frame.y},${frame.w},${frame.h}`;
   let cached = zoomCache.get(key);
   if (!cached) {
     cached = document.createElement('canvas');

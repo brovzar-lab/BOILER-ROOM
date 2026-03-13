@@ -3,22 +3,23 @@
  *
  * Draw order per frame:
  *   Layer 1: Clear canvas with background color
- *   Layer 2: Floor tiles (with viewport culling)
- *   Layer 3: Furniture placeholders
+ *   Layer 2: Floor tiles (with viewport culling) -- sprite-based with fallback
+ *   Layer 3: Furniture sprites + personality decorations
  *   Layer 3b: Drop zone highlight (amber dashed border on desk area)
- *   Layer 4: Characters (Y-sorted for depth)
+ *   Layer 4: Characters (Y-sorted for depth) -- sprite-based with fallback
  *   Layer 4b: Status Overlays (speech bubbles, thinking dots)
  *   Layer 4c: File icons on agent desks
  *   Layer 5: UI overlays (room labels, selection highlights)
  *   Layer 5b: Invalid drop tooltip + file hover tooltip
  *
  * All positions use integer math for pixel-perfect rendering.
- * Phase 2 uses colored rectangles; Phase 8 replaces with sprites.
+ * Phase 8: Uses pixel art sprites; falls back to colored rectangles if sprites not loaded.
  */
 import { TileType, TILE_SIZE } from './types';
 import type { Camera, Character } from './types';
-import { OFFICE_TILE_MAP, ROOMS, getRoomAtTile } from './officeLayout';
-import { PLACEHOLDER_COLORS } from './spriteSheet';
+import { OFFICE_TILE_MAP, ROOMS, FURNITURE, getRoomAtTile } from './officeLayout';
+import { PLACEHOLDER_COLORS, getCachedSprite, getCharacterSheet, getEnvironmentSheet } from './spriteSheet';
+import { CHARACTER_FRAMES, ENVIRONMENT_ATLAS, DECORATION_ATLAS } from './spriteAtlas';
 import { useFileStore } from '@/store/fileStore';
 import { dragOverRoomId, invalidDropMessage, invalidDropX, invalidDropY, hoverTileCol, hoverTileRow } from './input';
 
@@ -65,6 +66,8 @@ export function renderFrame(
   const minRow = Math.max(0, Math.floor(-offsetY / tileSize));
   const maxRow = Math.min(mapRows - 1, Math.floor((canvasHeight - offsetY) / tileSize));
 
+  const envSheet = getEnvironmentSheet();
+
   // ── Layer 1: Clear ──────────────────────────────────────────────────────
   ctx.fillStyle = BG_COLOR;
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
@@ -80,20 +83,24 @@ export function renderFrame(
       const x = Math.floor(col * tileSize + offsetX);
       const y = Math.floor(row * tileSize + offsetY);
 
+      if (envSheet) {
+        const atlasKey = getTileAtlasKey(tile, col, row);
+        const frame = ENVIRONMENT_ATLAS[atlasKey];
+        if (frame) {
+          const cached = getCachedSprite(envSheet, frame, zoom);
+          ctx.drawImage(cached, x, y);
+          continue;
+        }
+      }
+
+      // Fallback: colored rectangles
       ctx.fillStyle = getTileColor(tile, col, row);
       ctx.fillRect(x, y, tileSize, tileSize);
-
-      // Subtle grid lines for visual separation (1px darker)
-      if (tile === TileType.FLOOR || tile === TileType.DOOR) {
-        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x + 0.5, y + 0.5, tileSize - 1, tileSize - 1);
-      }
     }
   }
 
-  // ── Layer 3: Furniture Placeholders ─────────────────────────────────────
-  renderFurniture(ctx, tileSize, offsetX, offsetY, minCol, maxCol, minRow, maxRow);
+  // ── Layer 3: Furniture Sprites ────────────────────────────────────────────
+  renderFurniture(ctx, tileSize, offsetX, offsetY, zoom);
 
   // ── Layer 3b: Drop Zone Highlight ───────────────────────────────────────
   renderDropZoneHighlight(ctx, tileSize, offsetX, offsetY, canvasWidth, canvasHeight);
@@ -101,7 +108,7 @@ export function renderFrame(
   // ── Layer 4: Characters (Y-sorted for depth) ───────────────────────────
   const sortedChars = [...characters].sort((a, b) => a.y - b.y);
   for (const ch of sortedChars) {
-    renderCharacter(ctx, ch, tileSize, offsetX, offsetY, zoom);
+    renderCharacter(ctx, ch, tileSize, offsetX, offsetY, zoom, agentStatuses);
   }
 
   // ── Layer 4b: Status Overlays (speech bubbles, thinking dots) ─────────
@@ -116,7 +123,26 @@ export function renderFrame(
   }
 }
 
-// ── Tile Color Mapping ──────────────────────────────────────────────────────
+// ── Tile Atlas Key Mapping ───────────────────────────────────────────────────
+
+function getTileAtlasKey(tile: TileType, col: number, row: number): string {
+  switch (tile) {
+    case TileType.WALL:
+      return 'wall-top';
+    case TileType.DOOR:
+      return 'door';
+    case TileType.FLOOR: {
+      const room = getRoomAtTile(col, row);
+      if (room?.id === 'war-room') return 'floor-warroom';
+      if (!room) return 'floor-hallway';
+      return 'floor-office';
+    }
+    default:
+      return 'floor-office';
+  }
+}
+
+// ── Tile Color Mapping (fallback) ────────────────────────────────────────────
 
 function getTileColor(tile: TileType, col: number, row: number): string {
   switch (tile) {
@@ -125,12 +151,9 @@ function getTileColor(tile: TileType, col: number, row: number): string {
     case TileType.DOOR:
       return PLACEHOLDER_COLORS['door']!;
     case TileType.FLOOR: {
-      // Check if this tile is in the War Room for cool tones
       const room = getRoomAtTile(col, row);
       if (room?.id === 'war-room') return PLACEHOLDER_COLORS['war-room-floor']!;
-      // Hallway tiles (not in any room) get a distinct hallway color
       if (!room) return PLACEHOLDER_COLORS['hallway']!;
-      // Office floors get warm color
       return PLACEHOLDER_COLORS['floor']!;
     }
     default:
@@ -145,36 +168,176 @@ function renderFurniture(
   tileSize: number,
   offsetX: number,
   offsetY: number,
-  _minCol: number,
-  _maxCol: number,
-  _minRow: number,
-  _maxRow: number,
+  zoom: number,
 ): void {
-  // Draw simple desk and chair placeholders in each room
-  for (const room of ROOMS) {
-    const seat = room.seatTile;
-    const deskX = Math.floor(seat.col * tileSize + offsetX);
-    const deskY = Math.floor(seat.row * tileSize + offsetY);
+  const envSheet = getEnvironmentSheet();
 
-    // Desk: brown rectangle slightly larger than a tile, offset behind the seat
-    ctx.fillStyle = '#5c3d2e';
-    if (room.id !== 'war-room') {
-      // Desk behind the seat tile (one tile above)
-      ctx.fillRect(
-        deskX - Math.floor(tileSize * 0.1),
-        deskY - tileSize,
-        Math.floor(tileSize * 1.2),
-        Math.floor(tileSize * 0.8),
-      );
+  for (const item of FURNITURE) {
+    const x = Math.floor(item.col * tileSize + offsetX);
+    const y = Math.floor(item.row * tileSize + offsetY);
+
+    if (envSheet) {
+      renderFurnitureSprite(ctx, envSheet, item.type, x, y, item.width, item.height, tileSize, zoom);
     } else {
-      // War Room: large conference table in center
-      const r = room.tileRect;
-      const tableX = Math.floor((r.col + 2) * tileSize + offsetX);
-      const tableY = Math.floor((r.row + 3) * tileSize + offsetY);
-      ctx.fillStyle = '#4a3528';
-      ctx.fillRect(tableX, tableY, tileSize * 6, tileSize * 4);
+      // Fallback: brown rectangles
+      ctx.fillStyle = item.type === 'table' ? '#4a3528' : '#5c3d2e';
+      ctx.fillRect(x, y, item.width * tileSize, item.height * tileSize);
     }
   }
+
+  // Personality decorations (only with sprites)
+  if (envSheet) {
+    renderDecorations(ctx, envSheet, tileSize, offsetX, offsetY, zoom);
+  }
+}
+
+function renderFurnitureSprite(
+  ctx: CanvasRenderingContext2D,
+  sheet: HTMLImageElement,
+  type: string,
+  x: number,
+  y: number,
+  widthTiles: number,
+  heightTiles: number,
+  tileSize: number,
+  zoom: number,
+): void {
+  switch (type) {
+    case 'desk': {
+      // Desk: use left + right halves, or tile the left half across width
+      const leftFrame = ENVIRONMENT_ATLAS['desk-left'];
+      const rightFrame = ENVIRONMENT_ATLAS['desk-right'];
+      if (leftFrame && rightFrame && widthTiles >= 2) {
+        for (let t = 0; t < widthTiles; t++) {
+          const frame = t < widthTiles - 1 ? leftFrame : rightFrame;
+          ctx.drawImage(getCachedSprite(sheet, frame, zoom), x + t * tileSize, y);
+        }
+      } else if (leftFrame) {
+        for (let t = 0; t < widthTiles; t++) {
+          ctx.drawImage(getCachedSprite(sheet, leftFrame, zoom), x + t * tileSize, y);
+        }
+      }
+      break;
+    }
+    case 'chair': {
+      const frame = ENVIRONMENT_ATLAS['chair'];
+      if (frame) ctx.drawImage(getCachedSprite(sheet, frame, zoom), x, y);
+      break;
+    }
+    case 'bookshelf': {
+      const topFrame = ENVIRONMENT_ATLAS['bookshelf-top'];
+      const bottomFrame = ENVIRONMENT_ATLAS['bookshelf-bottom'];
+      if (topFrame) ctx.drawImage(getCachedSprite(sheet, topFrame, zoom), x, y);
+      if (bottomFrame && heightTiles >= 2) {
+        ctx.drawImage(getCachedSprite(sheet, bottomFrame, zoom), x, y + tileSize);
+      }
+      break;
+    }
+    case 'table': {
+      // Conference table: tile the segment sprite across the full area
+      const frame = ENVIRONMENT_ATLAS['table-segment'];
+      if (frame) {
+        for (let ty = 0; ty < heightTiles; ty++) {
+          for (let tx = 0; tx < widthTiles; tx++) {
+            ctx.drawImage(getCachedSprite(sheet, frame, zoom), x + tx * tileSize, y + ty * tileSize);
+          }
+        }
+      }
+      break;
+    }
+    case 'plant': {
+      const frame = ENVIRONMENT_ATLAS['plant'];
+      if (frame) ctx.drawImage(getCachedSprite(sheet, frame, zoom), x, y);
+      break;
+    }
+    case 'water-cooler': {
+      const frame = ENVIRONMENT_ATLAS['water-cooler'];
+      if (frame) ctx.drawImage(getCachedSprite(sheet, frame, zoom), x, y);
+      break;
+    }
+    case 'artwork': {
+      const frame = ENVIRONMENT_ATLAS['artwork'];
+      if (frame) ctx.drawImage(getCachedSprite(sheet, frame, zoom), x, y);
+      break;
+    }
+    default: {
+      // Unknown type -- draw nothing (fallback handled by caller)
+      break;
+    }
+  }
+}
+
+// ── Personality Decorations ──────────────────────────────────────────────────
+
+function renderDecorations(
+  ctx: CanvasRenderingContext2D,
+  sheet: HTMLImageElement,
+  tileSize: number,
+  offsetX: number,
+  offsetY: number,
+  zoom: number,
+): void {
+  // Diana: financial chart on wall + monitor with green numbers on desk
+  drawDeco(ctx, sheet, 'diana-chart', 5, 13, tileSize, offsetX, offsetY, zoom);
+  drawDeco(ctx, sheet, 'diana-monitor', 9, 14, tileSize, offsetX, offsetY, zoom);
+
+  // Marcos: law books on shelf + plant already in FURNITURE
+  drawDeco(ctx, sheet, 'marcos-lawbooks', 36, 13, tileSize, offsetX, offsetY, zoom);
+
+  // Sasha: 2x2 whiteboard on wall
+  drawDeco(ctx, sheet, 'sasha-whiteboard-tl', 5, 25, tileSize, offsetX, offsetY, zoom);
+  drawDeco(ctx, sheet, 'sasha-whiteboard-tr', 6, 25, tileSize, offsetX, offsetY, zoom);
+  drawDeco(ctx, sheet, 'sasha-whiteboard-bl', 5, 26, tileSize, offsetX, offsetY, zoom);
+  drawDeco(ctx, sheet, 'sasha-whiteboard-br', 6, 26, tileSize, offsetX, offsetY, zoom);
+
+  // Roberto: filing cabinet (sparse/minimal)
+  drawEnvDeco(ctx, sheet, 'filing-cabinet', 29, 25, tileSize, offsetX, offsetY, zoom);
+
+  // Valentina: post-it clusters on walls
+  drawEnvDeco(ctx, sheet, 'post-it', 24, 25, tileSize, offsetX, offsetY, zoom);
+  drawEnvDeco(ctx, sheet, 'post-it', 17, 26, tileSize, offsetX, offsetY, zoom);
+  // Extra plant for Valentina (in addition to FURNITURE plant)
+  drawEnvDeco(ctx, sheet, 'plant', 17, 30, tileSize, offsetX, offsetY, zoom);
+
+  // Billy: monitor on desk + small plant
+  drawEnvDeco(ctx, sheet, 'monitor', 21, 3, tileSize, offsetX, offsetY, zoom);
+  drawEnvDeco(ctx, sheet, 'plant', 24, 3, tileSize, offsetX, offsetY, zoom);
+}
+
+function drawDeco(
+  ctx: CanvasRenderingContext2D,
+  sheet: HTMLImageElement,
+  decoKey: string,
+  col: number,
+  row: number,
+  tileSize: number,
+  offsetX: number,
+  offsetY: number,
+  zoom: number,
+): void {
+  const frame = DECORATION_ATLAS[decoKey];
+  if (!frame) return;
+  const x = Math.floor(col * tileSize + offsetX);
+  const y = Math.floor(row * tileSize + offsetY);
+  ctx.drawImage(getCachedSprite(sheet, frame, zoom), x, y);
+}
+
+function drawEnvDeco(
+  ctx: CanvasRenderingContext2D,
+  sheet: HTMLImageElement,
+  envKey: string,
+  col: number,
+  row: number,
+  tileSize: number,
+  offsetX: number,
+  offsetY: number,
+  zoom: number,
+): void {
+  const frame = ENVIRONMENT_ATLAS[envKey];
+  if (!frame) return;
+  const x = Math.floor(col * tileSize + offsetX);
+  const y = Math.floor(row * tileSize + offsetY);
+  ctx.drawImage(getCachedSprite(sheet, frame, zoom), x, y);
 }
 
 // ── Drop Zone Highlight ─────────────────────────────────────────────────────
@@ -220,7 +383,6 @@ export function renderDropZoneHighlight(
 
   if (invalidDropMessage) {
     // Render tooltip near cursor. Convert CSS coords to canvas-relative.
-    // invalidDropX/Y are client coords; we draw relative to canvas.
     const tooltipX = Math.min(invalidDropX, canvasWidth - 200);
     const tooltipY = Math.max(invalidDropY - 30, 10);
 
@@ -346,7 +508,6 @@ export function renderFileIcons(
           ctx.font = `${Math.max(8, 8 * zoom / 2)}px monospace`;
           const tm = ctx.measureText(name);
           const tpx = 4;
-          const tpy = 2;
 
           ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
           ctx.beginPath();
@@ -393,13 +554,37 @@ function renderCharacter(
   offsetX: number,
   offsetY: number,
   zoom: number,
+  agentStatuses: Record<string, string>,
 ): void {
   const x = Math.floor(ch.x * zoom + offsetX);
   const y = Math.floor(ch.y * zoom + offsetY);
+
+  // Try sprite-based rendering
+  const sheet = getCharacterSheet(ch.id);
+  if (sheet) {
+    // Determine which sprite state to show
+    let spriteState: 'idle' | 'walk' | 'work' | 'talk' = ch.state;
+
+    // Use 'talk' frames when agent has needs-attention status (conversation ready)
+    const status = agentStatuses[ch.id];
+    if (status === 'needs-attention' && ch.state === 'idle') {
+      spriteState = 'talk';
+    }
+
+    const frames = CHARACTER_FRAMES[spriteState]?.[ch.direction];
+    if (frames && frames.length > 0) {
+      const frameIdx = Math.min(ch.frame, frames.length - 1);
+      const frame = frames[frameIdx]!;
+      const cached = getCachedSprite(sheet, frame, zoom);
+      ctx.drawImage(cached, x, y);
+      return;
+    }
+  }
+
+  // Fallback: colored rectangle (pre-Phase 8 behavior)
   const size = Math.floor(TILE_SIZE * zoom * 0.8);
   const pad = Math.floor(TILE_SIZE * zoom * 0.1);
 
-  // Character body: colored rectangle
   const color = PLACEHOLDER_COLORS[ch.id] ?? '#888888';
   ctx.fillStyle = color;
   ctx.fillRect(x + pad, y + pad, size, size);
