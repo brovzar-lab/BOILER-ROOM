@@ -1,5 +1,6 @@
 import { useOfficeStore } from '@/store/officeStore';
 import { useDealStore } from '@/store/dealStore';
+import { useFileStore } from '@/store/fileStore';
 import { getAgent } from '@/config/agents';
 import type { AgentId, AgentStatus } from '@/types/agent';
 
@@ -32,6 +33,12 @@ export function Header({ sidebarOpen, onToggleSidebar }: HeaderProps) {
   const deals = useDealStore((s) => s.deals);
   const activeDeal = deals.find((d) => d.id === activeDealId);
   const activeDealName = activeDeal?.name ?? null;
+
+  // File count for current agent
+  const files = useFileStore((s) => s.files);
+  const fileCount = isAgentId(activeRoomId)
+    ? files.filter((f) => f.agentId === activeRoomId && (!activeDealId || f.dealId === activeDealId)).length
+    : 0;
 
   // Determine what to display on the right side
   let label: string;
@@ -99,7 +106,7 @@ export function Header({ sidebarOpen, onToggleSidebar }: HeaderProps) {
         )}
       </div>
 
-      {/* Right: agent indicator */}
+      {/* Right: agent indicator + file count */}
       <div className="flex items-center gap-2">
         <span className={dotClassName} style={dotStyle} />
         <span className="text-sm text-[--color-text-secondary]">
@@ -108,6 +115,11 @@ export function Header({ sidebarOpen, onToggleSidebar }: HeaderProps) {
             <span className="text-[--color-text-muted]"> - {sublabel}</span>
           )}
         </span>
+        {fileCount > 0 && (
+          <span className="text-xs text-neutral-400 bg-neutral-700 px-2 py-0.5 rounded-full">
+            {fileCount} {fileCount === 1 ? 'file' : 'files'}
+          </span>
+        )}
       </div>
     </header>
   );

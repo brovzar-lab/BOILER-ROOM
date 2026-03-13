@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useChatStore } from '@/store/chatStore';
 import { useDealStore } from '@/store/dealStore';
 import { migrateConversationsToDeals } from '@/services/persistence/migration';
+import { setOnFileClick } from '@/engine/input';
 import { Header } from '@/components/ui/Header';
 import { ChatPanel } from '@/components/chat/ChatPanel';
+import { FileViewer } from '@/components/FileViewer';
 import { OfficeCanvas } from '@/components/canvas/OfficeCanvas';
 import { RoomLabel } from '@/components/canvas/RoomLabel';
 import { ZoomControls } from '@/components/canvas/ZoomControls';
@@ -23,6 +25,17 @@ function App() {
   const [ready, setReady] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [needsMigration, setNeedsMigration] = useState(false);
+  const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
+
+  // Wire canvas file icon clicks to open the FileViewer
+  const handleFileClick = useCallback((fileId: string) => {
+    setSelectedFileId(fileId);
+  }, []);
+
+  useEffect(() => {
+    setOnFileClick(handleFileClick);
+    return () => setOnFileClick(null);
+  }, [handleFileClick]);
 
   useEffect(() => {
     const init = async () => {
@@ -121,6 +134,11 @@ function App() {
           <div className="absolute right-0 top-0 h-full w-[400px] z-20
             border-l border-[--color-surface-border]">
             <ChatPanel />
+            {/* FileViewer: overlays chat panel with higher z-index */}
+            <FileViewer
+              fileId={selectedFileId}
+              onClose={() => setSelectedFileId(null)}
+            />
           </div>
         </div>
       </main>
