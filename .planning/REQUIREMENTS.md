@@ -69,8 +69,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **FILE-01**: User can drag-and-drop PDF files onto an agent's room/desk
 - [x] **FILE-02**: User can drag-and-drop DOCX files onto an agent's room/desk
-- [ ] **FILE-03**: Extracted text from files is injected into the agent's conversation context
-- [ ] **FILE-04**: Uploaded files appear as pixel document icons on the agent's desk
+- [x] **FILE-03**: Extracted text from files is injected into the agent's conversation context
+- [x] **FILE-04**: Uploaded files appear as pixel document icons on the agent's desk
 - [ ] **FILE-05**: User can click a file on a desk to view its contents
 - [x] **FILE-06**: File metadata is stored: name, size, date, associated agent, associated deal
 
@@ -190,8 +190,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEAL-06 | Phase 5 | Pending |
 | FILE-01 | Phase 6 | Complete |
 | FILE-02 | Phase 6 | Complete |
-| FILE-03 | Phase 6 | Pending |
-| FILE-04 | Phase 6 | Pending |
+| FILE-03 | Phase 6 | Complete |
+| FILE-04 | Phase 6 | Complete |
 | FILE-05 | Phase 6 | Pending |
 | FILE-06 | Phase 6 | Complete |
 | MEM-01 | Phase 7 | Pending |

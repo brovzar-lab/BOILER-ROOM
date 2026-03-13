@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-03-13T17:11:24Z"
-last_activity: 2026-03-13 -- Phase 6 Plan 01 complete (file extraction pipeline, fileStore CRUD)
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-03-13T17:21:49Z"
+last_activity: 2026-03-13 -- Phase 6 Plan 02 complete (context injection, canvas drag-and-drop, file icons)
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 15
-  completed_plans: 14
-  percent: 95
+  completed_plans: 15
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Multi-perspective, context-aware AI advisory for complex production deals -- type one question, get informed responses from five domain specialists who already know the deal history.
-**Current focus:** Phase 6 in progress -- File extraction pipeline complete, context injection and UI next
+**Current focus:** Phase 6 in progress -- Context injection and canvas interaction complete, file viewer UI next
 
 ## Current Position
 
 Phase: 6 of 8 (File Handling)
-Plan: 1 of 3
+Plan: 2 of 3
 Status: executing
-Last activity: 2026-03-13 -- Phase 6 Plan 01 complete (file extraction pipeline, fileStore CRUD)
+Last activity: 2026-03-13 -- Phase 6 Plan 02 complete (context injection, canvas drag-and-drop, file icons)
 
-Progress: [███████████████████░] 95% (14/15 plans complete)
+Progress: [████████████████████] 100% (15/15 plans complete)
 
 ## Performance Metrics
 
@@ -48,7 +48,7 @@ Progress: [███████████████████░] 95% (14
 | 03 Integration | 3/3 | 7 min | 2 min |
 | 04 War Room | 3/3 | 25 min | 8 min |
 | 05 Deal Rooms | 1/2 | 4 min | 4 min |
-| 06 File Handling | 1/3 | 4 min | 4 min |
+| 06 File Handling | 2/3 | 10 min | 5 min |
 
 **Recent Trend:**
 - Last 5 plans: 04-01 (5 min), 04-02 (5 min), 04-03 (15 min), 05-01 (4 min)
@@ -61,6 +61,7 @@ Progress: [███████████████████░] 95% (14
 | Phase 04 P03 | 15min | 3 tasks | 12 files |
 | Phase 05 P01 | 4min | 2 tasks | 8 files |
 | Phase 06 P01 | 4min | 2 tasks | 8 files |
+| Phase 06 P02 | 6min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -122,6 +123,10 @@ Recent decisions affecting current work:
 - [Phase 06]: pdfjs-dist worker configured via Vite ?url import pattern for non-blocking PDF parsing
 - [Phase 06]: Store extracted text only (not raw file blobs) in IndexedDB for storage efficiency
 - [Phase 06]: shareFileWithAllAgents creates independent copies per agent with new UUIDs
+- [Phase 06]: File icons on desk area (1 row above seatTile, 2 tiles wide) matching furniture layout
+- [Phase 06]: Desk-area-only drop zone highlight with amber dashed border (not full room)
+- [Phase 06]: Per-file cap 2000 tokens, total cap 8000 tokens for context budget
+- [Phase 06]: onFileClickCallback pattern for clean React file viewer integration
 
 ### Research Flags
 
@@ -141,6 +146,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T17:11:24Z
-Stopped at: Completed 06-01-PLAN.md
-Resume file: .planning/phases/06-file-handling/06-01-SUMMARY.md
+Last session: 2026-03-13T17:21:49Z
+Stopped at: Completed 06-02-PLAN.md
+Resume file: .planning/phases/06-file-handling/06-02-SUMMARY.md
