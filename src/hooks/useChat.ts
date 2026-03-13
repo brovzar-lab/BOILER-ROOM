@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useMemo } from 'react';
 import type { AgentId } from '@/types/agent';
 import { useChatStore } from '@/store/chatStore';
+import { useOfficeStore } from '@/store/officeStore';
 import { sendStreamingMessage } from '@/services/anthropic/stream';
 import { buildContext } from '@/services/context/builder';
 import { summarizeConversation } from '@/services/context/summarizer';
@@ -20,16 +21,13 @@ export function useChat(agentId: AgentId = 'diana') {
   const streaming = useChatStore((s) => s.streaming);
   const storeError = useChatStore((s) => s.error);
 
-  // Initialize on mount: load conversations, then get or create one for the agent
+  // Initialize on mount: get or create conversation for this agent.
+  // loadConversations is already called once in App.tsx on mount.
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
 
-    const init = async () => {
-      await useChatStore.getState().loadConversations();
-      await useChatStore.getState().getOrCreateConversation(agentId);
-    };
-    void init();
+    void useChatStore.getState().getOrCreateConversation(agentId);
   }, [agentId]);
 
   // Derive active conversation
@@ -69,6 +67,9 @@ export function useChat(agentId: AgentId = 'diana') {
       const abortController = new AbortController();
       store.startStreaming(abortController);
 
+      // Mark agent as 'thinking' on canvas
+      useOfficeStore.getState().setAgentStatus(agentId, 'thinking');
+
       // 5. Build messages array for the API
       const apiMessages = currentConversation.messages.map((msg) => ({
         role: msg.role,
@@ -89,6 +90,13 @@ export function useChat(agentId: AgentId = 'diana') {
           onComplete: async (fullContent: string, _usage) => {
             const s = useChatStore.getState();
             s.stopStreaming();
+
+            // Update agent status: 'idle' if user is in the room, 'needs-attention' otherwise
+            const officeState = useOfficeStore.getState();
+            officeState.setAgentStatus(
+              agentId,
+              officeState.activeRoomId === agentId ? 'idle' : 'needs-attention',
+            );
 
             // Add assistant message
             await s.addMessage(convId, {
@@ -125,6 +133,8 @@ export function useChat(agentId: AgentId = 'diana') {
           },
           onError: (err: Error) => {
             useChatStore.getState().stopStreaming();
+            // Error means no unread content, set back to idle
+            useOfficeStore.getState().setAgentStatus(agentId, 'idle');
             useChatStore.getState().setError(
               err.message || 'An unexpected error occurred. Please try again.',
             );

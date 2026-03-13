@@ -14,6 +14,7 @@ import type { Camera, Character } from '@/engine/types';
 import { ROOMS } from '@/engine/officeLayout';
 import { createCamera } from '@/engine/camera';
 import type { Room } from '@/engine/types';
+import type { AgentStatus } from '@/types/agent';
 
 export interface OfficeState {
   // Room data
@@ -34,11 +35,15 @@ export interface OfficeState {
   // Characters (engine manages movement/animation, store is source of truth)
   characters: Character[];
 
+  // Per-agent status tracking (idle/thinking/needs-attention)
+  agentStatuses: Record<string, AgentStatus>;
+
   // Actions (only called on meaningful state changes, NOT every frame)
   setActiveRoom: (roomId: string | null) => void;
   setTargetRoom: (roomId: string | null) => void;
   setBillyPosition: (col: number, row: number) => void;
   setZoomLevel: (level: number) => void;
+  setAgentStatus: (agentId: string, status: AgentStatus) => void;
   initializeCharacters: () => void;
 }
 
@@ -61,6 +66,15 @@ export const useOfficeStore = create<OfficeState>((set) => ({
   // Characters initialized empty, populated via initializeCharacters()
   characters: [],
 
+  // All 5 agents start idle
+  agentStatuses: {
+    diana: 'idle',
+    marcos: 'idle',
+    sasha: 'idle',
+    roberto: 'idle',
+    valentina: 'idle',
+  },
+
   // Actions
   setActiveRoom: (roomId) => set({ activeRoomId: roomId }),
 
@@ -73,6 +87,11 @@ export const useOfficeStore = create<OfficeState>((set) => ({
     set((state) => ({
       zoomLevel: Math.round(level),
       camera: { ...state.camera, zoom: Math.round(level) },
+    })),
+
+  setAgentStatus: (agentId, status) =>
+    set((state) => ({
+      agentStatuses: { ...state.agentStatuses, [agentId]: status },
     })),
 
   initializeCharacters: () =>
