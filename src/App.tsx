@@ -117,29 +117,26 @@ function App() {
         sidebarOpen={sidebarOpen}
         onToggleSidebar={() => setSidebarOpen((v) => !v)}
       />
-      <main className="flex-1 flex overflow-hidden">
-        {/* Deal sidebar on the left */}
+      <main className="flex-1 flex overflow-hidden min-h-0">
+        {/* Left sidebar: deals */}
         <DealSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        {/* Main content area */}
-        <div className="flex-1 relative overflow-hidden">
-          {/* Canvas: full background layer */}
+        {/* Center: office canvas — takes all remaining space */}
+        <div className="flex-1 relative overflow-hidden min-w-0">
           <OfficeCanvas />
-
-          {/* DOM overlays on top of canvas */}
           <RoomLabel />
           <ZoomControls />
+        </div>
 
-          {/* Chat panel: overlays the canvas from the right */}
-          <div className="absolute right-0 top-0 h-full w-[400px] z-20
-            border-l border-[--color-surface-border]">
-            <ChatPanel />
-            {/* FileViewer: overlays chat panel with higher z-index */}
-            <FileViewer
-              fileId={selectedFileId}
-              onClose={() => setSelectedFileId(null)}
-            />
-          </div>
+        {/* Right: chat panel — fixed width, independent column */}
+        <div className="w-[400px] shrink-0 flex flex-col min-h-0
+          border-l border-[--color-surface-border] relative">
+          <ChatPanel />
+          {/* FileViewer: overlays chat panel with higher z-index */}
+          <FileViewer
+            fileId={selectedFileId}
+            onClose={() => setSelectedFileId(null)}
+          />
         </div>
       </main>
 
