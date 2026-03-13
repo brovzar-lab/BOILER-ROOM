@@ -68,21 +68,32 @@ function App() {
     void init();
   }, []);
 
-  const handleMigrate = async (action: 'general' | 'new-deal') => {
-    if (action === 'new-deal') {
-      // Create a new deal for legacy conversations
-      // For simplicity, assign to default/General deal (migration already stamped them)
-      // The user can rename it from the sidebar
-    }
-    // Migration already assigned orphans to default deal
-    setNeedsMigration(false);
-
-    // Switch to the default deal
+  const handleMigrate = async (action: 'general' | 'new-deal', dealName?: string) => {
     const dealState = useDealStore.getState();
-    const defaultDeal = dealState.deals.find((d) => d.id === 'default');
-    if (defaultDeal) {
-      await dealState.switchDeal(defaultDeal.id);
+
+    if (action === 'new-deal' && dealName) {
+      // Create a new deal and reassign orphan conversations from 'default' to it
+      const newDealId = await dealState.createDeal(dealName);
+      const { getPersistence } = await import('@/services/persistence/adapter');
+      const persistence = getPersistence();
+      const allConversations = await persistence.getAll<{ id: string; dealId?: string }>('conversations');
+      const defaultConvs = allConversations.filter((c) => c.dealId === 'default');
+      if (defaultConvs.length > 0) {
+        await persistence.bulkSet(
+          'conversations',
+          defaultConvs.map((c) => ({ key: c.id, value: { ...c, dealId: newDealId } })),
+        );
+      }
+      await dealState.switchDeal(newDealId);
+    } else {
+      // Assign to General (migration already stamped orphans with 'default')
+      const defaultDeal = dealState.deals.find((d) => d.id === 'default');
+      if (defaultDeal) {
+        await dealState.switchDeal(defaultDeal.id);
+      }
     }
+
+    setNeedsMigration(false);
   };
 
   const handleDismissMigration = () => {
@@ -128,7 +139,7 @@ function App() {
       {/* Migration prompt modal */}
       {needsMigration && (
         <MigrationPrompt
-          onMigrate={(action) => void handleMigrate(action)}
+          onMigrate={(action, dealName) => void handleMigrate(action, dealName)}
           onDismiss={handleDismissMigration}
         />
       )}

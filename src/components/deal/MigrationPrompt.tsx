@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 
 interface MigrationPromptProps {
-  onMigrate: (action: 'general' | 'new-deal') => void;
+  onMigrate: (action: 'general' | 'new-deal', dealName?: string) => void;
   onDismiss: () => void;
 }
 
@@ -61,8 +61,8 @@ export function MigrationPrompt({ onMigrate, onDismiss }: MigrationPromptProps) 
               className="w-full px-2 py-1.5 text-xs bg-[--color-surface-bg] border border-[--color-border] rounded text-[--color-text] focus:outline-none focus:border-[--color-lemon-400] mb-2"
               placeholder="Deal name for legacy conversations..."
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  onMigrate('new-deal');
+                if (e.key === 'Enter' && nameRef.current?.value.trim()) {
+                  onMigrate('new-deal', nameRef.current.value.trim());
                 }
                 if (e.key === 'Escape') {
                   setShowNameInput(false);
@@ -71,8 +71,12 @@ export function MigrationPrompt({ onMigrate, onDismiss }: MigrationPromptProps) 
             />
             <div className="flex gap-2">
               <button
-                className="flex-1 px-3 py-1.5 text-xs bg-[--color-lemon-400] text-[--color-surface-bg] rounded font-medium hover:bg-[--color-lemon-400]/90"
-                onClick={() => onMigrate('new-deal')}
+                className="flex-1 px-3 py-1.5 text-xs bg-[--color-lemon-400] text-[--color-surface-bg] rounded font-medium hover:bg-[--color-lemon-400]/90 disabled:opacity-50"
+                disabled={!showNameInput}
+                onClick={() => {
+                  const name = nameRef.current?.value.trim();
+                  if (name) onMigrate('new-deal', name);
+                }}
               >
                 Create
               </button>
