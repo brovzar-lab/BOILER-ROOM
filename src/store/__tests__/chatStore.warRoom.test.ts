@@ -88,24 +88,29 @@ describe('chatStore War Room multi-stream state', () => {
 
   it('Test 5: cancelAllWarRoomStreams aborts all active controllers and resets', () => {
     const store = useChatStore.getState();
+
+    // Set war room mode first (resets streaming), then start streams
+    store.setWarRoomMode(true, 1);
+
     const controller1 = new AbortController();
     const controller2 = new AbortController();
     const controller3 = new AbortController();
 
-    const abort1 = vi.spyOn(controller1, 'abort');
-    const abort2 = vi.spyOn(controller2, 'abort');
-    const abort3 = vi.spyOn(controller3, 'abort');
-
     store.startWarRoomStream('diana', controller1);
     store.startWarRoomStream('marcos', controller2);
     store.startWarRoomStream('sasha', controller3);
-    store.setWarRoomMode(true, 1);
+
+    // Verify controllers are active before cancel
+    expect(controller1.signal.aborted).toBe(false);
+    expect(controller2.signal.aborted).toBe(false);
+    expect(controller3.signal.aborted).toBe(false);
 
     store.cancelAllWarRoomStreams();
 
-    expect(abort1).toHaveBeenCalled();
-    expect(abort2).toHaveBeenCalled();
-    expect(abort3).toHaveBeenCalled();
+    // Controllers should be aborted
+    expect(controller1.signal.aborted).toBe(true);
+    expect(controller2.signal.aborted).toBe(true);
+    expect(controller3.signal.aborted).toBe(true);
 
     const state = useChatStore.getState();
     expect(state.isWarRoomMode).toBe(false);

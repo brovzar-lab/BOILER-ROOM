@@ -1,7 +1,19 @@
 import { create } from 'zustand';
 import type { AgentId } from '@/types/agent';
-import type { Conversation, Message, StreamingState } from '@/types/chat';
+import type { Conversation, Message, StreamingState, WarRoomAgentStream } from '@/types/chat';
 import { getPersistence } from '@/services/persistence/adapter';
+
+const AGENT_IDS: AgentId[] = ['diana', 'marcos', 'sasha', 'roberto', 'valentina'];
+
+function createEmptyWarRoomStreaming(): Record<AgentId, WarRoomAgentStream> {
+  return {
+    diana: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' },
+    marcos: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' },
+    sasha: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' },
+    roberto: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' },
+    valentina: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' },
+  };
+}
 
 interface ChatState {
   conversations: Record<string, Conversation>;
@@ -19,6 +31,22 @@ interface ChatState {
   setError: (error: string | null) => void;
   updateConversationTokens: (conversationId: string, tokens: number) => void;
   setConversationSummary: (conversationId: string, summary: string, summaryTokens: number) => void;
+
+  // War Room parallel streaming
+  isWarRoomMode: boolean;
+  warRoomStreaming: Record<AgentId, WarRoomAgentStream>;
+  warRoomRound: number;
+  warRoomLastResponses: Record<AgentId, string>;
+
+  // War Room actions
+  startWarRoomStream: (agentId: AgentId, abortController: AbortController) => void;
+  updateWarRoomContent: (agentId: AgentId, content: string) => void;
+  completeWarRoomStream: (agentId: AgentId) => void;
+  failWarRoomStream: (agentId: AgentId, error: string) => void;
+  cancelAllWarRoomStreams: () => void;
+  setWarRoomMode: (active: boolean, round?: number) => void;
+  saveWarRoomLastResponses: () => void;
+  resetWarRoomStreaming: () => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -30,6 +58,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
     abortController: null,
   },
   error: null,
+
+  // War Room initial state
+  isWarRoomMode: false,
+  warRoomStreaming: createEmptyWarRoomStreaming(),
+  warRoomRound: 0,
+  warRoomLastResponses: {} as Record<AgentId, string>,
 
   loadConversations: async () => {
     const persistence = getPersistence();
@@ -199,5 +233,98 @@ export const useChatStore = create<ChatState>((set, get) => ({
         },
       };
     });
+  },
+
+  // War Room actions
+
+  startWarRoomStream: (agentId: AgentId, abortController: AbortController) => {
+    set((state) => ({
+      warRoomStreaming: {
+        ...state.warRoomStreaming,
+        [agentId]: {
+          isStreaming: true,
+          currentContent: '',
+          error: null,
+          abortController,
+          status: 'streaming' as const,
+        },
+      },
+    }));
+  },
+
+  updateWarRoomContent: (agentId: AgentId, content: string) => {
+    set((state) => ({
+      warRoomStreaming: {
+        ...state.warRoomStreaming,
+        [agentId]: {
+          ...state.warRoomStreaming[agentId],
+          currentContent: content,
+        },
+      },
+    }));
+  },
+
+  completeWarRoomStream: (agentId: AgentId) => {
+    set((state) => ({
+      warRoomStreaming: {
+        ...state.warRoomStreaming,
+        [agentId]: {
+          ...state.warRoomStreaming[agentId],
+          isStreaming: false,
+          abortController: null,
+          status: 'complete' as const,
+        },
+      },
+    }));
+  },
+
+  failWarRoomStream: (agentId: AgentId, error: string) => {
+    set((state) => ({
+      warRoomStreaming: {
+        ...state.warRoomStreaming,
+        [agentId]: {
+          ...state.warRoomStreaming[agentId],
+          isStreaming: false,
+          error,
+          status: 'error' as const,
+        },
+      },
+    }));
+  },
+
+  cancelAllWarRoomStreams: () => {
+    set((state) => {
+      // Abort all active controllers
+      for (const agentId of AGENT_IDS) {
+        state.warRoomStreaming[agentId].abortController?.abort();
+      }
+      return {
+        warRoomStreaming: createEmptyWarRoomStreaming(),
+        isWarRoomMode: false,
+      };
+    });
+  },
+
+  setWarRoomMode: (active: boolean, round?: number) => {
+    set((state) => ({
+      isWarRoomMode: active,
+      warRoomRound: round !== undefined ? round : state.warRoomRound,
+      // Reset streaming state when activating
+      ...(active ? { warRoomStreaming: createEmptyWarRoomStreaming() } : {}),
+    }));
+  },
+
+  saveWarRoomLastResponses: () => {
+    set((state) => {
+      const responses = {} as Record<AgentId, string>;
+      for (const agentId of AGENT_IDS) {
+        responses[agentId] = state.warRoomStreaming[agentId].currentContent;
+      }
+      return { warRoomLastResponses: responses };
+    });
+  },
+
+  resetWarRoomStreaming: () => {
+    set({ warRoomStreaming: createEmptyWarRoomStreaming() });
   },
 }));

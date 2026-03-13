@@ -10,6 +10,15 @@ export interface Message {
   timestamp: number;
   tokenCount?: number;       // Token count for this message
   isSummary?: boolean;       // True if this is a summarization message
+  source?: 'direct' | 'war-room'; // Tags War Room messages for badge rendering
+}
+
+export interface WarRoomAgentStream {
+  isStreaming: boolean;
+  currentContent: string;
+  error: string | null;
+  abortController: AbortController | null;
+  status: 'idle' | 'streaming' | 'complete' | 'error' | 'retrying';
 }
 
 export interface Conversation {
