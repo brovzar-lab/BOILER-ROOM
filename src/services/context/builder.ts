@@ -17,6 +17,7 @@ export interface BuiltContext {
  * Layers:
  * 1. Base system prompt (shared rules)
  * 2. Agent persona prompt
+ * 2.5. (Optional) Cross-visibility block for War Room follow-ups
  * 3. (Future) Deal context -- Phase 5
  * 4. (Future) File summaries -- Phase 6
  * 5. (Future) Agent memory -- Phase 7
@@ -26,6 +27,7 @@ export function buildContext(
   agentId: AgentId,
   messages: Array<{ role: MessageRole; content: string }>,
   conversation?: Conversation,
+  crossVisibilityBlock?: string,
 ): BuiltContext {
   // Layer 1: Base system prompt
   const layers: string[] = [BASE_SYSTEM_PROMPT];
@@ -34,6 +36,11 @@ export function buildContext(
   const agent = getAgent(agentId);
   if (agent) {
     layers.push(agent.personaPrompt);
+  }
+
+  // Layer 2.5: Cross-visibility block for War Room follow-ups (optional)
+  if (crossVisibilityBlock) {
+    layers.push(crossVisibilityBlock);
   }
 
   // Layers 3-5: Reserved for future phases (deal context, file summaries, memory)
