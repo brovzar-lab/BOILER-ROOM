@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { AgentId } from '@/types/agent';
 import type { Conversation, Message, StreamingState, WarRoomAgentStream } from '@/types/chat';
 import { getPersistence } from '@/services/persistence/adapter';
+import { useDealStore } from '@/store/dealStore';
 
 const AGENT_IDS: AgentId[] = ['diana', 'marcos', 'sasha', 'roberto', 'valentina'];
 
@@ -66,8 +67,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
   warRoomLastResponses: {} as Record<AgentId, string>,
 
   loadConversations: async () => {
+    const dealId = useDealStore.getState().activeDealId;
+    if (!dealId) {
+      set({ conversations: {}, activeConversationId: null });
+      return;
+    }
+
     const persistence = getPersistence();
-    const conversations = await persistence.getAll<Conversation>('conversations');
+    const conversations = await persistence.query<Conversation>('conversations', 'dealId', dealId);
     const conversationMap: Record<string, Conversation> = {};
 
     for (const conv of conversations) {
@@ -78,26 +85,28 @@ export const useChatStore = create<ChatState>((set, get) => ({
       conversationMap[conv.id] = { ...conv, messages };
     }
 
-    set({ conversations: conversationMap });
+    set({ conversations: conversationMap, activeConversationId: null });
   },
 
   getOrCreateConversation: async (agentId: AgentId) => {
     const { conversations } = get();
+    const dealId = useDealStore.getState().activeDealId;
 
-    // Check if a conversation for this agent already exists
+    // Check if a conversation for this agent in this deal already exists
     const existing = Object.values(conversations).find(
-      (conv) => conv.agentId === agentId
+      (conv) => conv.agentId === agentId && conv.dealId === dealId
     );
     if (existing) {
       set({ activeConversationId: existing.id });
       return existing.id;
     }
 
-    // Create a new conversation
+    // Create a new conversation with dealId
     const now = Date.now();
     const newConversation: Conversation = {
       id: crypto.randomUUID(),
       agentId,
+      dealId: dealId ?? undefined,
       messages: [],
       totalTokens: 0,
       createdAt: now,
