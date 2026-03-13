@@ -49,7 +49,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### War Room
 
-- [ ] **WAR-01**: Entering the War Room causes all agent characters to walk to the central table
+- [x] **WAR-01**: Entering the War Room causes all agent characters to walk to the central table
 - [ ] **WAR-02**: User can type a message that is sent to ALL 5 agents simultaneously
 - [x] **WAR-03**: Responses stream in parallel, labeled and color-coded by agent
 - [x] **WAR-04**: Each War Room response feeds back into that agent's individual conversation history
@@ -176,7 +176,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | NAV-03 | Phase 3 | Complete |
 | NAV-05 | Phase 3 | Complete |
 | NAV-06 | Phase 3 | Complete |
-| WAR-01 | Phase 4 | Pending |
+| WAR-01 | Phase 4 | Complete |
 | WAR-02 | Phase 4 | Pending |
 | WAR-03 | Phase 4 | Complete |
 | WAR-04 | Phase 4 | Complete |
