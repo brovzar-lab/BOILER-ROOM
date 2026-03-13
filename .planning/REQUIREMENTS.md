@@ -58,10 +58,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Deal Rooms
 
-- [ ] **DEAL-01**: User can create named deals (e.g., "Oro Verde - Netflix", "Lemon Trust I")
-- [ ] **DEAL-02**: Each deal has its own conversation histories per agent
-- [ ] **DEAL-03**: Each deal has its own uploaded files and agent memory
-- [ ] **DEAL-04**: Switching deals atomically switches all agent contexts (history, files, memory)
+- [x] **DEAL-01**: User can create named deals (e.g., "Oro Verde - Netflix", "Lemon Trust I")
+- [x] **DEAL-02**: Each deal has its own conversation histories per agent
+- [x] **DEAL-03**: Each deal has its own uploaded files and agent memory
+- [x] **DEAL-04**: Switching deals atomically switches all agent contexts (history, files, memory)
 - [ ] **DEAL-05**: Deal switcher UI shows deal name, last activity, and per-agent activity summary
 - [ ] **DEAL-06**: Active deal name is prominently displayed in the interface
 
@@ -182,10 +182,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | WAR-04 | Phase 4 | Complete |
 | WAR-05 | Phase 4 | Pending |
 | WAR-06 | Phase 4 | Complete |
-| DEAL-01 | Phase 5 | Pending |
-| DEAL-02 | Phase 5 | Pending |
-| DEAL-03 | Phase 5 | Pending |
-| DEAL-04 | Phase 5 | Pending |
+| DEAL-01 | Phase 5 | Complete |
+| DEAL-02 | Phase 5 | Complete |
+| DEAL-03 | Phase 5 | Complete |
+| DEAL-04 | Phase 5 | Complete |
 | DEAL-05 | Phase 5 | Pending |
 | DEAL-06 | Phase 5 | Pending |
 | FILE-01 | Phase 6 | Pending |
