@@ -80,19 +80,19 @@ Plans:
 **Goal**: User can broadcast a question to all 5 agents simultaneously and see parallel streaming responses, each feeding back into individual agent histories
 **Depends on**: Phase 3 (all 5 agents working individually)
 **Requirements**: WAR-01, WAR-02, WAR-03, WAR-04, WAR-05, WAR-06
-**Research**: NEEDED -- Anthropic API rate limits for specific pricing tier, concurrency design
+**Research**: COMPLETE -- Anthropic API rate limits verified (Scale tier 1000+ RPM), concurrency design established
 **Success Criteria** (what must be TRUE):
   1. User enters the War Room and all 5 agent characters visually walk to the central table
   2. User types one message and receives 5 parallel streaming responses, each color-coded and labeled by agent
   3. Each War Room response is appended to that agent's individual conversation history (viewable later in their office)
   4. If 1-2 agents error, the remaining agents still display their responses without interruption
   5. API rate limits are respected via staggered requests with no 429 errors under normal use
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
-- [ ] 04-03: TBD
+- [ ] 04-01-PLAN.md — chatStore multi-stream expansion, Message source field, cross-visibility summary builder, retry backoff utility
+- [ ] 04-02-PLAN.md — Agent gathering/dispersal animations, War Room entry detection, 'w' key shortcut, WAR_ROOM_SEATS positions
+- [ ] 04-03-PLAN.md — useWarRoom hook, WarRoomPanel + WarRoomMessage + WarRoomBadge components, ChatPanel routing, human verification
 
 ### Phase 5: Deal Rooms
 **Goal**: User can create named deals and switch between them, with every agent's context (history, files, memory) atomically scoping to the active deal
