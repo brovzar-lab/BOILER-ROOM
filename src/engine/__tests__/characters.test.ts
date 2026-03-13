@@ -3,10 +3,6 @@ import { TileType, TILE_SIZE, WALK_SPEED, WALK_SPEED_FAST, SPEED_RAMP_TILES, WAL
 import type { Character, TileCoord } from '../types';
 import { createTileMap } from '../tileMap';
 
-// We will mock officeStore and findPath/getRoomAtTile where needed.
-// Characters module reads from officeStore.getState() for updateAllCharacters,
-// but updateCharacter is a pure function we can test directly.
-
 /**
  * Helper: create a test character at a given tile position.
  */
@@ -63,12 +59,14 @@ describe('updateCharacter - walk state', () => {
       speed: WALK_SPEED,
       moveProgress: 0.95,
     });
-    // With dt large enough to push past 1.0
-    const dt = 1.0; // Very large step
+    // Small dt that just pushes past 1.0 for one tile
+    // Need progress to go from 0.95 to >= 1.0: (WALK_SPEED / TILE_SIZE) * dt >= 0.05
+    // (64 / 16) * dt >= 0.05 -> dt >= 0.0125
+    const dt = 0.02; // Advances by 0.08, total 1.03 -> snaps to tile 6, remaining 0.03
     updateCharacter(ch, dt, tileMap);
-    // Should have advanced past the first tile
     expect(ch.tileCol).toBe(6);
     expect(ch.tileRow).toBe(5);
+    expect(ch.moveProgress).toBeCloseTo(0.03, 2);
   });
 
   it('transitions from walk to idle when path is exhausted', () => {
@@ -80,8 +78,8 @@ describe('updateCharacter - walk state', () => {
       speed: WALK_SPEED,
       moveProgress: 0.95,
     });
-    // Push through the last tile
-    const dt = 1.0;
+    // Push through the last tile: (64/16) * 0.02 = 0.08, total = 1.03
+    const dt = 0.02;
     updateCharacter(ch, dt, tileMap);
     expect(ch.tileCol).toBe(6);
     expect(ch.state).toBe('idle');
@@ -285,19 +283,20 @@ describe('updateCharacter - idle state', () => {
 // ── startWalk ───────────────────────────────────────────────────────────────
 
 describe('startWalk', () => {
-  let startWalk: typeof import('../characters').startWalk;
   let tileMap: TileType[][];
 
-  beforeEach(async () => {
+  beforeEach(() => {
     vi.resetModules();
+    tileMap = createTileMap(20, 20, TileType.FLOOR);
+  });
 
-    // Mock officeStore with characters
+  it('sets character state to walk and assigns path', async () => {
+    const billy = makeCharacter({ id: 'billy', tileCol: 5, tileRow: 5, state: 'idle' });
+
     vi.doMock('@/store/officeStore', () => ({
       useOfficeStore: {
         getState: () => ({
-          characters: [
-            makeCharacter({ id: 'billy', tileCol: 5, tileRow: 5 }),
-          ],
+          characters: [billy],
           activeRoomId: 'billy',
           setActiveRoom: vi.fn(),
           setBillyPosition: vi.fn(),
@@ -305,106 +304,114 @@ describe('startWalk', () => {
       },
     }));
 
-    // Mock findPath to return a known path
     vi.doMock('../tileMap', async () => {
       const actual = await vi.importActual<typeof import('../tileMap')>('../tileMap');
       return {
         ...actual,
-        findPath: vi.fn((_sc: number, _sr: number, ec: number, er: number) => {
-          // Return a simple horizontal path
-          const path: TileCoord[] = [];
-          for (let c = 6; c <= ec; c++) {
-            path.push({ col: c, row: er });
-          }
-          return path;
-        }),
+        findPath: vi.fn(() => [
+          { col: 6, row: 5 },
+          { col: 7, row: 5 },
+          { col: 8, row: 5 },
+          { col: 9, row: 5 },
+          { col: 10, row: 5 },
+        ]),
       };
     });
 
-    const mod = await import('../characters');
-    startWalk = mod.startWalk;
-    tileMap = createTileMap(20, 20, TileType.FLOOR);
-  });
-
-  it('sets character state to walk and assigns path', () => {
-    const billy = makeCharacter({ id: 'billy', tileCol: 5, tileRow: 5, state: 'idle' });
-    // Override store mock to include this character
-    const { useOfficeStore } = require('@/store/officeStore');
-    useOfficeStore.getState = () => ({
-      characters: [billy],
-      activeRoomId: 'billy',
-      setActiveRoom: vi.fn(),
-      setBillyPosition: vi.fn(),
-    });
-
+    const { startWalk } = await import('../characters');
     startWalk('billy', 10, 5, tileMap);
 
     expect(billy.state).toBe('walk');
-    expect(billy.path.length).toBeGreaterThan(0);
+    expect(billy.path.length).toBe(5);
     expect(billy.moveProgress).toBe(0);
   });
 
-  it('calculates speed based on path length (short path -> WALK_SPEED)', () => {
+  it('calculates speed based on path length (short path -> WALK_SPEED)', async () => {
     const billy = makeCharacter({ id: 'billy', tileCol: 5, tileRow: 5 });
-    const { useOfficeStore } = require('@/store/officeStore');
 
-    // Mock findPath to return a short path (< SPEED_RAMP_TILES)
-    const { findPath } = require('../tileMap');
-    findPath.mockReturnValue([
-      { col: 6, row: 5 },
-      { col: 7, row: 5 },
-      { col: 8, row: 5 },
-    ]);
+    vi.doMock('@/store/officeStore', () => ({
+      useOfficeStore: {
+        getState: () => ({
+          characters: [billy],
+          activeRoomId: 'billy',
+          setActiveRoom: vi.fn(),
+          setBillyPosition: vi.fn(),
+        }),
+      },
+    }));
 
-    useOfficeStore.getState = () => ({
-      characters: [billy],
-      activeRoomId: 'billy',
-      setActiveRoom: vi.fn(),
-      setBillyPosition: vi.fn(),
+    vi.doMock('../tileMap', async () => {
+      const actual = await vi.importActual<typeof import('../tileMap')>('../tileMap');
+      return {
+        ...actual,
+        findPath: vi.fn(() => [
+          { col: 6, row: 5 },
+          { col: 7, row: 5 },
+          { col: 8, row: 5 },
+        ]),
+      };
     });
 
+    const { startWalk } = await import('../characters');
     startWalk('billy', 8, 5, tileMap);
     expect(billy.speed).toBe(WALK_SPEED);
   });
 
-  it('calculates speed for long path (> SPEED_RAMP_TILES -> WALK_SPEED_FAST)', () => {
+  it('calculates speed for long path (> SPEED_RAMP_TILES -> WALK_SPEED_FAST)', async () => {
     const billy = makeCharacter({ id: 'billy', tileCol: 5, tileRow: 5 });
-    const { useOfficeStore } = require('@/store/officeStore');
 
-    // Mock findPath to return a long path (> SPEED_RAMP_TILES)
-    const { findPath } = require('../tileMap');
     const longPath: TileCoord[] = [];
     for (let c = 6; c <= 20; c++) {
       longPath.push({ col: c, row: 5 });
     }
-    findPath.mockReturnValue(longPath);
 
-    useOfficeStore.getState = () => ({
-      characters: [billy],
-      activeRoomId: 'billy',
-      setActiveRoom: vi.fn(),
-      setBillyPosition: vi.fn(),
+    vi.doMock('@/store/officeStore', () => ({
+      useOfficeStore: {
+        getState: () => ({
+          characters: [billy],
+          activeRoomId: 'billy',
+          setActiveRoom: vi.fn(),
+          setBillyPosition: vi.fn(),
+        }),
+      },
+    }));
+
+    vi.doMock('../tileMap', async () => {
+      const actual = await vi.importActual<typeof import('../tileMap')>('../tileMap');
+      return {
+        ...actual,
+        findPath: vi.fn(() => longPath),
+      };
     });
 
+    const { startWalk } = await import('../characters');
     startWalk('billy', 20, 5, tileMap);
     expect(billy.speed).toBe(WALK_SPEED_FAST);
   });
 
-  it('with empty path (unreachable) keeps character in current state', () => {
+  it('with empty path (unreachable) keeps character in current state', async () => {
     const billy = makeCharacter({ id: 'billy', tileCol: 5, tileRow: 5, state: 'idle' });
-    const { useOfficeStore } = require('@/store/officeStore');
 
-    // Mock findPath to return empty
-    const { findPath } = require('../tileMap');
-    findPath.mockReturnValue([]);
+    vi.doMock('@/store/officeStore', () => ({
+      useOfficeStore: {
+        getState: () => ({
+          characters: [billy],
+          activeRoomId: 'billy',
+          setActiveRoom: vi.fn(),
+          setBillyPosition: vi.fn(),
+        }),
+      },
+    }));
 
-    useOfficeStore.getState = () => ({
-      characters: [billy],
-      activeRoomId: 'billy',
-      setActiveRoom: vi.fn(),
-      setBillyPosition: vi.fn(),
+    vi.doMock('../tileMap', async () => {
+      const actual = await vi.importActual<typeof import('../tileMap')>('../tileMap');
+      return {
+        ...actual,
+        findPath: vi.fn(() => []),
+      };
     });
 
+    const { startWalk } = await import('../characters');
     startWalk('billy', 99, 99, tileMap);
     expect(billy.state).toBe('idle');
     expect(billy.path).toEqual([]);
@@ -471,7 +478,7 @@ describe('speed ramp', () => {
       speed: WALK_SPEED,
     });
     updateCharacter(ch, 0.01, tileMap);
-    // Speed should remain WALK_SPEED
+    // Speed should remain WALK_SPEED (updateCharacter does not change speed)
     expect(ch.speed).toBe(WALK_SPEED);
   });
 
@@ -494,10 +501,9 @@ describe('speed ramp', () => {
 // ── Knock pause and agent facing BILLY ──────────────────────────────────────
 
 describe('updateAllCharacters - knock and agent reactions', () => {
-  let updateAllCharacters: typeof import('../characters').updateAllCharacters;
   let tileMap: TileType[][];
 
-  beforeEach(async () => {
+  beforeEach(() => {
     vi.resetModules();
     tileMap = createTileMap(50, 50, TileType.FLOOR);
   });
@@ -566,8 +572,7 @@ describe('updateAllCharacters - knock and agent reactions', () => {
       },
     }));
 
-    const mod = await import('../characters');
-    updateAllCharacters = mod.updateAllCharacters;
+    const { updateAllCharacters } = await import('../characters');
 
     // BILLY arrives -- should trigger knock pause
     updateAllCharacters(0.1, tileMap);
@@ -642,8 +647,7 @@ describe('updateAllCharacters - knock and agent reactions', () => {
       },
     }));
 
-    const mod = await import('../characters');
-    updateAllCharacters = mod.updateAllCharacters;
+    const { updateAllCharacters } = await import('../characters');
 
     updateAllCharacters(0.1, tileMap);
 
