@@ -40,10 +40,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Characters & Navigation
 
-- [ ] **NAV-01**: BILLY (user avatar) is a pixel character that walks between rooms using BFS pathfinding
-- [ ] **NAV-02**: Clicking a room causes BILLY to walk there (not instant teleport)
+- [x] **NAV-01**: BILLY (user avatar) is a pixel character that walks between rooms using BFS pathfinding
+- [x] **NAV-02**: Clicking a room causes BILLY to walk there (not instant teleport)
 - [ ] **NAV-03**: When BILLY arrives at an agent's room, the chat panel slides open for that agent
-- [ ] **NAV-04**: Agent characters have idle animations at their desks (typing, reading, coffee)
+- [x] **NAV-04**: Agent characters have idle animations at their desks (typing, reading, coffee)
 - [ ] **NAV-05**: Agent characters animate in sync with their status (typing animation when API is streaming)
 - [ ] **NAV-06**: Visual indicators show which rooms have active conversations and unread messages
 
@@ -164,9 +164,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ENGN-04 | Phase 2 | Complete |
 | ENGN-05 | Phase 2 | Complete |
 | ENGN-06 | Phase 2 | Complete |
-| NAV-01 | Phase 2 | Pending |
-| NAV-02 | Phase 2 | Pending |
-| NAV-04 | Phase 2 | Pending |
+| NAV-01 | Phase 2 | Complete |
+| NAV-02 | Phase 2 | Complete |
+| NAV-04 | Phase 2 | Complete |
 | AGNT-03 | Phase 3 | Pending |
 | AGNT-04 | Phase 3 | Pending |
 | AGNT-05 | Phase 3 | Pending |
