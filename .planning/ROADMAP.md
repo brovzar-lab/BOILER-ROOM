@@ -115,19 +115,19 @@ Plans:
 **Goal**: User can drag-and-drop PDF and DOCX files onto agent desks, with extracted text injected into the agent's conversation context
 **Depends on**: Phase 3 (agent rooms), Phase 5 (deal-scoped file storage)
 **Requirements**: FILE-01, FILE-02, FILE-03, FILE-04, FILE-05, FILE-06
-**Research**: Skip (PDF.js and mammoth have excellent official docs including Worker setup)
+**Research**: COMPLETE -- pdfjs-dist + mammoth extraction, Vite worker configuration, drag-and-drop patterns
 **Success Criteria** (what must be TRUE):
   1. User drags a PDF onto an agent's room and the extracted text appears in that agent's context for future responses
   2. User drags a DOCX onto an agent's room and the extracted text appears in that agent's context for future responses
   3. Uploaded files appear as pixel document icons on the agent's desk in the Canvas view
   4. User can click a file icon on a desk to view the file's extracted contents
   5. File metadata (name, size, date, associated agent, associated deal) is stored and queryable
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
-- [ ] 06-03: TBD
+- [ ] 06-01-PLAN.md — FileRecord type, PDF/DOCX extraction services, fileService orchestrator, fileStore CRUD (TDD)
+- [ ] 06-02-PLAN.md — buildContext Layer 4 file injection, canvas drag-and-drop handlers, file icon rendering with drop zone highlights
+- [ ] 06-03-PLAN.md — FileViewer slide-out panel, ChatPanel drop zone, Header file count indicator, human verification
 
 ### Phase 7: Agent Memory
 **Goal**: Agents automatically extract and retain structured facts from conversations, building persistent knowledge per deal that informs future responses and can be shared across agents
