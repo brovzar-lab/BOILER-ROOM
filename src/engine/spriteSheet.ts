@@ -11,17 +11,17 @@ import type { SpriteFrame } from './types';
 // ── Placeholder Colors (Phase 2) ───────────────────────────────────────────
 // Warm tones in offices, cool tones in hallways and War Room
 export const PLACEHOLDER_COLORS: Record<string, string> = {
-  floor: '#3a3530',
-  wall: '#1a1815',
-  door: '#4a4540',
-  hallway: '#2e2b27',
+  floor: '#6e665e',
+  wall: '#453e38',
+  door: '#7a7268',
+  hallway: '#584f48',
   billy: '#e8a838',
   diana: '#c084fc',
   marcos: '#60a5fa',
   sasha: '#34d399',
   roberto: '#f87171',
   valentina: '#fb923c',
-  'war-room-floor': '#2a2d35',
+  'war-room-floor': '#4a5060',
 };
 
 // ── Sprite Sheet Loading ────────────────────────────────────────────────────

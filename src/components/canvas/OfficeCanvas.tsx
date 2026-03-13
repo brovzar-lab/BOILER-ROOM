@@ -24,18 +24,21 @@ export function OfficeCanvas() {
     let cancelled = false;
 
     // HiDPI setup: scale canvas internal resolution to match device pixel ratio
+    // CSS size is managed by Tailwind (w-full h-full absolute inset-0) — never override it
     function setupHiDPI(): void {
       if (!canvas) return;
       const dpr = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
 
+      // Guard: skip if element hasn't been laid out yet
+      if (rect.width === 0 || rect.height === 0) return;
+
       // Set internal resolution to CSS size * DPR
       canvas.width = Math.floor(rect.width * dpr);
       canvas.height = Math.floor(rect.height * dpr);
 
-      // CSS size stays the same (managed by Tailwind)
-      canvas.style.width = `${rect.width}px`;
-      canvas.style.height = `${rect.height}px`;
+      // Do NOT set canvas.style.width/height — Tailwind classes handle CSS sizing.
+      // Setting explicit style would override the w-full/h-full classes.
 
       // Scale context so drawing operations use CSS coordinates
       const ctx = canvas.getContext('2d');
