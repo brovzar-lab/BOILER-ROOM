@@ -52,20 +52,23 @@ describe('retryWithBackoff', () => {
   });
 
   it('throws after all retries exhausted', async () => {
+    // Use real timers for this test to avoid unhandled rejection issues
+    vi.useRealTimers();
+
     const fn = vi.fn().mockRejectedValue(new Error('persistent failure'));
 
-    const resultPromise = retryWithBackoff(fn, {
-      maxRetries: 2,
-      baseDelayMs: 100,
-    });
+    await expect(
+      retryWithBackoff(fn, {
+        maxRetries: 2,
+        baseDelayMs: 10, // Very short delay for test speed
+      })
+    ).rejects.toThrow('persistent failure');
 
-    // Advance timers for all retry delays
-    await vi.advanceTimersByTimeAsync(1000);
-    await vi.advanceTimersByTimeAsync(1000);
-
-    await expect(resultPromise).rejects.toThrow('persistent failure');
     // 1 initial + 2 retries = 3 total calls
     expect(fn).toHaveBeenCalledTimes(3);
+
+    // Re-enable fake timers for remaining tests
+    vi.useFakeTimers();
   });
 
   it('calls onRetry callback with attempt number and delay', async () => {
