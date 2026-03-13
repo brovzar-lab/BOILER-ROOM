@@ -57,3 +57,9 @@ body {
   scrollbar-width: thin;
   scrollbar-color: var(--color-surface-border) var(--color-surface-bg);
 }
+
+/* Canvas pixel-perfect rendering (fallback chain) */
+canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
