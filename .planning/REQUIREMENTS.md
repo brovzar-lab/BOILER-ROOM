@@ -78,7 +78,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **MEM-01**: After each conversation, key facts are automatically extracted (decisions, numbers, dates, action items)
 - [x] **MEM-02**: Extracted memory is structured (not narrative) and stored per agent per deal
-- [ ] **MEM-03**: User can view what an agent "knows" about the current deal via a memory panel
+- [x] **MEM-03**: User can view what an agent "knows" about the current deal via a memory panel
 - [x] **MEM-04**: Structured memory is prepended to the agent's system prompt as context
 - [x] **MEM-05**: Structured memory is NEVER auto-summarized (only narrative history is summarizable)
 - [x] **MEM-06**: Agents can reference facts from other agents' memory with attribution
@@ -196,7 +196,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FILE-06 | Phase 6 | Complete |
 | MEM-01 | Phase 7 | Complete |
 | MEM-02 | Phase 7 | Complete |
-| MEM-03 | Phase 7 | Pending |
+| MEM-03 | Phase 7 | Complete |
 | MEM-04 | Phase 7 | Complete |
 | MEM-05 | Phase 7 | Complete |
 | MEM-06 | Phase 7 | Complete |

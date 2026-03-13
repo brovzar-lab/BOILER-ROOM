@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: War Room** - Broadcast to all agents simultaneously, parallel color-coded streaming, rate-limit-aware concurrency, partial failure handling (completed 2026-03-13)
 - [ ] **Phase 5: Deal Rooms** - Named deal entities, per-deal conversation/file/memory scoping, atomic context switching
 - [x] **Phase 6: File Handling** - Drag-and-drop PDF/DOCX, Web Worker text extraction, file content injected into agent context (completed 2026-03-13)
-- [ ] **Phase 7: Agent Memory** - Structured fact extraction from conversations, memory panel, cross-agent knowledge sharing with attribution
+- [x] **Phase 7: Agent Memory** - Structured fact extraction from conversations, memory panel, cross-agent knowledge sharing with attribution (completed 2026-03-13)
 - [ ] **Phase 8: Polish** - Production pixel art sprites, personality animations, ambient sound, responsive design, bundle optimization
 
 ## Phase Details
@@ -176,5 +176,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 4. War Room | 3/3 | Complete | 2026-03-13 |
 | 5. Deal Rooms | 1/2 | In Progress|  |
 | 6. File Handling | 3/3 | Complete   | 2026-03-13 |
-| 7. Agent Memory | 0/3 | Not started | - |
+| 7. Agent Memory | 3/3 | Complete   | 2026-03-13 |
 | 8. Polish | 0/2 | Not started | - |
