@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-03-PLAN.md (Overview Panel + Dynamic Header)
-last_updated: "2026-03-13T02:49:17.000Z"
-last_activity: 2026-03-13 -- Completed 03-03 Overview Panel + Dynamic Header (Phase 3 DONE)
+stopped_at: Phase 3 VERIFIED — ready for Phase 4
+last_updated: "2026-03-13T08:30:00.000Z"
+last_activity: 2026-03-13 -- Phase 3 verified, gap fixed (return-home nav), prompts tuned for brevity
 progress:
   total_phases: 8
   completed_phases: 3
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Multi-perspective, context-aware AI advisory for complex production deals -- type one question, get informed responses from five domain specialists who already know the deal history.
-**Current focus:** Phase 3 COMPLETE -- Integration + All Agents
+**Current focus:** Phase 3 VERIFIED — ready for Phase 4 (War Room)
 
 ## Current Position
 
-Phase: 3 of 8 (Integration + All Agents) -- Plan 3/3 COMPLETE
-Next: Phase 4
-Status: Phase 3 COMPLETE
-Last activity: 2026-03-13 -- Completed 03-03 Overview Panel + Dynamic Header
+Phase: 3 of 8 (Integration + All Agents) -- VERIFIED ✓
+Next: Phase 4 (War Room — broadcast to all agents)
+Status: Phase 3 VERIFIED, all gaps closed
+Last activity: 2026-03-13 -- Verified, gap fixed (return-home nav), prompts tuned for brevity
 
 Progress: [██████████] 100%
 
@@ -95,6 +95,8 @@ Recent decisions affecting current work:
 - [Phase 03]: ChatPanel split into outer (room-aware router) + inner (AgentChatPanel) for clean useChat initialization per agent via React key prop
 - [Phase 03]: Agent status flows through Zustand bridge: chatStore streaming -> officeStore agentStatuses -> engine reads via getState() -> canvas renders overlays
 - [Phase 03]: OverviewPanel uses single-column stacked card layout for 400px panel width with inline relative time helper (no library)
+- [Phase 03]: Escape key returns BILLY to his office, setActiveRoom('billy') fires on arrival to restore OverviewPanel
+- [Phase 03]: Agent prompts tuned for conversational brevity (2-4 sentences default, skip preambles, ask follow-ups)
 
 ### Research Flags
 
@@ -114,6 +116,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T02:49:17Z
-Stopped at: Completed 03-03-PLAN.md (Overview Panel + Dynamic Header) -- Phase 3 DONE
+Last session: 2026-03-13T08:30:00Z
+Stopped at: Phase 3 VERIFIED — ready for Phase 4 (War Room)
 Resume file: None
