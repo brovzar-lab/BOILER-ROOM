@@ -198,6 +198,24 @@ export function updateAllCharacters(
     updateCharacter(ch, dt, tileMap);
   }
 
+  // Drive agent character animations from agentStatuses (Zustand bridge)
+  const { agentStatuses } = state;
+  for (const ch of characters) {
+    if (ch.id === 'billy') continue;
+    const status = agentStatuses[ch.id];
+    if (status === 'thinking') {
+      // Switch to work animation (fast typing) unless walking
+      if (ch.state === 'idle' || ch.state === 'work') {
+        ch.state = 'work';
+      }
+    } else if (status === 'idle' || status === 'needs-attention') {
+      // Return to idle if previously in work state (from thinking)
+      if (ch.state === 'work') {
+        ch.state = 'idle';
+      }
+    }
+  }
+
   // Check if BILLY entered a new tile
   if (billy && (billy.tileCol !== prevBillyCol || billy.tileRow !== prevBillyRow)) {
     const room = getRoomAtTile(billy.tileCol, billy.tileRow);

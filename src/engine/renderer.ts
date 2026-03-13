@@ -31,6 +31,7 @@ export function renderFrame(
   activeRoomId: string | null,
   canvasWidth: number,
   canvasHeight: number,
+  agentStatuses: Record<string, string>,
 ): void {
   // Pixel-perfect rendering: disable anti-aliasing every frame
   ctx.imageSmoothingEnabled = false;
@@ -87,6 +88,9 @@ export function renderFrame(
   for (const ch of sortedChars) {
     renderCharacter(ctx, ch, tileSize, offsetX, offsetY, zoom);
   }
+
+  // ── Layer 4b: Status Overlays (speech bubbles, thinking dots) ─────────
+  renderStatusOverlays(ctx, characters, agentStatuses, tileSize, offsetX, offsetY, zoom);
 
   // ── Layer 5: UI Overlays ────────────────────────────────────────────────
   if (activeRoomId) {
@@ -206,6 +210,69 @@ function renderCharacter(
   }
   ctx.closePath();
   ctx.fill();
+}
+
+// ── Status Overlays (speech bubbles, thinking dots) ─────────────────────────
+
+function renderStatusOverlays(
+  ctx: CanvasRenderingContext2D,
+  characters: Character[],
+  agentStatuses: Record<string, string>,
+  _tileSize: number,
+  offsetX: number,
+  offsetY: number,
+  zoom: number,
+): void {
+  for (const ch of characters) {
+    if (ch.id === 'billy') continue;
+    const status = agentStatuses[ch.id];
+
+    if (status === 'needs-attention') {
+      // Speech bubble above character head
+      const cx = Math.floor(ch.x * zoom + offsetX + (TILE_SIZE * zoom) / 2);
+      const bubbleY = Math.floor(ch.y * zoom + offsetY - 4 * zoom);
+      const bw = Math.floor(6 * zoom);
+      const bh = Math.floor(5 * zoom);
+      const radius = Math.max(1, Math.floor(zoom));
+
+      // Bubble body (white rounded rect)
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.roundRect(cx - bw / 2, bubbleY - bh, bw, bh, radius);
+      ctx.fill();
+
+      // Small triangle pointer
+      const triSize = Math.max(1, Math.floor(zoom));
+      ctx.beginPath();
+      ctx.moveTo(cx - triSize, bubbleY);
+      ctx.lineTo(cx + triSize, bubbleY);
+      ctx.lineTo(cx, bubbleY + triSize);
+      ctx.closePath();
+      ctx.fill();
+
+      // Red notification dot inside bubble
+      ctx.fillStyle = '#f87171';
+      const dotR = Math.max(1, Math.floor(zoom * 0.8));
+      ctx.beginPath();
+      ctx.arc(cx, bubbleY - bh / 2, dotR, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    if (status === 'thinking') {
+      // Amber dots ("...") above character head
+      const cx = Math.floor(ch.x * zoom + offsetX + (TILE_SIZE * zoom) / 2);
+      const dotsY = Math.floor(ch.y * zoom + offsetY - 2 * zoom);
+      const dotR = Math.max(1, Math.floor(zoom * 0.6));
+      const spacing = Math.floor(2.5 * zoom);
+
+      ctx.fillStyle = '#fbbf24';
+      for (let i = -1; i <= 1; i++) {
+        ctx.beginPath();
+        ctx.arc(cx + i * spacing, dotsY, dotR, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
 }
 
 // ── Room Label Overlay ──────────────────────────────────────────────────────

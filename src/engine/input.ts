@@ -7,8 +7,17 @@
  */
 import { useOfficeStore } from '@/store/officeStore';
 import { screenToTile } from './camera';
-import { getRoomAtTile, OFFICE_TILE_MAP } from './officeLayout';
+import { getRoomAtTile, ROOMS, OFFICE_TILE_MAP } from './officeLayout';
 import { startWalk } from './characters';
+
+/** Maps number keys to agent room IDs */
+const KEY_TO_AGENT: Record<string, string> = {
+  '1': 'diana',
+  '2': 'marcos',
+  '3': 'sasha',
+  '4': 'roberto',
+  '5': 'valentina',
+};
 
 /** Module-level hover position for renderer to read */
 export let hoverTileCol = -1;
@@ -52,8 +61,32 @@ export function setupInputHandlers(canvas: HTMLCanvasElement): () => void {
   }
 
   function handleKeyDown(e: KeyboardEvent): void {
+    // Don't trigger navigation while typing in chat input
+    const tag = document.activeElement?.tagName;
+    if (tag === 'TEXTAREA' || tag === 'INPUT') return;
+
     if (e.key === 'z' || e.key === 'Z') {
       toggleZoom();
+      return;
+    }
+
+    // Number keys 1-5: navigate BILLY to agent rooms
+    const agentId = KEY_TO_AGENT[e.key];
+    if (agentId) {
+      const state = useOfficeStore.getState();
+      // Ignore if already in that room
+      if (state.activeRoomId === agentId) return;
+
+      const room = ROOMS.find((r) => r.id === agentId);
+      if (!room) return;
+
+      state.setTargetRoom(room.id);
+      startWalk(
+        'billy',
+        room.billyStandTile.col,
+        room.billyStandTile.row,
+        OFFICE_TILE_MAP,
+      );
     }
   }
 

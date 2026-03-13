@@ -79,7 +79,7 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
     // Update camera (smooth follow toward target)
     updateCamera(state.camera, dt, canvasWidth, canvasHeight);
 
-    // Render the frame
+    // Render the frame (pass agentStatuses for canvas status overlays)
     renderFrame(
       ctx,
       state.camera,
@@ -87,6 +87,7 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
       state.activeRoomId,
       canvasWidth,
       canvasHeight,
+      state.agentStatuses,
     );
 
     rafId = requestAnimationFrame(frame);
