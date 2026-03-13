@@ -1,6 +1,7 @@
 import { useOfficeStore } from '@/store/officeStore';
 import { useDealStore } from '@/store/dealStore';
 import { useFileStore } from '@/store/fileStore';
+import { useMemoryStore } from '@/store/memoryStore';
 import { getAgent } from '@/config/agents';
 import type { AgentId, AgentStatus } from '@/types/agent';
 
@@ -38,6 +39,12 @@ export function Header({ sidebarOpen, onToggleSidebar }: HeaderProps) {
   const files = useFileStore((s) => s.files);
   const fileCount = isAgentId(activeRoomId)
     ? files.filter((f) => f.agentId === activeRoomId && (!activeDealId || f.dealId === activeDealId)).length
+    : 0;
+
+  // Memory fact count for current deal (all agents)
+  const memoryFacts = useMemoryStore((s) => s.facts);
+  const factCount = activeDealId
+    ? memoryFacts.filter((f) => f.dealId === activeDealId).length
     : 0;
 
   // Determine what to display on the right side
@@ -118,6 +125,11 @@ export function Header({ sidebarOpen, onToggleSidebar }: HeaderProps) {
         {fileCount > 0 && (
           <span className="text-xs text-neutral-400 bg-neutral-700 px-2 py-0.5 rounded-full">
             {fileCount} {fileCount === 1 ? 'file' : 'files'}
+          </span>
+        )}
+        {factCount > 0 && (
+          <span className="text-xs text-neutral-400 bg-neutral-700 px-2 py-0.5 rounded-full">
+            {factCount} {factCount === 1 ? 'fact' : 'facts'}
           </span>
         )}
       </div>

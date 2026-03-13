@@ -3,6 +3,7 @@ import { useChat } from '@/hooks/useChat';
 import { useOfficeStore } from '@/store/officeStore';
 import { useDealStore } from '@/store/dealStore';
 import { useFileStore } from '@/store/fileStore';
+import { useMemoryStore } from '@/store/memoryStore';
 import { getAgent } from '@/config/agents';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
@@ -10,6 +11,7 @@ import { TokenCounter } from './TokenCounter';
 import { ErrorBanner } from './ErrorBanner';
 import { OverviewPanel } from './OverviewPanel';
 import { WarRoomPanel } from './WarRoomPanel';
+import { MemoryPanel } from '@/components/memory/MemoryPanel';
 import type { AgentId } from '@/types/agent';
 
 /** Valid agent room IDs (excludes 'billy' and 'war-room') */
@@ -36,6 +38,12 @@ export function ChatPanel() {
   const isProcessing = useFileStore((s) => s.isProcessing);
   const [fadeClass, setFadeClass] = useState('opacity-100 transition-opacity duration-200');
   const [isDragOver, setIsDragOver] = useState(false);
+  const [showMemory, setShowMemory] = useState(false);
+
+  // Reset memory panel when switching rooms or deals
+  useEffect(() => {
+    setShowMemory(false);
+  }, [activeRoomId, activeDealId]);
 
   // Fade out and back in when the active deal changes
   useEffect(() => {
@@ -87,6 +95,9 @@ export function ChatPanel() {
 
   if (isAgentRoom(activeRoomId)) {
     const agent = getAgent(activeRoomId);
+    // Memory fact count for badge
+    const factCount = useMemoryStore.getState().getFactsForAgent(activeRoomId, activeDealId).length;
+
     return (
       <div
         className={`flex flex-col flex-1 min-h-0 bg-[--color-surface-bg] relative ${fadeClass}`}
@@ -109,15 +120,35 @@ export function ChatPanel() {
                 {agent.title}
               </span>
             </div>
-            {/* Processing indicator */}
-            {isProcessing && (
-              <span className="ml-auto text-xs text-amber-400 animate-pulse">
-                Processing file...
-              </span>
-            )}
+            <div className="ml-auto flex items-center gap-2">
+              {/* Processing indicator */}
+              {isProcessing && (
+                <span className="text-xs text-amber-400 animate-pulse">
+                  Processing file...
+                </span>
+              )}
+              {/* Memory button */}
+              <button
+                onClick={() => setShowMemory(true)}
+                className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded
+                  bg-neutral-700 hover:bg-neutral-600 text-neutral-300 hover:text-neutral-100 transition-colors"
+              >
+                Memory
+                {factCount > 0 && (
+                  <span className="bg-neutral-600 text-neutral-200 px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
+                    {factCount}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         )}
         <AgentChatPanel key={`${activeRoomId}-${activeDealId}`} agentId={activeRoomId} />
+
+        {/* Memory panel overlay */}
+        {showMemory && (
+          <MemoryPanel agentId={activeRoomId} onClose={() => setShowMemory(false)} />
+        )}
 
         {/* Drop zone overlay */}
         {isDragOver && (
