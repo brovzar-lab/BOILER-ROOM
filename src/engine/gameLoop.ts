@@ -8,7 +8,10 @@
  * The game loop receives an already-configured canvas.
  */
 import { useOfficeStore } from '@/store/officeStore';
+import { TILE_SIZE } from './types';
 import { updateCamera } from './camera';
+import { updateAllCharacters } from './characters';
+import { OFFICE_TILE_MAP } from './officeLayout';
 import { renderFrame } from './renderer';
 
 /**
@@ -57,6 +60,21 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
     // Use CSS dimensions (logical pixels) for rendering calculations
     const canvasWidth = prevWidth;
     const canvasHeight = prevHeight;
+
+    // Update all characters (movement, animation, room entry detection)
+    updateAllCharacters(dt, OFFICE_TILE_MAP);
+
+    // If BILLY is walking, set camera target to follow BILLY's pixel position
+    const billy = state.characters.find((c) => c.id === 'billy');
+    if (billy && state.camera.followTarget === 'billy' && state.camera.zoom >= 2) {
+      // Camera targets BILLY's center pixel position, offset to center in viewport
+      state.camera.targetX = billy.x * state.camera.zoom - canvasWidth / 2 + (TILE_SIZE * state.camera.zoom) / 2;
+      state.camera.targetY = billy.y * state.camera.zoom - canvasHeight / 2 + (TILE_SIZE * state.camera.zoom) / 2;
+    } else if (state.camera.zoom === 1) {
+      // Overview mode: center camera on the map
+      state.camera.targetX = 0;
+      state.camera.targetY = 0;
+    }
 
     // Update camera (smooth follow toward target)
     updateCamera(state.camera, dt, canvasWidth, canvasHeight);

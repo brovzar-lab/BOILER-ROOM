@@ -222,6 +222,64 @@ export const ROOMS: Room[] = [
   },
 ];
 
+// ── Furniture ───────────────────────────────────────────────────────────────
+
+export interface FurnitureItem {
+  roomId: string;
+  type: 'desk' | 'chair' | 'table' | 'bookshelf' | 'plant' | 'water-cooler' | 'artwork';
+  col: number;
+  row: number;
+  width: number;  // in tiles
+  height: number; // in tiles
+}
+
+/**
+ * Furniture placement data for all rooms and hallway decorations.
+ * Each room has at least a desk; hallways have environmental props.
+ * Phase 8 will replace placeholder rendering with sprite-based furniture.
+ */
+export const FURNITURE: FurnitureItem[] = [
+  // BILLY's Office (cols 17-24, rows 3-7 interior)
+  { roomId: 'billy', type: 'desk', col: 19, row: 3, width: 3, height: 1 },
+  { roomId: 'billy', type: 'chair', col: 20, row: 4, width: 1, height: 1 },
+  { roomId: 'billy', type: 'bookshelf', col: 17, row: 3, width: 1, height: 2 },
+
+  // Diana's Office (cols 5-12, rows 12-19 interior)
+  { roomId: 'diana', type: 'desk', col: 7, row: 14, width: 2, height: 1 },
+  { roomId: 'diana', type: 'chair', col: 8, row: 15, width: 1, height: 1 },
+  { roomId: 'diana', type: 'bookshelf', col: 5, row: 12, width: 1, height: 2 },
+
+  // War Room (cols 17-24, rows 12-19 interior) -- large conference table
+  { roomId: 'war-room', type: 'table', col: 18, row: 14, width: 5, height: 3 },
+
+  // Marcos's Office (cols 29-36, rows 12-19 interior)
+  { roomId: 'marcos', type: 'desk', col: 31, row: 14, width: 2, height: 1 },
+  { roomId: 'marcos', type: 'chair', col: 32, row: 15, width: 1, height: 1 },
+  { roomId: 'marcos', type: 'plant', col: 36, row: 12, width: 1, height: 1 },
+
+  // Sasha's Office (cols 5-12, rows 24-31 interior)
+  { roomId: 'sasha', type: 'desk', col: 7, row: 26, width: 2, height: 1 },
+  { roomId: 'sasha', type: 'chair', col: 8, row: 27, width: 1, height: 1 },
+  { roomId: 'sasha', type: 'artwork', col: 5, row: 24, width: 1, height: 1 },
+
+  // Valentina's Office (cols 17-24, rows 24-31 interior)
+  { roomId: 'valentina', type: 'desk', col: 19, row: 26, width: 2, height: 1 },
+  { roomId: 'valentina', type: 'chair', col: 20, row: 27, width: 1, height: 1 },
+  { roomId: 'valentina', type: 'plant', col: 24, row: 24, width: 1, height: 1 },
+
+  // Roberto's Office (cols 29-36, rows 24-31 interior)
+  { roomId: 'roberto', type: 'desk', col: 31, row: 26, width: 2, height: 1 },
+  { roomId: 'roberto', type: 'chair', col: 32, row: 27, width: 1, height: 1 },
+  { roomId: 'roberto', type: 'bookshelf', col: 29, row: 24, width: 1, height: 2 },
+
+  // Hallway decorations
+  { roomId: 'hallway', type: 'plant', col: 6, row: 9, width: 1, height: 1 },
+  { roomId: 'hallway', type: 'water-cooler', col: 15, row: 9, width: 1, height: 1 },
+  { roomId: 'hallway', type: 'artwork', col: 27, row: 9, width: 1, height: 1 },
+  { roomId: 'hallway', type: 'plant', col: 6, row: 22, width: 1, height: 1 },
+  { roomId: 'hallway', type: 'plant', col: 36, row: 22, width: 1, height: 1 },
+];
+
 // ── Room Lookup ─────────────────────────────────────────────────────────────
 
 /**
