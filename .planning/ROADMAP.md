@@ -105,12 +105,11 @@ Plans:
   3. Switching deals atomically changes every agent's context -- user sees different histories, files, and memory per deal
   4. Deal switcher shows deal name, last activity timestamp, and per-agent activity summary
   5. Active deal name is prominently displayed in the interface at all times
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
-- [ ] 05-03: TBD
+- [ ] 05-01-PLAN.md — Deal types, dealStore CRUD, chatStore deal-scoping, buildContext Layer 3 injection, migration utility (TDD)
+- [ ] 05-02-PLAN.md — Deal sidebar UI, deal cards with agent dots, Header deal badge, App.tsx initialization, hook deal-awareness, fade transition, human verification
 
 ### Phase 6: File Handling
 **Goal**: User can drag-and-drop PDF and DOCX files onto agent desks, with extracted text injected into the agent's conversation context
@@ -175,7 +174,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 2. Canvas Engine | 3/3 | Complete | 2026-03-13 |
 | 3. Integration + All Agents | 3/3 | Complete   | 2026-03-13 |
 | 4. War Room | 3/3 | Complete | 2026-03-13 |
-| 5. Deal Rooms | 0/3 | Not started | - |
+| 5. Deal Rooms | 0/2 | Not started | - |
 | 6. File Handling | 0/3 | Not started | - |
 | 7. Agent Memory | 0/3 | Not started | - |
 | 8. Polish | 0/2 | Not started | - |
