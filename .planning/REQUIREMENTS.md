@@ -31,12 +31,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Canvas Engine
 
-- [ ] **ENGN-01**: Isometric pixel art office renders on HTML5 Canvas 2D at 60fps
-- [ ] **ENGN-02**: Office contains 7 distinct rooms: 5 agent offices, 1 War Room, 1 BILLY corner office
+- [x] **ENGN-01**: Isometric pixel art office renders on HTML5 Canvas 2D at 60fps
+- [x] **ENGN-02**: Office contains 7 distinct rooms: 5 agent offices, 1 War Room, 1 BILLY corner office
 - [ ] **ENGN-03**: Rooms have furniture and decoration appropriate to each agent's personality
-- [ ] **ENGN-04**: Canvas supports integer zoom levels with pixel-perfect rendering (no anti-aliasing)
-- [ ] **ENGN-05**: Canvas renders correctly on HiDPI displays (Retina)
-- [ ] **ENGN-06**: Game loop runs independently of React render cycle (requestAnimationFrame)
+- [x] **ENGN-04**: Canvas supports integer zoom levels with pixel-perfect rendering (no anti-aliasing)
+- [x] **ENGN-05**: Canvas renders correctly on HiDPI displays (Retina)
+- [x] **ENGN-06**: Game loop runs independently of React render cycle (requestAnimationFrame)
 
 ### Characters & Navigation
 
@@ -158,12 +158,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFR-04 | Phase 1 | Complete |
 | INFR-05 | Phase 1 | Complete |
 | INFR-06 | Phase 1 | Complete |
-| ENGN-01 | Phase 2 | Pending |
-| ENGN-02 | Phase 2 | Pending |
+| ENGN-01 | Phase 2 | Complete |
+| ENGN-02 | Phase 2 | Complete |
 | ENGN-03 | Phase 2 | Pending |
-| ENGN-04 | Phase 2 | Pending |
-| ENGN-05 | Phase 2 | Pending |
-| ENGN-06 | Phase 2 | Pending |
+| ENGN-04 | Phase 2 | Complete |
+| ENGN-05 | Phase 2 | Complete |
+| ENGN-06 | Phase 2 | Complete |
 | NAV-01 | Phase 2 | Pending |
 | NAV-02 | Phase 2 | Pending |
 | NAV-04 | Phase 2 | Pending |

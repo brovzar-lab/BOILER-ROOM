@@ -54,7 +54,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Engine core: types, tile map with BFS pathfinding, 7-room office layout, renderer, camera, game loop, officeStore expansion, vitest setup
+- [x] 02-01-PLAN.md — Engine core: types, tile map with BFS pathfinding, 7-room office layout, renderer, camera, game loop, officeStore expansion, vitest setup
 - [ ] 02-02-PLAN.md — Character state machine, BILLY movement with speed ramping, agent idle/work animations, click-to-walk input, knock animation
 - [ ] 02-03-PLAN.md — React OfficeCanvas component, RoomLabel overlay, ZoomControls, App.tsx wiring, human visual verification
 
@@ -172,7 +172,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation + Single-Agent Chat | 3/3 | Complete | 2026-03-12 |
-| 2. Canvas Engine | 0/3 | Not started | - |
+| 2. Canvas Engine | 1/3 | In Progress | - |
 | 3. Integration + All Agents | 0/3 | Not started | - |
 | 4. War Room | 0/3 | Not started | - |
 | 5. Deal Rooms | 0/3 | Not started | - |

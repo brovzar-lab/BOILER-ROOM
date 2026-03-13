@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 01-03-PLAN.md (Chat UI, markdown, useChat hook -- Phase 1 complete)
-last_updated: "2026-03-12T21:45:41.538Z"
-last_activity: 2026-03-12 -- Completed 01-03-PLAN.md
+status: in-progress
+stopped_at: Completed 02-01-PLAN.md (Engine core -- types, tile map, BFS, renderer, camera, game loop)
+last_updated: "2026-03-13T01:09:30Z"
+last_activity: 2026-03-12 -- Completed 02-01-PLAN.md
 progress:
   total_phases: 8
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
-  percent: 100
+  total_plans: 6
+  completed_plans: 4
+  percent: 17
 ---
 
 # Project State
@@ -21,33 +21,34 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Multi-perspective, context-aware AI advisory for complex production deals -- type one question, get informed responses from five domain specialists who already know the deal history.
-**Current focus:** Phase 1 - Foundation + Single-Agent Chat
+**Current focus:** Phase 2 - Canvas Engine
 
 ## Current Position
 
-Phase: 1 of 8 (Foundation + Single-Agent Chat)
-Plan: 3 of 3 in current phase (PHASE COMPLETE)
-Status: Phase Complete
-Last activity: 2026-03-12 -- Completed 01-03-PLAN.md
+Phase: 2 of 8 (Canvas Engine)
+Plan: 1 of 3 in current phase
+Status: In Progress
+Last activity: 2026-03-12 -- Completed 02-01-PLAN.md
 
-Progress: [██████████] 100%
+Progress: [██░░░░░░░░] 17%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
+- Total plans completed: 4
 - Average duration: 7 min
-- Total execution time: 0.33 hours
+- Total execution time: 0.43 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 Foundation | 3/3 | 20 min | 7 min |
+| 02 Canvas Engine | 1/3 | 6 min | 6 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (4 min), 01-02 (4 min), 01-03 (12 min)
-- Trend: Stable (01-03 longer due to human verification checkpoint)
+- Last 5 plans: 01-01 (4 min), 01-02 (4 min), 01-03 (12 min), 02-01 (6 min)
+- Trend: Stable
 
 *Updated after each plan completion*
 
@@ -74,6 +75,11 @@ Recent decisions affecting current work:
 - useChat hook encapsulates all chat orchestration -- components only receive props
 - react-markdown renders both completed messages and live streaming content
 - Anthropic SDK baseURL uses window.location.origin prefix for browser URL constructor compatibility
+- 16x16 tiles at 2x zoom displaying as 32x32 -- matches pixel-agents reference
+- Hub-and-spoke layout: 42x34 tile grid with hallways connecting all 7 rooms
+- Placeholder colored rectangles for Phase 2 instead of sprite sheets
+- Camera offsets via integer math (no ctx.translate) for pixel-perfect rendering
+- Game loop reads officeStore via getState() non-reactively to avoid React re-renders
 
 ### Research Flags
 
@@ -94,5 +100,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-12
-Stopped at: Completed 01-03-PLAN.md (Chat UI, markdown, useChat hook -- Phase 1 complete)
+Stopped at: Completed 02-01-PLAN.md (Engine core -- types, tile map, BFS, renderer, camera, game loop)
 Resume file: None
