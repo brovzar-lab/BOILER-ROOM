@@ -37,7 +37,6 @@ const CHAT_COLLAPSE_WIDTH = 1400;
 
 function App() {
   const [ready, setReady] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [chatOpen, setChatOpen] = useState(true);
   const [needsMigration, setNeedsMigration] = useState(false);
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
@@ -235,13 +234,10 @@ function App() {
 
   return (
     <div className="h-screen bg-[--color-surface-bg] flex flex-col">
-      <Header
-        sidebarOpen={sidebarOpen}
-        onToggleSidebar={() => setSidebarOpen((v) => !v)}
-      />
+      <Header />
       <main ref={mainRef} className="flex-1 flex overflow-hidden min-h-0">
         {/* Left sidebar: deals */}
-        <DealSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <DealSidebar />
 
         {/* Center: office canvas + desk drop zone */}
         <div

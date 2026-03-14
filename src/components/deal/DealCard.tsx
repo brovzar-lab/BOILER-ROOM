@@ -6,6 +6,15 @@ import { DealActions } from './DealActions';
 
 const AGENT_IDS: AgentId[] = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
 
+/** Initial letter for each agent (used in compact activity row). */
+const AGENT_INITIALS: Record<AgentId, string> = {
+  patrik: 'P',
+  marcos: 'M',
+  sandra: 'S',
+  isaac: 'I',
+  wendy: 'W',
+};
+
 /**
  * Formats a timestamp into a relative time string (e.g., "2m ago", "1h ago").
  * Same inline helper pattern used in OverviewPanel.
@@ -34,8 +43,9 @@ interface DealCardProps {
 /**
  * Individual deal card in the sidebar list.
  *
- * Shows deal name, description, 5 agent activity dots, relative timestamp,
- * and a three-dot menu for actions. Active deal gets amber left border accent.
+ * Shows deal name, description, per-agent activity with colored initials
+ * and message counts, relative timestamp, and a three-dot menu for actions.
+ * Active deal gets amber left border accent.
  */
 export function DealCard({ deal, isActive, agentActivity, onSelect }: DealCardProps) {
   const [showActions, setShowActions] = useState(false);
@@ -43,6 +53,9 @@ export function DealCard({ deal, isActive, agentActivity, onSelect }: DealCardPr
   const isArchived = deal.status === 'archived';
   const isDeleted = deal.status === 'deleted';
   const isMuted = isArchived || isDeleted;
+
+  // Agents with activity > 0
+  const activeAgents = AGENT_IDS.filter((id) => (agentActivity[id] ?? 0) > 0);
 
   return (
     <div
@@ -80,25 +93,47 @@ export function DealCard({ deal, isActive, agentActivity, onSelect }: DealCardPr
         </div>
       )}
 
-      {/* Agent activity dots + relative time */}
+      {/* Per-agent activity: colored initials with counts */}
       <div className="flex items-center justify-between mt-1.5">
-        <div className="flex items-center gap-1">
-          {AGENT_IDS.map((agentId) => {
-            const agent = agents[agentId];
-            const hasActivity = (agentActivity[agentId] ?? 0) > 0;
-            return (
-              <span
-                key={agentId}
-                className={`w-2 h-2 rounded-full ${hasActivity ? 'opacity-100' : 'opacity-30'}`}
-                style={{ backgroundColor: agent?.color ?? '#888' }}
-                title={agent?.name ?? agentId}
-              />
-            );
-          })}
+        <div className="flex items-center gap-1.5">
+          {activeAgents.length > 0 ? (
+            activeAgents.map((agentId) => {
+              const agent = agents[agentId];
+              const count = agentActivity[agentId] ?? 0;
+              return (
+                <span
+                  key={agentId}
+                  className="text-[10px] font-bold"
+                  style={{ color: agent?.color ?? '#888' }}
+                  title={`${agent?.name ?? agentId}: ${count} conversation${count !== 1 ? 's' : ''}`}
+                >
+                  {AGENT_INITIALS[agentId]}:{count}
+                </span>
+              );
+            })
+          ) : (
+            // Fallback: show muted dots when no activity
+            AGENT_IDS.map((agentId) => {
+              const agent = agents[agentId];
+              return (
+                <span
+                  key={agentId}
+                  className="w-2 h-2 rounded-full opacity-30"
+                  style={{ backgroundColor: agent?.color ?? '#888' }}
+                  title={agent?.name ?? agentId}
+                />
+              );
+            })
+          )}
         </div>
         <span className="text-[10px] text-[--color-text-muted]">
           {relativeTime(deal.updatedAt)}
         </span>
+      </div>
+
+      {/* Last active line */}
+      <div className="text-[9px] text-[--color-text-muted] mt-0.5">
+        Last active: {relativeTime(deal.updatedAt)}
       </div>
 
       {/* Actions dropdown */}
