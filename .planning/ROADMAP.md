@@ -109,7 +109,7 @@ Plans:
 | 6. File Handling | v1.0 | 3/3 | Complete | 2026-03-13 |
 | 7. Agent Memory | v1.0 | 4/4 | Complete | 2026-03-13 |
 | 8. Polish | v1.0 | 3/3 | Complete | 2026-03-14 |
-| 9. Compact Layout | v1.1 | 0/3 | Planning | - |
+| 9. Compact Layout | v1.1 | 1/3 | In Progress | - |
 | 10. Rendering Pipeline | v1.1 | 0/? | Not started | - |
 | 11. JRPG Sprite Integration | v1.1 | 0/? | Not started | - |
 | 12. Smooth Zoom | v1.1 | 0/? | Not started | - |
