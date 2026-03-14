@@ -50,6 +50,17 @@ export let cursorScreenY = 0;
 /** Shared zoom state instance -- game loop reads this for tickZoom */
 export const zoomState = createZoomState();
 
+/** Whether the user is currently dragging to pan the camera */
+export let isDragging = false;
+
+/** Whether the user has manually panned — disables follow until BILLY walks */
+export let userHasPanned = false;
+
+/** Called by game loop when BILLY starts walking to re-enable follow */
+export function clearUserPan(): void {
+  userHasPanned = false;
+}
+
 /** Module-level hover position for renderer to read */
 export let hoverTileCol = -1;
 export let hoverTileRow = -1;
@@ -80,6 +91,12 @@ export function setOnFileClick(cb: ((fileId: string) => void) | null): void {
  */
 export function setupInputHandlers(canvas: HTMLCanvasElement): () => void {
   function handleClick(e: MouseEvent): void {
+    // Suppress click if user was dragging to pan
+    if (dragMoved) {
+      dragMoved = false;
+      return;
+    }
+
     const rect = canvas.getBoundingClientRect();
     const cssX = e.clientX - rect.left;
     const cssY = e.clientY - rect.top;
@@ -228,6 +245,48 @@ export function setupInputHandlers(canvas: HTMLCanvasElement): () => void {
   function handleMouseLeave(): void {
     hoverTileCol = -1;
     hoverTileRow = -1;
+    isDragging = false;
+  }
+
+  // ── Click-and-Drag Pan Handler ──────────────────────────────────────────
+
+  let dragStartX = 0;
+  let dragStartY = 0;
+  let dragCameraStartX = 0;
+  let dragCameraStartY = 0;
+  let dragMoved = false;
+
+  function handleMouseDown(e: MouseEvent): void {
+    // Only left-click drag (button 0), ignore if over UI
+    if (e.button !== 0) return;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    const state = useOfficeStore.getState();
+    dragCameraStartX = state.camera.x;
+    dragCameraStartY = state.camera.y;
+    dragMoved = false;
+    isDragging = false;
+  }
+
+  function handleMouseMoveDrag(e: MouseEvent): void {
+    // Only start drag after 3px movement threshold to avoid interfering with clicks
+    if (e.buttons !== 1) return;
+    const dx = e.clientX - dragStartX;
+    const dy = e.clientY - dragStartY;
+    if (!isDragging && Math.abs(dx) + Math.abs(dy) < 3) return;
+
+    isDragging = true;
+    dragMoved = true;
+    userHasPanned = true;
+    const state = useOfficeStore.getState();
+    state.camera.x = dragCameraStartX - dx;
+    state.camera.y = dragCameraStartY - dy;
+    state.camera.targetX = state.camera.x;
+    state.camera.targetY = state.camera.y;
+  }
+
+  function handleMouseUp(_e: MouseEvent): void {
+    isDragging = false;
   }
 
   // ── Wheel / Pinch Zoom Handler ──────────────────────────────────────────
@@ -322,7 +381,10 @@ export function setupInputHandlers(canvas: HTMLCanvasElement): () => void {
   // Attach listeners
   canvas.addEventListener('click', handleClick);
   canvas.addEventListener('dblclick', handleDblClick);
+  canvas.addEventListener('mousedown', handleMouseDown);
   canvas.addEventListener('mousemove', handleMouseMove);
+  canvas.addEventListener('mousemove', handleMouseMoveDrag);
+  canvas.addEventListener('mouseup', handleMouseUp);
   canvas.addEventListener('mouseleave', handleMouseLeave);
   canvas.addEventListener('wheel', handleWheel, { passive: false });
   canvas.addEventListener('dragover', handleDragOver);
@@ -334,7 +396,10 @@ export function setupInputHandlers(canvas: HTMLCanvasElement): () => void {
   return () => {
     canvas.removeEventListener('click', handleClick);
     canvas.removeEventListener('dblclick', handleDblClick);
+    canvas.removeEventListener('mousedown', handleMouseDown);
     canvas.removeEventListener('mousemove', handleMouseMove);
+    canvas.removeEventListener('mousemove', handleMouseMoveDrag);
+    canvas.removeEventListener('mouseup', handleMouseUp);
     canvas.removeEventListener('mouseleave', handleMouseLeave);
     canvas.removeEventListener('wheel', handleWheel);
     canvas.removeEventListener('dragover', handleDragOver);

@@ -15,7 +15,7 @@ import { OFFICE_TILE_MAP } from './officeLayout';
 import { renderFrame } from './renderer';
 import { getAudioManager } from './audioManager';
 import { tickZoom, startAnimatedZoom } from './zoomController';
-import { zoomState, cursorScreenX, cursorScreenY } from './input';
+import { zoomState, cursorScreenX, cursorScreenY, isDragging, userHasPanned, clearUserPan } from './input';
 import type { AgentStatus } from '@/types/agent';
 
 /**
@@ -160,8 +160,14 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
     }
     prevAgentStatuses = { ...currentStatuses };
 
-    // Camera follow: BILLY follow runs unconditionally (zoom offset applied on top)
-    if (billy && state.camera.followTarget === 'billy' && state.camera.zoom >= ZOOM_OVERVIEW_THRESHOLD) {
+    // Re-enable follow when BILLY starts walking (user clicked a room to navigate)
+    if (billy && billy.state === 'walk' && userHasPanned) {
+      clearUserPan();
+    }
+
+    // Camera follow: pause during active zoom, drag-to-pan, or manual pan
+    const zoomActive = zoomState.phase !== 'idle';
+    if (!zoomActive && !isDragging && !userHasPanned && billy && state.camera.followTarget === 'billy' && state.camera.zoom >= ZOOM_OVERVIEW_THRESHOLD) {
       // Follow target: center of character's occupied tile (foot-center)
       // Using foot-center keeps the ground plane natural with taller 24x32 sprites
       const followX = billy.x + TILE_SIZE / 2;
