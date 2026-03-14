@@ -32,7 +32,7 @@ Requirements for v1.1 Visual Overhaul. Each maps to roadmap phases.
 
 ### Sprites
 
-- [ ] **SPRT-01**: Characters render as 24x32 JRPG 3/4 sprites with foot-center anchoring on 16x16 grid
+- [x] **SPRT-01**: Characters render as 24x32 JRPG 3/4 sprites with foot-center anchoring on 16x16 grid
 - [x] **SPRT-02**: Each character has 4 animation states (idle, walk, work, talk) with 4 directional walk sprites
 - [x] **SPRT-03**: Characters have expressive faces, detailed outfit textures, hair detail, drop shadows
 - [x] **SPRT-04**: Sprite pipeline supports easy asset swapping (drop in new PNGs without code changes)
@@ -98,7 +98,7 @@ Deferred to future release.
 | ZOOM-03 | Phase 12 | Pending |
 | ZOOM-04 | Phase 12 | Pending |
 | ZOOM-05 | Phase 12 | Pending |
-| SPRT-01 | Phase 11 | Pending |
+| SPRT-01 | Phase 11 | Complete |
 | SPRT-02 | Phase 11 | Complete |
 | SPRT-03 | Phase 11 | Complete |
 | SPRT-04 | Phase 11 | Complete |

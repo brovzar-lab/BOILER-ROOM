@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Visual Overhaul
 status: in-progress
-stopped_at: Completed 11-02-PLAN.md
-last_updated: "2026-03-14T15:31:06Z"
-last_activity: 2026-03-14 — 24x32 JRPG sprite generation + atlas update (11-02)
+stopped_at: Completed 11-03-PLAN.md
+last_updated: "2026-03-14T15:37:00Z"
+last_activity: 2026-03-14 — 24x32 renderer integration with foot-center anchoring (11-03)
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
   percent: 88
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 ## Current Position
 
 Phase: 11 of 13 (JRPG Sprite Integration)
-Plan: 2 of 3 in current phase
-Status: Plan 11-02 Complete
-Last activity: 2026-03-14 — 24x32 JRPG sprite generation + atlas update (11-02)
+Plan: 3 of 3 in current phase
+Status: Phase 11 Complete
+Last activity: 2026-03-14 — 24x32 renderer integration with foot-center anchoring, drop shadows, camera follow (11-03)
 
-Progress: [████████░░] 88% (Phase 11) | 54% (v1.1 overall)
+Progress: [██████████] 100% (Phase 11) | 62% (v1.1 overall)
 
 ## Performance Metrics
 
@@ -49,6 +49,7 @@ Progress: [████████░░] 88% (Phase 11) | 54% (v1.1 overall)
 | 10    | 02   | 3min     | 2     | 3     |
 | 11    | 01   | 11min    | 3     | 61    |
 | 11    | 02   | 5min     | 2     | 10    |
+| 11    | 03   | 3min     | 2     | 5     |
 
 ## Accumulated Context
 
@@ -73,6 +74,9 @@ Recent decisions affecting current work:
 - [11-02]: Split makeCharFrame (24x32) vs makeEnvFrame (16x16) for frame coordinate builders
 - [11-02]: Environment sheet expanded to 16x12 rows for couch, corkboard, motivational tiles
 - [11-02]: Character-specific appearance via drawCharacterSpecifics dispatch function
+- [11-03]: Camera follows foot-center (ch.x+8, ch.y+8) not visual center for natural ground plane
+- [11-03]: Drop shadow drawn before character sprite so feet overlap shadow edge
+- [11-03]: depthSort baseRow unchanged — foot-based Y-sort already correct for 24x32
 
 ### Pending Todos
 
@@ -86,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T15:31:06Z
-Stopped at: Completed 11-02-PLAN.md
-Resume file: .planning/phases/11-jrpg-sprite-integration/11-02-SUMMARY.md
+Last session: 2026-03-14T15:37:00Z
+Stopped at: Completed 11-03-PLAN.md (Phase 11 complete)
+Resume file: .planning/phases/11-jrpg-sprite-integration/11-03-SUMMARY.md

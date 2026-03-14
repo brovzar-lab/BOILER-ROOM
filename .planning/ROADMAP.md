@@ -29,7 +29,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 
 - [x] **Phase 9: Compact Layout** - Redesign office grid from 42x34 sprawl to ~28x24 compact grid with validated pathfinding (completed 2026-03-14)
 - [x] **Phase 10: Rendering Pipeline** - Refactor renderer to ctx.setTransform() zoom, unified Y-sorted depth, and 3/4 wall rendering (completed 2026-03-14)
-- [ ] **Phase 11: JRPG Sprite Integration** - 24x32 character sprites and 3/4 perspective environment tiles with correct anchoring
+- [x] **Phase 11: JRPG Sprite Integration** - 24x32 character sprites and 3/4 perspective environment tiles with correct anchoring (completed 2026-03-14)
 - [ ] **Phase 12: Smooth Zoom** - Trackpad pinch-to-zoom with cursor-centered scaling, snap-to-half-integer, and quantized sprite cache
 - [ ] **Phase 13: Polish and UI** - Ambient glow effects, environment detail, personality decorations, and chat/deal UI refinements
 
@@ -74,7 +74,7 @@ Plans:
   3. Floor tiles show warm parquet wood grain and furniture has visible front-face depth (drawer panels, bookshelf spines)
   4. Drop shadows appear under all characters grounding them in the scene
   5. New sprite PNGs can be swapped in without code changes (asset pipeline supports easy replacement)
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 Plans:
 - [x] 11-01-PLAN.md — Agent rename (patrik/sandra/isaac/wendy) + persona prompts + office layout updates
 - [x] 11-02-PLAN.md — Sprite pipeline rewrite (24x32 characters + 3/4 environment tiles) + atlas update
@@ -118,6 +118,6 @@ Plans:
 | 8. Polish | v1.0 | 3/3 | Complete | 2026-03-14 |
 | 9. Compact Layout | 3/3 | Complete   | 2026-03-14 | - |
 | 10. Rendering Pipeline | v1.1 | Complete    | 2026-03-14 | 2026-03-14 |
-| 11. JRPG Sprite Integration | 2/3 | In Progress|  | - |
+| 11. JRPG Sprite Integration | 3/3 | Complete   | 2026-03-14 | - |
 | 12. Smooth Zoom | v1.1 | 0/? | Not started | - |
 | 13. Polish and UI | v1.1 | 0/? | Not started | - |
