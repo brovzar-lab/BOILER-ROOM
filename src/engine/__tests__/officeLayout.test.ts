@@ -165,13 +165,18 @@ describe('compact grid invariants', () => {
     }
   });
 
-  it("BILLY's office is in top-left region", () => {
+  it("BILLY's office is in top center-left region", () => {
     const billy = ROOMS.find((r) => r.id === 'billy')!;
     const gridMidCol = OFFICE_TILE_MAP[0]!.length / 2;
+    // BILLY is center-left: starts before midpoint but not at far left
     expect(
       billy.tileRect.col,
-      "BILLY's office should be in left half",
+      "BILLY's office should start before center",
     ).toBeLessThan(gridMidCol);
+    expect(
+      billy.tileRect.col,
+      "BILLY's office should not be at far left (col > 1)",
+    ).toBeGreaterThan(1);
     const gridMidRow = OFFICE_TILE_MAP.length / 2;
     expect(
       billy.tileRect.row,
@@ -179,13 +184,18 @@ describe('compact grid invariants', () => {
     ).toBeLessThan(gridMidRow);
   });
 
-  it("Sasha's office is in top-right region", () => {
+  it("Sasha's office is in top center-right region", () => {
     const sasha = ROOMS.find((r) => r.id === 'sasha')!;
     const gridMidCol = OFFICE_TILE_MAP[0]!.length / 2;
+    // Sasha is center-right: starts at or after midpoint but not at far right
     expect(
       sasha.tileRect.col,
-      "Sasha's office should be in right half",
+      "Sasha's office should start at or after center",
     ).toBeGreaterThanOrEqual(gridMidCol);
+    expect(
+      sasha.tileRect.col,
+      "Sasha's office should not be at far right (col < 24)",
+    ).toBeLessThan(24);
     const gridMidRow = OFFICE_TILE_MAP.length / 2;
     expect(
       sasha.tileRect.row,

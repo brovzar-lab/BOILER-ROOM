@@ -3,11 +3,11 @@
  *
  * Compact 3-row grid layout (32 cols x 30 rows) matching War Room mockup:
  *
- *   [BILLY]       [Sasha]
- *   [Diana] [WAR ROOM] [Marcos]
- *   [Roberto]     [Valentina]
+ *            [BILLY] [Sasha]           ← centered in canvas
+ *   [Diana]  [WAR ROOM]     [Marcos]   ← at far left and right edges
+ *   [Roberto]                [Valentina] ← at far left and right edges
  *
- *   - Top row: BILLY (left), Sasha (right)
+ *   - Top row: BILLY (center-left), Sasha (center-right) — centered above War Room
  *   - Middle row: Diana (left), War Room (center, 12x9), Marcos (right)
  *   - Bottom row: Roberto (left), Valentina (right)
  *   - 2-tile wide dark corridors between all rows
@@ -16,16 +16,18 @@
  *
  * Column layout:
  *   Cols 0:      VOID border
- *   Cols 1-7:    Left offices (BILLY, Diana, Roberto)
+ *   Cols 1-7:    Left offices (Diana, Roberto)
  *   Cols 8-9:    Left vertical corridor
+ *   Cols 9-15:   BILLY's Office (top row, center-left)
  *   Cols 10-21:  War Room (middle row) / horizontal corridor (top/bottom rows)
+ *   Cols 17-23:  Sasha's Office (top row, center-right)
  *   Cols 22-23:  Right vertical corridor
- *   Cols 24-30:  Right offices (Sasha, Marcos, Valentina)
+ *   Cols 24-30:  Right offices (Marcos, Valentina)
  *   Col  31:     VOID border
  *
  * Row layout:
  *   Rows 0-1:    VOID headroom
- *   Rows 2-8:    Top offices (BILLY, Sasha) — 7 tall
+ *   Rows 2-8:    Top offices (BILLY, Sasha) — 7 tall, centered
  *   Rows 9-10:   Horizontal corridor
  *   Rows 11-17:  Diana (left), Marcos (right) — 7 tall
  *   Rows 11-19:  War Room (center) — 9 tall
@@ -84,15 +86,15 @@ function buildTileMap(): TileType[][] {
   // TOP ROW (rows 2-8)
   // ════════════════════════════════════════════════════════════════════════
 
-  // BILLY's Office (top-left): cols 1-7, rows 2-8
-  room(1, 2, 7, 7);
+  // BILLY's Office (top, center-left): cols 9-15, rows 2-8
+  room(9, 2, 7, 7);
 
-  // Sasha's Office (top-right): cols 24-30, rows 2-8
-  room(24, 2, 7, 7);
+  // Sasha's Office (top, center-right): cols 17-23, rows 2-8
+  room(17, 2, 7, 7);
 
   // Doors (south wall → upper horizontal corridor)
-  map[8]![4] = D;   // BILLY door at south wall center
-  map[8]![27] = D;  // Sasha door at south wall center
+  map[8]![12] = D;  // BILLY door at south wall center
+  map[8]![20] = D;  // Sasha door at south wall center
 
   // ════════════════════════════════════════════════════════════════════════
   // UPPER HORIZONTAL CORRIDOR (rows 9-10, cols 1-30)
@@ -171,18 +173,18 @@ export const ROOMS: Room[] = [
   {
     id: 'billy',
     name: "BILLY's Office",
-    tileRect: { col: 1, row: 2, width: 7, height: 7 },
-    doorTile: { col: 4, row: 8 },
-    seatTile: { col: 4, row: 5 },
-    billyStandTile: { col: 5, row: 5 },
+    tileRect: { col: 9, row: 2, width: 7, height: 7 },
+    doorTile: { col: 12, row: 8 },
+    seatTile: { col: 12, row: 5 },
+    billyStandTile: { col: 13, row: 5 },
   },
   {
     id: 'sasha',
     name: "Sasha's Office",
-    tileRect: { col: 24, row: 2, width: 7, height: 7 },
-    doorTile: { col: 27, row: 8 },
-    seatTile: { col: 27, row: 5 },
-    billyStandTile: { col: 26, row: 5 },
+    tileRect: { col: 17, row: 2, width: 7, height: 7 },
+    doorTile: { col: 20, row: 8 },
+    seatTile: { col: 20, row: 5 },
+    billyStandTile: { col: 19, row: 5 },
   },
   {
     id: 'war-room',
@@ -242,15 +244,15 @@ export interface FurnitureItem {
  * Each room has at least a desk; hallways have environmental props.
  */
 export const FURNITURE: FurnitureItem[] = [
-  // BILLY's Office (interior cols 2-6, rows 3-7)
-  { roomId: 'billy', type: 'desk', col: 3, row: 3, width: 3, height: 1 },
-  { roomId: 'billy', type: 'chair', col: 4, row: 4, width: 1, height: 1 },
-  { roomId: 'billy', type: 'bookshelf', col: 2, row: 3, width: 1, height: 2 },
+  // BILLY's Office (interior cols 10-14, rows 3-7)
+  { roomId: 'billy', type: 'desk', col: 11, row: 3, width: 3, height: 1 },
+  { roomId: 'billy', type: 'chair', col: 12, row: 4, width: 1, height: 1 },
+  { roomId: 'billy', type: 'bookshelf', col: 10, row: 3, width: 1, height: 2 },
 
-  // Sasha's Office (interior cols 25-29, rows 3-7)
-  { roomId: 'sasha', type: 'desk', col: 26, row: 3, width: 2, height: 1 },
-  { roomId: 'sasha', type: 'chair', col: 27, row: 4, width: 1, height: 1 },
-  { roomId: 'sasha', type: 'artwork', col: 25, row: 3, width: 1, height: 1 },
+  // Sasha's Office (interior cols 18-22, rows 3-7)
+  { roomId: 'sasha', type: 'desk', col: 19, row: 3, width: 2, height: 1 },
+  { roomId: 'sasha', type: 'chair', col: 20, row: 4, width: 1, height: 1 },
+  { roomId: 'sasha', type: 'artwork', col: 18, row: 3, width: 1, height: 1 },
 
   // War Room (interior cols 11-20, rows 12-18) — conference table
   { roomId: 'war-room', type: 'table', col: 14, row: 14, width: 4, height: 2 },
@@ -331,10 +333,10 @@ export const DECORATIONS: DecorationItem[] = [
   { roomId: 'marcos', key: 'marcos-lawbooks', col: 29, row: 12 },
 
   // Sasha: 2x2 whiteboard on wall
-  { roomId: 'sasha', key: 'sasha-whiteboard-tl', col: 25, row: 3 },
-  { roomId: 'sasha', key: 'sasha-whiteboard-tr', col: 26, row: 3 },
-  { roomId: 'sasha', key: 'sasha-whiteboard-bl', col: 25, row: 4 },
-  { roomId: 'sasha', key: 'sasha-whiteboard-br', col: 26, row: 4 },
+  { roomId: 'sasha', key: 'sasha-whiteboard-tl', col: 18, row: 3 },
+  { roomId: 'sasha', key: 'sasha-whiteboard-tr', col: 19, row: 3 },
+  { roomId: 'sasha', key: 'sasha-whiteboard-bl', col: 18, row: 4 },
+  { roomId: 'sasha', key: 'sasha-whiteboard-br', col: 19, row: 4 },
 
   // Roberto: filing cabinet
   { roomId: 'roberto', key: 'filing-cabinet', col: 2, row: 23 },
@@ -345,8 +347,8 @@ export const DECORATIONS: DecorationItem[] = [
   { roomId: 'valentina', key: 'plant', col: 25, row: 27 },
 
   // Billy: monitor on desk + small plant
-  { roomId: 'billy', key: 'monitor', col: 5, row: 3 },
-  { roomId: 'billy', key: 'plant', col: 6, row: 3 },
+  { roomId: 'billy', key: 'monitor', col: 13, row: 3 },
+  { roomId: 'billy', key: 'plant', col: 14, row: 3 },
 ];
 
 // ── Room Lookup ─────────────────────────────────────────────────────────────
