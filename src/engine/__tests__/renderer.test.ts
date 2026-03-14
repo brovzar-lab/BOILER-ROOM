@@ -41,7 +41,7 @@ vi.mock('../input', () => ({
   get hoverTileRow() { return mockHoverTileRow; },
 }));
 
-import { renderFrame, renderDropZoneHighlight, renderFileIcons, hoveredFileId } from '../renderer';
+import { renderFrame, renderDropZoneHighlight, renderFileIcons } from '../renderer';
 
 function createMockCtx() {
   return {

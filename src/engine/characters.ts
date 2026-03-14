@@ -15,7 +15,7 @@ import {
   WORK_FRAME_DURATION,
   TileType,
 } from './types';
-import type { Character, Direction, TileCoord } from './types';
+import type { Character, Direction } from './types';
 import { findPath } from './tileMap';
 import { getRoomAtTile, ROOMS, WAR_ROOM_SEATS } from './officeLayout';
 import { useOfficeStore } from '@/store/officeStore';
@@ -304,7 +304,7 @@ export function gatherAgentsToWarRoom(tileMap: TileType[][]): Promise<void> {
       const delay = index * (500 + Math.random() * 500);
       setTimeout(() => {
         const seat = WAR_ROOM_SEATS[agentId];
-        startWalk(agentId, seat.col, seat.row, tileMap);
+        if (seat) startWalk(agentId, seat.col, seat.row, tileMap);
       }, delay);
     });
 
@@ -317,6 +317,7 @@ export function gatherAgentsToWarRoom(tileMap: TileType[][]): Promise<void> {
         const ch = characters.find((c) => c.id === id);
         if (!ch) return false;
         const seat = WAR_ROOM_SEATS[id];
+        if (!seat) return false;
         return (
           ch.state === 'idle' &&
           ch.path.length === 0 &&

@@ -11,7 +11,7 @@ export async function extractPdfText(data: ArrayBuffer): Promise<string> {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
     const text = content.items
-      .filter((item): item is { str: string } => 'str' in item)
+      .filter((item): item is typeof item & { str: string } => 'str' in item)
       .map((item) => item.str)
       .join(' ');
     pages.push(text);

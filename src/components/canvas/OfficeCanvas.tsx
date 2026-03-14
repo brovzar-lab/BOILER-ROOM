@@ -60,16 +60,17 @@ export function OfficeCanvas() {
       useOfficeStore.getState().initializeCharacters();
 
       // Start the game loop (reads store via getState each frame)
-      stopLoop = startGameLoop(canvas);
+      if (canvas) stopLoop = startGameLoop(canvas);
 
       // Set up input handlers (click-to-walk, zoom toggle, hover)
-      cleanupInput = setupInputHandlers(canvas);
+      if (canvas) cleanupInput = setupInputHandlers(canvas);
 
       // ResizeObserver: re-run HiDPI setup when container resizes
       resizeObserver = new ResizeObserver(() => {
         setupHiDPI();
       });
-      resizeObserver.observe(canvas.parentElement ?? canvas);
+      const observeTarget = canvas?.parentElement ?? canvas;
+      if (observeTarget) resizeObserver.observe(observeTarget);
     }
 
     void init();

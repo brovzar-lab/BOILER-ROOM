@@ -8,7 +8,7 @@ import {
   WAR_ROOM_SEATS,
   DECORATIONS,
 } from '../officeLayout';
-import type { FurnitureItem } from '../officeLayout';
+
 import { isWalkable, findPath, getTileAt } from '../tileMap';
 
 // -- Room Furniture Tests -----------------------------------------------------

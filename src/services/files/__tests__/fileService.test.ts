@@ -71,7 +71,7 @@ describe('extractPdfText', () => {
             }),
           }),
       }),
-    } as ReturnType<typeof getDocument>);
+    } as unknown as ReturnType<typeof getDocument>);
 
     const { extractPdfText } = await import('@/services/files/extractPdf');
     const result = await extractPdfText(new ArrayBuffer(0));
@@ -120,7 +120,7 @@ describe('fileService', () => {
             }),
           }),
         }),
-      } as ReturnType<typeof getDocument>);
+      } as unknown as ReturnType<typeof getDocument>);
 
       const { processDroppedFile } = await import('@/services/files/fileService');
 
@@ -211,7 +211,7 @@ describe('fileService', () => {
   describe('shareFileWithAllAgents', () => {
     it('creates copies for all 5 agents', async () => {
       let uuidCounter = 0;
-      vi.mocked(crypto.randomUUID).mockImplementation(() => `shared-uuid-${uuidCounter++}`);
+      vi.mocked(crypto.randomUUID).mockImplementation(() => `shared-uuid-${uuidCounter++}` as `${string}-${string}-${string}-${string}-${string}`);
 
       const sourceRecord: FileRecord = {
         id: 'original-id',
@@ -299,7 +299,7 @@ describe('processDroppedFile – Excel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockPersistence.set.mockResolvedValue(undefined);
-    vi.mocked(crypto.randomUUID).mockReturnValue(mockUUID);
+    vi.mocked(crypto.randomUUID).mockReturnValue(mockUUID as `${string}-${string}-${string}-${string}-${string}`);
   });
 
   it('processes an .xlsx file and returns FileRecord with type xlsx', async () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { Conversation, Message } from '@/types/chat';
+import type { Conversation } from '@/types/chat';
 
 // Mock persistence layer
 const mockPersistence = {
@@ -115,8 +115,8 @@ describe('chatStore deal-scoped loading', () => {
     const state = useChatStore.getState();
     const conv = state.conversations[convId];
     expect(conv).toBeDefined();
-    expect(conv.agentId).toBe('patrik');
-    expect(conv.dealId).toBe('deal-1');
+    expect(conv!.agentId).toBe('patrik');
+    expect(conv!.dealId).toBe('deal-1');
     expect(mockPersistence.set).toHaveBeenCalledWith('conversations', convId, expect.objectContaining({ dealId: 'deal-1', agentId: 'patrik' }));
   });
 
@@ -145,7 +145,7 @@ describe('chatStore deal-scoped loading', () => {
     // Should have created a new conversation with deal-2
     const state = useChatStore.getState();
     const conv = state.conversations[convId];
-    expect(conv.dealId).toBe('deal-2');
+    expect(conv!.dealId).toBe('deal-2');
   });
 
   it('New conversations created via getOrCreateConversation always have dealId set', async () => {
@@ -155,6 +155,6 @@ describe('chatStore deal-scoped loading', () => {
 
     const state = useChatStore.getState();
     const conv = state.conversations[convId];
-    expect(conv.dealId).toBe('deal-99');
+    expect(conv!.dealId).toBe('deal-99');
   });
 });

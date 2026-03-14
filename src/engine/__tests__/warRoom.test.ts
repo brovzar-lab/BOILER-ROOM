@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { TileType, TILE_SIZE, WALK_SPEED } from '../types';
-import type { Character, TileCoord } from '../types';
+import type { Character } from '../types';
 import { createTileMap } from '../tileMap';
 
 /**
@@ -98,8 +98,6 @@ describe('gatherAgentsToWarRoom', () => {
     );
     characters.push(makeCharacter({ id: 'billy', tileCol: 20, tileRow: 15 }));
 
-    const startWalkSpy = vi.fn();
-
     vi.doMock('@/store/officeStore', () => ({
       useOfficeStore: {
         getState: () => ({
@@ -140,7 +138,7 @@ describe('gatherAgentsToWarRoom', () => {
     // Now simulate agents arriving at their seats (set them to idle at seat positions)
     for (const agent of agents) {
       const ch = characters.find((c) => c.id === agent)!;
-      const seat = WAR_ROOM_SEATS[agent];
+      const seat = WAR_ROOM_SEATS[agent]!;
       ch.state = 'idle';
       ch.path = [];
       ch.tileCol = seat.col;
@@ -181,7 +179,7 @@ describe('gatherAgentsToWarRoom', () => {
       };
     });
 
-    const { gatherAgentsToWarRoom, WAR_ROOM_SEATS } = await import('../characters');
+    const { gatherAgentsToWarRoom, WAR_ROOM_SEATS: _WAR_ROOM_SEATS } = await import('../characters');
 
     // Mock Math.random to return 0 for deterministic stagger delays
     // delay = index * (500 + 0) = 0, 500, 1000, 1500, 2000ms
@@ -252,7 +250,7 @@ describe('gatherAgentsToWarRoom', () => {
     // Simulate 4 of 5 agents arriving
     for (const agent of agents.slice(0, 4)) {
       const ch = characters.find((c) => c.id === agent)!;
-      const seat = WAR_ROOM_SEATS[agent];
+      const seat = WAR_ROOM_SEATS[agent]!;
       ch.state = 'idle';
       ch.path = [];
       ch.tileCol = seat.col;
@@ -264,7 +262,7 @@ describe('gatherAgentsToWarRoom', () => {
 
     // Last agent arrives
     const wendy = characters.find((c) => c.id === 'wendy')!;
-    const valSeat = WAR_ROOM_SEATS['wendy'];
+    const valSeat = WAR_ROOM_SEATS['wendy']!;
     wendy.state = 'idle';
     wendy.path = [];
     wendy.tileCol = valSeat.col;
@@ -472,11 +470,8 @@ describe('updateAllCharacters - War Room entry', () => {
 // ── '6' key shortcut (War Room) ───────────────────────────────────────────────
 
 describe("'6' key shortcut", () => {
-  let tileMap: TileType[][];
-
   beforeEach(() => {
     vi.resetModules();
-    tileMap = createTileMap(50, 50, TileType.FLOOR);
   });
 
   it("triggers BILLY walking to War Room billyStandTile", async () => {

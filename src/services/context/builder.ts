@@ -131,7 +131,7 @@ export function buildContext(
         if (!grouped[fact.agentId]) {
           grouped[fact.agentId] = [];
         }
-        grouped[fact.agentId].push(fact);
+        grouped[fact.agentId]!.push(fact);
         crossUsedTokens += lineTokens;
       }
 

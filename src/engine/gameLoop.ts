@@ -15,7 +15,7 @@ import { OFFICE_TILE_MAP } from './officeLayout';
 import { renderFrame } from './renderer';
 import { getAudioManager } from './audioManager';
 import { tickZoom, startAnimatedZoom } from './zoomController';
-import { zoomState, cursorScreenX, cursorScreenY, isDragging, userHasPanned, clearUserPan } from './input';
+import { zoomState, isDragging, userHasPanned, clearUserPan } from './input';
 import type { AgentStatus } from '@/types/agent';
 
 /**
@@ -23,7 +23,7 @@ import type { AgentStatus } from '@/types/agent';
  * Returns a cleanup function that stops the loop and cancels the animation frame.
  */
 export function startGameLoop(canvas: HTMLCanvasElement): () => void {
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d')!;
   if (!ctx) {
     throw new Error('Failed to get 2d context from canvas');
   }

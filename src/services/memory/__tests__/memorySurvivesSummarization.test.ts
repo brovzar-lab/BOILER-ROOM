@@ -85,7 +85,7 @@ describe('Memory survives summarization', () => {
 
     // Simulate memory facts being stored
     for (const fact of memoryFacts) {
-      await persistenceWrites.memory.set(fact.id, fact);
+      await persistenceWrites.memory!.set(fact.id, fact);
     }
 
     // 2. Create a conversation that exceeds summarization threshold
@@ -116,8 +116,8 @@ describe('Memory survives summarization', () => {
     });
 
     // 4. Verify memory facts are completely untouched
-    const fact1 = persistenceWrites.memory.get('mem-1') as MemoryFact;
-    const fact2 = persistenceWrites.memory.get('mem-2') as MemoryFact;
+    const fact1 = persistenceWrites.memory!.get('mem-1') as MemoryFact;
+    const fact2 = persistenceWrites.memory!.get('mem-2') as MemoryFact;
 
     expect(fact1).toBeDefined();
     expect(fact1.content).toBe('Budget is $2.4M USD');
@@ -128,9 +128,9 @@ describe('Memory survives summarization', () => {
     expect(fact2.agentId).toBe('marcos');
 
     // 5. Verify summarization only touched 'conversations' store
-    expect(persistenceWrites.conversations.size).toBeGreaterThan(0);
+    expect(persistenceWrites.conversations!.size).toBeGreaterThan(0);
 
     // Memory store should still have exactly 2 facts, unchanged
-    expect(persistenceWrites.memory.size).toBe(2);
+    expect(persistenceWrites.memory!.size).toBe(2);
   });
 });

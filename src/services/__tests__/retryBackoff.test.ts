@@ -46,9 +46,9 @@ describe('retryWithBackoff', () => {
     expect(fn).toHaveBeenCalledTimes(3);
     expect(onRetry).toHaveBeenCalledTimes(2);
     // First retry: attempt 1, delay around 1000 + jitter
-    expect(onRetry.mock.calls[0][0]).toBe(1);
+    expect(onRetry.mock.calls[0]![0]).toBe(1);
     // Second retry: attempt 2, delay around 2000 + jitter
-    expect(onRetry.mock.calls[1][0]).toBe(2);
+    expect(onRetry.mock.calls[1]![0]).toBe(2);
   });
 
   it('throws after all retries exhausted', async () => {
@@ -89,8 +89,8 @@ describe('retryWithBackoff', () => {
     await resultPromise;
 
     expect(onRetry).toHaveBeenCalledTimes(1);
-    expect(onRetry.mock.calls[0][0]).toBe(1); // attempt number
-    expect(typeof onRetry.mock.calls[0][1]).toBe('number'); // delay in ms
-    expect(onRetry.mock.calls[0][1]).toBeGreaterThan(0); // positive delay
+    expect(onRetry.mock.calls[0]![0]).toBe(1); // attempt number
+    expect(typeof onRetry.mock.calls[0]![1]).toBe('number'); // delay in ms
+    expect(onRetry.mock.calls[0]![1]).toBeGreaterThan(0); // positive delay
   });
 });

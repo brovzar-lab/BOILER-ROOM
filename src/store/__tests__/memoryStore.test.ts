@@ -53,7 +53,7 @@ describe('memoryStore', () => {
   describe('loadFacts', () => {
     it('queries IndexedDB memory store by dealId index and populates state.facts', async () => {
       const facts = [makeFact(), makeFact({ id: 'fact-2', agentId: 'marcos' })];
-      mockPersistence.query.mockResolvedValue(facts);
+      (mockPersistence.query as ReturnType<typeof vi.fn>).mockResolvedValue(facts);
 
       const { useMemoryStore } = await import('@/store/memoryStore');
       await useMemoryStore.getState().loadFacts('deal-1');
@@ -71,7 +71,7 @@ describe('memoryStore', () => {
       });
 
       const newFacts = [makeFact({ id: 'new-1', dealId: 'deal-2' })];
-      mockPersistence.query.mockResolvedValue(newFacts);
+      (mockPersistence.query as ReturnType<typeof vi.fn>).mockResolvedValue(newFacts);
 
       await useMemoryStore.getState().loadFacts('deal-2');
 

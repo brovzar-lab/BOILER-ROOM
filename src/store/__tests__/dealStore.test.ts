@@ -19,8 +19,6 @@ vi.mock('@/services/persistence/adapter', () => ({
 // Mock chatStore for switchDeal cross-store calls
 const mockLoadConversations = vi.fn().mockResolvedValue(undefined);
 const mockStopStreaming = vi.fn();
-const mockAbort = vi.fn();
-
 vi.mock('@/store/chatStore', () => ({
   useChatStore: {
     getState: () => ({
@@ -51,7 +49,7 @@ describe('dealStore CRUD', () => {
     const state = useDealStore.getState();
     expect(state.deals).toHaveLength(1);
 
-    const deal = state.deals[0];
+    const deal = state.deals[0]!;
     expect(deal.name).toBe('Oro Verde - Netflix');
     expect(deal.id).toBe(dealId);
     expect(deal.status).toBe('active');
@@ -65,7 +63,7 @@ describe('dealStore CRUD', () => {
     await store.createDeal('Oro Verde', 'Netflix MX limited series');
 
     const state = useDealStore.getState();
-    const deal = state.deals[0];
+    const deal = state.deals[0]!;
     expect(deal.description).toBe('Netflix MX limited series');
   });
 
@@ -82,8 +80,8 @@ describe('dealStore CRUD', () => {
 
     const state = useDealStore.getState();
     expect(state.deals).toHaveLength(2);
-    expect(state.deals[0].name).toBe('New Deal');
-    expect(state.deals[1].name).toBe('Old Deal');
+    expect(state.deals[0]!.name).toBe('New Deal');
+    expect(state.deals[1]!.name).toBe('Old Deal');
   });
 
   it('renameDeal(dealId, "New Name") -> deal name updated in state and persisted', async () => {
@@ -178,8 +176,8 @@ describe('dealStore CRUD', () => {
 
     const state = useDealStore.getState();
     expect(state.deals).toHaveLength(1);
-    expect(state.deals[0].name).toBe('General');
-    expect(state.deals[0].id).toBe('default');
+    expect(state.deals[0]!.name).toBe('General');
+    expect(state.deals[0]!.id).toBe('default');
     expect(state.activeDealId).toBe('default');
     expect(mockPersistence.set).toHaveBeenCalledWith('deals', 'default', expect.objectContaining({ name: 'General' }));
   });
@@ -193,7 +191,7 @@ describe('dealStore CRUD', () => {
 
     const state = useDealStore.getState();
     expect(state.deals).toHaveLength(1);
-    expect(state.deals[0].name).toBe('Existing Deal');
+    expect(state.deals[0]!.name).toBe('Existing Deal');
     expect(mockPersistence.set).not.toHaveBeenCalled();
   });
 

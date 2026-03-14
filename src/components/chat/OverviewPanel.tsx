@@ -3,7 +3,7 @@ import { useChatStore } from '@/store/chatStore';
 import { agents } from '@/config/agents';
 import { startWalk } from '@/engine/characters';
 import { OFFICE_TILE_MAP, ROOMS } from '@/engine/officeLayout';
-import type { AgentId, AgentStatus } from '@/types/agent';
+import type { AgentStatus } from '@/types/agent';
 import type { PersonaConfig } from '@/config/agents';
 
 /**

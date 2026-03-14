@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Deal, DealStatus } from '@/types/deal';
+import type { Deal } from '@/types/deal';
 import { agents } from '@/config/agents';
 import type { AgentId } from '@/types/agent';
 import { DealActions } from './DealActions';

@@ -7,12 +7,9 @@ import {
   nearestHalf,
   pixelAlignCamera,
   ZOOM_FACTOR,
-  FRICTION,
   IDLE_DELAY,
   SNAP_DURATION,
-  SNAP_THRESHOLD,
   MAX_ZOOM,
-  MIN_VELOCITY,
 } from '../zoomController';
 import { applyCursorCenteredZoom } from '../camera';
 import type { Camera } from '../types';
@@ -132,7 +129,7 @@ describe('zoomController', () => {
       const framesNeeded = Math.ceil(IDLE_DELAY / (1 / 60)) + 1;
       for (let i = 0; i < framesNeeded; i++) {
         tickZoom(state, camera, 1 / 60, 800, 600, 0.5);
-        if (state.phase === 'snapping') break;
+        if ((state.phase as string) === 'snapping') break;
       }
 
       expect(state.phase).toBe('snapping');
@@ -178,7 +175,7 @@ describe('zoomController', () => {
       const framesNeeded = Math.ceil(IDLE_DELAY / (1 / 60)) + 2;
       for (let i = 0; i < framesNeeded; i++) {
         tickZoom(state, camera, 1 / 60, 800, 600, 0.5);
-        if (state.phase === 'idle') break;
+        if ((state.phase as string) === 'idle') break;
       }
 
       // Should snap instantly to 2.5, skip animation
