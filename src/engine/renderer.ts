@@ -17,7 +17,7 @@
  */
 import { TileType, TILE_SIZE } from './types';
 import type { Camera, Character } from './types';
-import { OFFICE_TILE_MAP, ROOMS, FURNITURE, getRoomAtTile } from './officeLayout';
+import { OFFICE_TILE_MAP, ROOMS, FURNITURE, DECORATIONS, getRoomAtTile } from './officeLayout';
 import { PLACEHOLDER_COLORS, getCachedSprite, getCharacterSheet, getEnvironmentSheet } from './spriteSheet';
 import { CHARACTER_FRAMES, ENVIRONMENT_ATLAS, DECORATION_ATLAS } from './spriteAtlas';
 import { useFileStore } from '@/store/fileStore';
@@ -277,31 +277,16 @@ function renderDecorations(
   offsetY: number,
   zoom: number,
 ): void {
-  // Diana: financial chart on wall + monitor with green numbers on desk
-  drawDeco(ctx, sheet, 'diana-chart', 5, 13, tileSize, offsetX, offsetY, zoom);
-  drawDeco(ctx, sheet, 'diana-monitor', 9, 14, tileSize, offsetX, offsetY, zoom);
-
-  // Marcos: law books on shelf + plant already in FURNITURE
-  drawDeco(ctx, sheet, 'marcos-lawbooks', 36, 13, tileSize, offsetX, offsetY, zoom);
-
-  // Sasha: 2x2 whiteboard on wall
-  drawDeco(ctx, sheet, 'sasha-whiteboard-tl', 5, 25, tileSize, offsetX, offsetY, zoom);
-  drawDeco(ctx, sheet, 'sasha-whiteboard-tr', 6, 25, tileSize, offsetX, offsetY, zoom);
-  drawDeco(ctx, sheet, 'sasha-whiteboard-bl', 5, 26, tileSize, offsetX, offsetY, zoom);
-  drawDeco(ctx, sheet, 'sasha-whiteboard-br', 6, 26, tileSize, offsetX, offsetY, zoom);
-
-  // Roberto: filing cabinet (sparse/minimal)
-  drawEnvDeco(ctx, sheet, 'filing-cabinet', 29, 25, tileSize, offsetX, offsetY, zoom);
-
-  // Valentina: post-it clusters on walls
-  drawEnvDeco(ctx, sheet, 'post-it', 24, 25, tileSize, offsetX, offsetY, zoom);
-  drawEnvDeco(ctx, sheet, 'post-it', 17, 26, tileSize, offsetX, offsetY, zoom);
-  // Extra plant for Valentina (in addition to FURNITURE plant)
-  drawEnvDeco(ctx, sheet, 'plant', 17, 30, tileSize, offsetX, offsetY, zoom);
-
-  // Billy: monitor on desk + small plant
-  drawEnvDeco(ctx, sheet, 'monitor', 21, 3, tileSize, offsetX, offsetY, zoom);
-  drawEnvDeco(ctx, sheet, 'plant', 24, 3, tileSize, offsetX, offsetY, zoom);
+  for (const deco of DECORATIONS) {
+    // Try DECORATION_ATLAS first (personality items like diana-chart, sasha-whiteboard-tl)
+    const decoFrame = DECORATION_ATLAS[deco.key];
+    if (decoFrame) {
+      drawDeco(ctx, sheet, deco.key, deco.col, deco.row, tileSize, offsetX, offsetY, zoom);
+      continue;
+    }
+    // Fall back to ENVIRONMENT_ATLAS (generic items like plant, monitor, filing-cabinet, post-it)
+    drawEnvDeco(ctx, sheet, deco.key, deco.col, deco.row, tileSize, offsetX, offsetY, zoom);
+  }
 }
 
 function drawDeco(
