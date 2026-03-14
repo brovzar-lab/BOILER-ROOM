@@ -11,7 +11,7 @@ import {
 import type { FurnitureItem } from '../officeLayout';
 import { isWalkable, findPath, getTileAt } from '../tileMap';
 
-// ── Room Furniture Tests ─────────────────────────────────────────────────────
+// -- Room Furniture Tests -----------------------------------------------------
 
 describe('office furniture', () => {
   it('each room has at least 1 furniture item (desk at minimum)', () => {
@@ -54,7 +54,7 @@ describe('office furniture', () => {
   });
 });
 
-// ── Room Layout Tests ───────────────────────────────────────────────────────
+// -- Room Layout Tests --------------------------------------------------------
 
 describe('room layout', () => {
   it('hallway tiles are not inside any room tileRect', () => {
@@ -88,20 +88,20 @@ describe('room layout', () => {
   });
 });
 
-// ── Compact Grid Invariant Tests ────────────────────────────────────────────
+// -- Compact Grid Invariant Tests ---------------------------------------------
 
 describe('compact grid invariants', () => {
-  it('grid dimensions are compact', () => {
+  it('grid dimensions are correct', () => {
     // Rows
     expect(
       OFFICE_TILE_MAP.length,
-      `Grid should have <= 30 rows (got ${OFFICE_TILE_MAP.length})`,
-    ).toBeLessThanOrEqual(30);
+      `Grid should have 30 rows (got ${OFFICE_TILE_MAP.length})`,
+    ).toBe(30);
     // Cols
     expect(
       OFFICE_TILE_MAP[0]!.length,
-      `Grid should have <= 32 cols (got ${OFFICE_TILE_MAP[0]!.length})`,
-    ).toBeLessThanOrEqual(32);
+      `Grid should have 32 cols (got ${OFFICE_TILE_MAP[0]!.length})`,
+    ).toBe(32);
   });
 
   it('all room seatTile positions are FLOOR tiles', () => {
@@ -203,18 +203,30 @@ describe('compact grid invariants', () => {
     ).toBeLessThan(gridMidRow);
   });
 
-  it('War Room is in center row, flanked by Diana and Marcos', () => {
+  it('War Room is in center, spanning both side office rows', () => {
     const warRoom = ROOMS.find((r) => r.id === 'war-room')!;
     const diana = ROOMS.find((r) => r.id === 'diana')!;
     const marcos = ROOMS.find((r) => r.id === 'marcos')!;
+    const roberto = ROOMS.find((r) => r.id === 'roberto')!;
+    const valentina = ROOMS.find((r) => r.id === 'valentina')!;
 
-    // War Room starts at same row as Diana and Marcos
+    // War Room starts at same row as Diana and Marcos (upper side offices)
     expect(warRoom.tileRect.row).toBe(diana.tileRect.row);
     expect(warRoom.tileRect.row).toBe(marcos.tileRect.row);
+
+    // War Room ends at same row as Roberto and Valentina (lower side offices)
+    const warRoomBottom = warRoom.tileRect.row + warRoom.tileRect.height;
+    const robertoBottom = roberto.tileRect.row + roberto.tileRect.height;
+    const valentinaBottom = valentina.tileRect.row + valentina.tileRect.height;
+    expect(warRoomBottom).toBe(robertoBottom);
+    expect(warRoomBottom).toBe(valentinaBottom);
 
     // War Room is between Diana (left) and Marcos (right)
     expect(warRoom.tileRect.col).toBeGreaterThan(diana.tileRect.col + diana.tileRect.width);
     expect(warRoom.tileRect.col + warRoom.tileRect.width).toBeLessThan(marcos.tileRect.col);
+
+    // War Room is 16 tiles tall (spans both side rows)
+    expect(warRoom.tileRect.height).toBe(16);
 
     // War Room is below top rooms
     const topRooms = ROOMS.filter(
@@ -224,44 +236,32 @@ describe('compact grid invariants', () => {
       ...topRooms.map((r) => r.tileRect.row + r.tileRect.height),
     );
     expect(warRoom.tileRect.row).toBeGreaterThan(topMax - 1);
-
-    // War Room is above bottom rooms
-    const bottomRooms = ROOMS.filter(
-      (r) => r.id === 'roberto' || r.id === 'valentina',
-    );
-    const bottomMin = Math.min(...bottomRooms.map((r) => r.tileRect.row));
-    expect(warRoom.tileRect.row + warRoom.tileRect.height).toBeLessThan(bottomMin + 1);
   });
 
-  it('middle row has Diana and Marcos flanking War Room', () => {
+  it('upper side offices: Diana and Marcos at same row', () => {
     const diana = ROOMS.find((r) => r.id === 'diana')!;
     const marcos = ROOMS.find((r) => r.id === 'marcos')!;
     expect(diana).toBeDefined();
     expect(marcos).toBeDefined();
-    // Both at same start row
     expect(diana.tileRect.row).toBe(marcos.tileRect.row);
   });
 
-  it('bottom row has Roberto and Valentina offices', () => {
-    const bottomRoomIds = ['roberto', 'valentina'];
-    for (const id of bottomRoomIds) {
-      const room = ROOMS.find((r) => r.id === id);
-      expect(room, `${id} should exist in ROOMS`).toBeDefined();
-    }
-    // All should be at same row (bottom section)
-    const bottomRooms = ROOMS.filter((r) => bottomRoomIds.includes(r.id));
-    const rows = new Set(bottomRooms.map((r) => r.tileRect.row));
-    expect(rows.size, 'All bottom offices should be at same row').toBe(1);
+  it('lower side offices: Roberto and Valentina at same row', () => {
+    const roberto = ROOMS.find((r) => r.id === 'roberto')!;
+    const valentina = ROOMS.find((r) => r.id === 'valentina')!;
+    expect(roberto).toBeDefined();
+    expect(valentina).toBeDefined();
+    expect(roberto.tileRect.row).toBe(valentina.tileRect.row);
   });
 
   it('corridors are 2 tiles wide', () => {
-    // Check horizontal corridor at rows 9-10 (between top rooms and middle row)
+    // Check horizontal corridor at rows 9-10 (below top offices)
     expect(isWalkable(15, 9, OFFICE_TILE_MAP)).toBe(true);
     expect(isWalkable(15, 10, OFFICE_TILE_MAP)).toBe(true);
 
-    // Check horizontal corridor at rows 20-21 (between middle row and bottom rooms)
-    expect(isWalkable(15, 20, OFFICE_TILE_MAP)).toBe(true);
-    expect(isWalkable(15, 21, OFFICE_TILE_MAP)).toBe(true);
+    // Check horizontal corridor at rows 27-28 (below War Room)
+    expect(isWalkable(15, 27, OFFICE_TILE_MAP)).toBe(true);
+    expect(isWalkable(15, 28, OFFICE_TILE_MAP)).toBe(true);
 
     // Check vertical corridor at cols 8-9 (left side)
     expect(isWalkable(8, 15, OFFICE_TILE_MAP)).toBe(true);
@@ -270,10 +270,16 @@ describe('compact grid invariants', () => {
     // Check vertical corridor at cols 22-23 (right side)
     expect(isWalkable(22, 15, OFFICE_TILE_MAP)).toBe(true);
     expect(isWalkable(23, 15, OFFICE_TILE_MAP)).toBe(true);
+
+    // Check gap corridor between upper/lower side offices (rows 18-19)
+    expect(isWalkable(4, 18, OFFICE_TILE_MAP)).toBe(true);
+    expect(isWalkable(4, 19, OFFICE_TILE_MAP)).toBe(true);
+    expect(isWalkable(27, 18, OFFICE_TILE_MAP)).toBe(true);
+    expect(isWalkable(27, 19, OFFICE_TILE_MAP)).toBe(true);
   });
 });
 
-// ── WAR_ROOM_SEATS Tests ────────────────────────────────────────────────────
+// -- WAR_ROOM_SEATS Tests -----------------------------------------------------
 
 describe('WAR_ROOM_SEATS', () => {
   it('has 6 entries including billy', () => {
@@ -344,7 +350,7 @@ describe('WAR_ROOM_SEATS', () => {
   });
 });
 
-// ── DECORATIONS Tests ───────────────────────────────────────────────────────
+// -- DECORATIONS Tests --------------------------------------------------------
 
 describe('DECORATIONS', () => {
   it('all decoration items are within their room boundaries', () => {
