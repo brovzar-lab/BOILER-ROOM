@@ -101,11 +101,15 @@ Plans:
 **Requirements**: ENV-03, ENV-04, ENV-05, ENV-06, ENV-07, UI-01, UI-02, UI-03, UI-04, UI-05
 **Success Criteria** (what must be TRUE):
   1. Monitor screens glow with blue halos and desk lamps emit warm amber circles onto surrounding surfaces
-  2. Area rugs, detailed plants, and personality decorations (Sasha's whiteboard, Roberto's minimal desk, Valentina's Post-its) are visible in each office
-  3. Room labels ("Agent Office", "War Room") appear on the canvas matching the mockup style
+  2. Area rugs, detailed plants, and personality decorations (Patrik's charts, Sandra's whiteboard, Marcos's lawbooks, Isaac's corkboard, Wendy's motivational art) are visible in each office
+  3. Room labels ("Patrik -- CFO", "War Room") appear on the canvas matching the mockup style
   4. Chat panel shows agent name/role, file count badge, and inline Attach/Memory buttons matching the mockup
   5. Deals sidebar is always visible on the left with per-agent activity summary and prominent active deal name
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 13-01-PLAN.md — Canvas glow effects + day/night theming + all-room labels
+- [ ] 13-02-PLAN.md — Area rugs + personality decorations + personal touches per office
+- [ ] 13-03-PLAN.md — Chat panel redesign + always-visible deals sidebar + per-agent activity
 
 ## Progress
 
@@ -123,4 +127,4 @@ Plans:
 | 10. Rendering Pipeline | v1.1 | Complete    | 2026-03-14 | 2026-03-14 |
 | 11. JRPG Sprite Integration | 3/3 | Complete    | 2026-03-14 | - |
 | 12. Smooth Zoom | 2/2 | Complete    | 2026-03-14 | - |
-| 13. Polish and UI | v1.1 | 0/? | Not started | - |
+| 13. Polish and UI | v1.1 | 0/3 | Not started | - |
