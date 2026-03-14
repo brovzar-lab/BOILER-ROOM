@@ -105,8 +105,9 @@ Plans:
   3. Room labels ("Patrik -- CFO", "War Room") appear on the canvas matching the mockup style
   4. Chat panel shows agent name/role, file count badge, and inline Attach/Memory buttons matching the mockup
   5. Deals sidebar is always visible on the left with per-agent activity summary and prominent active deal name
-**Plans:** 3 plans
+**Plans:** 4 plans
 Plans:
+- [ ] 13-00-PLAN.md — Wave 0 test stubs for Nyquist compliance
 - [ ] 13-01-PLAN.md — Canvas glow effects + day/night theming + all-room labels
 - [ ] 13-02-PLAN.md — Area rugs + personality decorations + personal touches per office
 - [ ] 13-03-PLAN.md — Chat panel redesign + always-visible deals sidebar + per-agent activity
@@ -127,4 +128,4 @@ Plans:
 | 10. Rendering Pipeline | v1.1 | Complete    | 2026-03-14 | 2026-03-14 |
 | 11. JRPG Sprite Integration | 3/3 | Complete    | 2026-03-14 | - |
 | 12. Smooth Zoom | 2/2 | Complete    | 2026-03-14 | - |
-| 13. Polish and UI | v1.1 | 0/3 | Not started | - |
+| 13. Polish and UI | v1.1 | 0/4 | Not started | - |

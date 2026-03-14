@@ -2,8 +2,9 @@
 phase: 13
 slug: polish-and-ui
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: false
+wave_0_plan: "13-00"
 created: 2026-03-14
 ---
 
@@ -38,15 +39,16 @@ created: 2026-03-14
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 13-01-01 | 01 | 1 | ENV-03 | unit | `npx vitest run src/engine/__tests__/renderer.test.ts -t "glow"` | W0 | pending |
-| 13-01-02 | 01 | 1 | ENV-04 | unit | `npx vitest run src/engine/__tests__/renderer.test.ts -t "lamp"` | W0 | pending |
-| 13-01-03 | 01 | 1 | ENV-05 | unit | `npx vitest run src/engine/__tests__/renderer.test.ts -t "rug"` | W0 | pending |
+| 13-00-01 | 00 | 0 | ENV-03, ENV-04, ENV-05, ENV-07, UI-03, UI-05 | stub | `npx vitest run --reporter=verbose 2>&1 \| grep todo` | Creates | pending |
+| 13-01-01 | 01 | 1 | ENV-03 | unit | `npx vitest run src/engine/__tests__/renderer.test.ts -t "glow"` | W0 (13-00) | pending |
+| 13-01-02 | 01 | 1 | ENV-04 | unit | `npx vitest run src/engine/__tests__/renderer.test.ts -t "lamp"` | W0 (13-00) | pending |
+| 13-01-03 | 01 | 1 | ENV-05 | unit | `npx vitest run src/engine/__tests__/renderer.test.ts -t "rug"` | W0 (13-00) | pending |
 | 13-01-04 | 01 | 1 | ENV-06 | unit | `npx vitest run src/engine/__tests__/renderer.test.ts -t "plant"` | Partial | pending |
-| 13-01-05 | 01 | 1 | ENV-07 | unit | `npx vitest run src/engine/__tests__/officeLayout.test.ts -t "decoration"` | W0 | pending |
-| 13-02-01 | 02 | 1 | UI-05 | unit | `npx vitest run src/engine/__tests__/renderer.test.ts -t "room label"` | W0 | pending |
+| 13-01-05 | 01 | 1 | ENV-07 | unit | `npx vitest run src/engine/__tests__/officeLayout.test.ts -t "decoration"` | W0 (13-00) | pending |
+| 13-02-01 | 02 | 1 | UI-05 | unit | `npx vitest run src/engine/__tests__/renderer.test.ts -t "room label"` | W0 (13-00) | pending |
 | 13-03-01 | 03 | 2 | UI-01 | smoke | Manual visual verification | manual-only | pending |
 | 13-03-02 | 03 | 2 | UI-02 | smoke | Manual visual verification | manual-only | pending |
-| 13-03-03 | 03 | 2 | UI-03 | unit | `npx vitest run src/components/__tests__/DealCard.test.tsx -t "activity"` | W0 | pending |
+| 13-03-03 | 03 | 2 | UI-03 | unit | `npx vitest run src/components/__tests__/DealCard.test.tsx -t "activity"` | W0 (13-00) | pending |
 | 13-03-04 | 03 | 2 | UI-04 | smoke | Manual visual verification | manual-only | pending |
 
 *Status: pending / green / red / flaky*
@@ -55,11 +57,11 @@ created: 2026-03-14
 
 ## Wave 0 Requirements
 
-- [ ] Add glow/lamp/rug test cases to `src/engine/__tests__/renderer.test.ts` — covers ENV-03, ENV-04, ENV-05
-- [ ] Add decoration count/key assertions to `src/engine/__tests__/officeLayout.test.ts` — covers ENV-07
-- [ ] Add room label all-rooms test to `src/engine/__tests__/renderer.test.ts` — covers UI-05
+- [ ] Add glow/lamp/rug/room-label test stubs to `src/engine/__tests__/renderer.test.ts` — covers ENV-03, ENV-04, ENV-05, UI-05
+- [ ] Add decoration count/key stubs to `src/engine/__tests__/officeLayout.test.ts` — covers ENV-07
+- [ ] Create `src/components/__tests__/DealCard.test.tsx` with activity stubs — covers UI-03
 
-*Wave 0 test stubs created by plan tasks (TDD pattern).*
+*Wave 0 test stubs created by 13-00-PLAN.md (must execute before plans 01/02/03).*
 
 ---
 
@@ -77,11 +79,11 @@ created: 2026-03-14
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 5s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references (via 13-00-PLAN.md)
+- [x] No watch-mode flags
+- [x] Feedback latency < 5s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** ready (pending 13-00 execution)
