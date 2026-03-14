@@ -203,30 +203,20 @@ describe('compact grid invariants', () => {
     ).toBeLessThan(gridMidRow);
   });
 
-  it('War Room is in center, spanning both side office rows', () => {
+  it('War Room is in center, vertically centered between corridors', () => {
     const warRoom = ROOMS.find((r) => r.id === 'war-room')!;
     const diana = ROOMS.find((r) => r.id === 'diana')!;
     const marcos = ROOMS.find((r) => r.id === 'marcos')!;
-    const roberto = ROOMS.find((r) => r.id === 'roberto')!;
-    const valentina = ROOMS.find((r) => r.id === 'valentina')!;
-
-    // War Room starts at same row as Diana and Marcos (upper side offices)
-    expect(warRoom.tileRect.row).toBe(diana.tileRect.row);
-    expect(warRoom.tileRect.row).toBe(marcos.tileRect.row);
-
-    // War Room ends at same row as Roberto and Valentina (lower side offices)
-    const warRoomBottom = warRoom.tileRect.row + warRoom.tileRect.height;
-    const robertoBottom = roberto.tileRect.row + roberto.tileRect.height;
-    const valentinaBottom = valentina.tileRect.row + valentina.tileRect.height;
-    expect(warRoomBottom).toBe(robertoBottom);
-    expect(warRoomBottom).toBe(valentinaBottom);
 
     // War Room is between Diana (left) and Marcos (right)
     expect(warRoom.tileRect.col).toBeGreaterThan(diana.tileRect.col + diana.tileRect.width);
     expect(warRoom.tileRect.col + warRoom.tileRect.width).toBeLessThan(marcos.tileRect.col);
 
-    // War Room is 16 tiles tall (spans both side rows)
-    expect(warRoom.tileRect.height).toBe(16);
+    // War Room is 11 tiles tall (roughly same height as one side office pair)
+    expect(warRoom.tileRect.height).toBe(11);
+
+    // War Room is 12 tiles wide
+    expect(warRoom.tileRect.width).toBe(12);
 
     // War Room is below top rooms
     const topRooms = ROOMS.filter(

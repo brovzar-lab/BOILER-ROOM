@@ -5,11 +5,11 @@
  *
  *            [BILLY] [Sasha]           <- centered, top row
  *   [Diana]                [Marcos]    <- upper side offices
- *            [  WAR  ROOM  ]          <- tall, center (spans both side rows)
+ *            [ WAR ROOM ]             <- center, same height as one side pair
  *   [Roberto]              [Valentina] <- lower side offices
  *
  *   - Top row: BILLY (center-left), Sasha (center-right) -- centered above War Room
- *   - War Room spans FULL height of both side office rows (rows 11-26, 16 tall)
+ *   - War Room centered vertically between upper/lower corridors (rows 12-22, 11 tall)
  *   - Diana & Roberto stacked on left (rows 11-17, rows 20-26)
  *   - Marcos & Valentina stacked on right (rows 11-17, rows 20-26)
  *   - Gap/corridor between upper and lower side offices at rows 18-19
@@ -22,7 +22,7 @@
  *   Cols 1-7:    Left offices (Diana, Roberto)
  *   Cols 8-9:    Left vertical corridor
  *   Cols 9-15:   BILLY's Office (top row, center-left)
- *   Cols 10-21:  War Room (center, 12 wide x 16 tall)
+ *   Cols 10-21:  War Room (center, 12 wide x 11 tall)
  *   Cols 17-23:  Sasha's Office (top row, center-right)
  *   Cols 22-23:  Right vertical corridor
  *   Cols 24-30:  Right offices (Marcos, Valentina)
@@ -33,10 +33,10 @@
  *   Rows 2-8:    Top offices (BILLY, Sasha) -- 7 tall, centered
  *   Rows 9-10:   Horizontal corridor
  *   Rows 11-17:  Upper side offices (Diana left, Marcos right)
- *   Rows 11-26:  War Room (center) -- 16 tall, spanning both side rows
+ *   Rows 12-22:  War Room (center) -- 11 tall, centered between corridors
  *   Rows 18-19:  Corridor between upper/lower side offices (War Room continues)
  *   Rows 20-26:  Lower side offices (Roberto left, Valentina right)
- *   Rows 27-28:  Horizontal corridor below War Room south door
+ *   Rows 27-28:  Horizontal corridor below side offices
  *   Row  29:     VOID border
  */
 import { TileType } from './types';
@@ -114,8 +114,8 @@ function buildTileMap(): TileType[][] {
   // Marcos's Office (upper-right): cols 24-30, rows 11-17
   room(24, 11, 7, 7);
 
-  // War Room (center, massive): cols 10-21, rows 11-26 (12 wide, 16 tall)
-  room(10, 11, 12, 16);
+  // War Room (center): cols 10-21, rows 12-22 (12 wide, 11 tall)
+  room(10, 12, 12, 11);
 
   // Roberto's Office (lower-left): cols 1-7, rows 20-26
   room(1, 20, 7, 7);
@@ -135,13 +135,16 @@ function buildTileMap(): TileType[][] {
   // Valentina door on west wall -> right vertical corridor
   map[23]![24] = D;
 
-  // War Room north door (connects to upper corridor at row 10)
-  map[11]![15] = D;
-  map[11]![16] = D;
+  // Connecting corridor above War Room north door (row 11, cols 10-21)
+  fill(10, 11, 12, 1, F);
 
-  // War Room south door (connects to lower corridor at row 27)
-  map[26]![15] = D;
-  map[26]![16] = D;
+  // War Room north door (connects to corridor above at row 11)
+  map[12]![15] = D;
+  map[12]![16] = D;
+
+  // War Room south door (connects to corridor below at row 22)
+  map[22]![15] = D;
+  map[22]![16] = D;
 
   // Left vertical corridor: cols 8-9, rows 9-28
   // Connects upper horizontal corridor through side offices to lower corridor
@@ -149,6 +152,10 @@ function buildTileMap(): TileType[][] {
 
   // Right vertical corridor: cols 22-23, rows 9-28
   fill(22, 9, 2, 19, F);
+
+  // Connecting corridor below War Room south door to lower horizontal corridor
+  // (rows 23-26, cols 14-17 -- narrow passage)
+  fill(14, 23, 4, 4, F);
 
   // Corridor between upper and lower side offices on the left (rows 18-19, cols 1-7)
   fill(1, 18, 7, 2, F);
@@ -189,10 +196,10 @@ export const ROOMS: Room[] = [
   {
     id: 'war-room',
     name: 'War Room',
-    tileRect: { col: 10, row: 11, width: 12, height: 16 },
-    doorTile: { col: 15, row: 11 },
-    seatTile: { col: 15, row: 18 },
-    billyStandTile: { col: 16, row: 16 },
+    tileRect: { col: 10, row: 12, width: 12, height: 11 },
+    doorTile: { col: 15, row: 12 },
+    seatTile: { col: 15, row: 17 },
+    billyStandTile: { col: 16, row: 15 },
   },
   {
     id: 'diana',
@@ -256,15 +263,15 @@ export const FURNITURE: FurnitureItem[] = [
   { roomId: 'sasha', type: 'chair', col: 20, row: 4, width: 1, height: 1 },
   { roomId: 'sasha', type: 'artwork', col: 18, row: 3, width: 1, height: 1 },
 
-  // War Room (interior cols 11-20, rows 12-25) -- large conference table centered
-  { roomId: 'war-room', type: 'table', col: 13, row: 17, width: 6, height: 4 },
-  // Chairs around the conference table
-  { roomId: 'war-room', type: 'chair', col: 16, row: 16, width: 1, height: 1 }, // north/head (BILLY)
-  { roomId: 'war-room', type: 'chair', col: 12, row: 18, width: 1, height: 1 }, // left side, upper (Diana)
-  { roomId: 'war-room', type: 'chair', col: 12, row: 19, width: 1, height: 1 }, // left side, lower (Sasha)
-  { roomId: 'war-room', type: 'chair', col: 19, row: 18, width: 1, height: 1 }, // right side, upper (Marcos)
-  { roomId: 'war-room', type: 'chair', col: 19, row: 19, width: 1, height: 1 }, // right side, lower (Roberto)
-  { roomId: 'war-room', type: 'chair', col: 15, row: 21, width: 1, height: 1 }, // south/foot (Valentina)
+  // War Room (interior cols 11-20, rows 13-21) -- portrait conference table centered
+  { roomId: 'war-room', type: 'table', col: 14, row: 14, width: 4, height: 6 },
+  // Chairs around the portrait conference table (cols 14-17, rows 14-19)
+  { roomId: 'war-room', type: 'chair', col: 15, row: 13, width: 1, height: 1 }, // north/head (BILLY)
+  { roomId: 'war-room', type: 'chair', col: 13, row: 15, width: 1, height: 1 }, // left side, upper (Diana)
+  { roomId: 'war-room', type: 'chair', col: 13, row: 17, width: 1, height: 1 }, // left side, lower (Sasha)
+  { roomId: 'war-room', type: 'chair', col: 18, row: 15, width: 1, height: 1 }, // right side, upper (Marcos)
+  { roomId: 'war-room', type: 'chair', col: 18, row: 17, width: 1, height: 1 }, // right side, lower (Roberto)
+  { roomId: 'war-room', type: 'chair', col: 16, row: 20, width: 1, height: 1 }, // south/foot (Valentina)
 
   // Diana's Office (interior cols 2-6, rows 12-16)
   { roomId: 'diana', type: 'desk', col: 3, row: 13, width: 2, height: 1 },
@@ -298,8 +305,8 @@ export const FURNITURE: FurnitureItem[] = [
 
 /**
  * Conference table seat tiles for BILLY + 5 agents.
- * Positioned at chairs adjacent to the 6x4 table at (13,17)-(18,20) within
- * the War Room interior (cols 11-20, rows 12-25).
+ * Positioned at chairs adjacent to the 4x6 portrait table at (14,14)-(17,19)
+ * within the War Room interior (cols 11-20, rows 13-21).
  *
  * Arrangement:
  *   - BILLY at head/north of table
@@ -308,12 +315,12 @@ export const FURNITURE: FurnitureItem[] = [
  *   - Valentina at south/foot of table
  */
 export const WAR_ROOM_SEATS: Record<string, TileCoord> = {
-  billy:     { col: 16, row: 16 }, // head of table (north chair)
-  diana:     { col: 12, row: 18 }, // left side, upper chair
-  sasha:     { col: 12, row: 19 }, // left side, lower chair
-  marcos:    { col: 19, row: 18 }, // right side, upper chair
-  roberto:   { col: 19, row: 19 }, // right side, lower chair
-  valentina: { col: 15, row: 21 }, // foot of table (south chair)
+  billy:     { col: 15, row: 13 }, // head of table (north chair)
+  diana:     { col: 13, row: 15 }, // left side, upper chair
+  sasha:     { col: 13, row: 17 }, // left side, lower chair
+  marcos:    { col: 18, row: 15 }, // right side, upper chair
+  roberto:   { col: 18, row: 17 }, // right side, lower chair
+  valentina: { col: 16, row: 20 }, // foot of table (south chair)
 };
 
 // -- Decoration Items ---------------------------------------------------------
