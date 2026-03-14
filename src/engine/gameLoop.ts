@@ -9,7 +9,7 @@
  */
 import { useOfficeStore } from '@/store/officeStore';
 import { TILE_SIZE } from './types';
-import { updateCamera } from './camera';
+import { updateCamera, computeAutoFitZoom } from './camera';
 import { updateAllCharacters } from './characters';
 import { OFFICE_TILE_MAP } from './officeLayout';
 import { renderFrame } from './renderer';
@@ -34,6 +34,10 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
   let prevWidth = 0;
   let prevHeight = 0;
 
+  // Auto-fit zoom tracking: true until user manually overrides via ZoomControls
+  let isAutoFitZoom = true;
+  let firstFrame = true;
+
   function frame(time: number): void {
     if (stopped) return;
 
@@ -55,6 +59,39 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
       canvas.height = Math.floor(rect.height * dpr);
       ctx.scale(dpr, dpr);
       ctx.imageSmoothingEnabled = false;
+
+      // Recalculate auto-fit zoom on resize (only if user hasn't manually overridden)
+      if (isAutoFitZoom && rect.width > 0 && rect.height > 0) {
+        const fitZoom = computeAutoFitZoom(rect.width, rect.height);
+        state.camera.zoom = fitZoom;
+        useOfficeStore.getState().setZoomLevel(fitZoom);
+      }
+    }
+
+    // On first frame, apply auto-fit zoom
+    if (firstFrame && prevWidth > 0 && prevHeight > 0) {
+      firstFrame = false;
+      const fitZoom = computeAutoFitZoom(prevWidth, prevHeight);
+      state.camera.zoom = fitZoom;
+      useOfficeStore.getState().setZoomLevel(fitZoom);
+    }
+
+    // Detect manual zoom override: if store zoom differs from camera zoom
+    // and it wasn't set by our auto-fit code, mark as manual override
+    if (state.zoomLevel !== state.camera.zoom) {
+      state.camera.zoom = state.zoomLevel;
+      isAutoFitZoom = false;
+    }
+
+    // Expose auto-fit reset via a module-level flag
+    if ((globalThis as Record<string, unknown>).__boiler_reset_autofit) {
+      (globalThis as Record<string, unknown>).__boiler_reset_autofit = false;
+      isAutoFitZoom = true;
+      if (prevWidth > 0 && prevHeight > 0) {
+        const fitZoom = computeAutoFitZoom(prevWidth, prevHeight);
+        state.camera.zoom = fitZoom;
+        useOfficeStore.getState().setZoomLevel(fitZoom);
+      }
     }
 
     // Use CSS dimensions (logical pixels) for rendering calculations

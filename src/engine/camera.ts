@@ -1,10 +1,24 @@
 /**
  * Camera system with integer zoom, smooth follow, and coordinate conversion.
- * Supports zoom level 1 (overview: whole floor visible) and 2 (follow: tracks target).
+ * Supports zoom level 1 (overview: whole floor visible), 2+ (follow: tracks target),
+ * and auto-fit zoom that calculates the largest integer zoom fitting the full map.
  */
 import { TILE_SIZE } from './types';
 import type { Camera, TileCoord } from './types';
 import { OFFICE_TILE_MAP } from './officeLayout';
+
+/**
+ * Computes the largest integer zoom level at which the entire office map
+ * fits within the given canvas dimensions. Minimum return value is 1.
+ */
+export function computeAutoFitZoom(canvasWidth: number, canvasHeight: number): number {
+  const mapCols = OFFICE_TILE_MAP[0]!.length; // 42
+  const mapRows = OFFICE_TILE_MAP.length;       // 34
+  const mapPixelW = mapCols * TILE_SIZE;         // 672
+  const mapPixelH = mapRows * TILE_SIZE;         // 544
+
+  return Math.max(1, Math.floor(Math.min(canvasWidth / mapPixelW, canvasHeight / mapPixelH)));
+}
 
 /**
  * Creates a camera centered on BILLY's starting room with default zoom=2.
