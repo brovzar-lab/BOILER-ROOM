@@ -63,6 +63,7 @@ function createMockCtx() {
     moveTo: vi.fn(),
     lineTo: vi.fn(),
     arc: vi.fn(),
+    ellipse: vi.fn(),
     measureText: vi.fn(() => ({ width: 50 })),
     save: vi.fn(),
     restore: vi.fn(),

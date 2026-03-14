@@ -141,11 +141,14 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
     }
     prevAgentStatuses = { ...currentStatuses };
 
-    // If BILLY is walking, set camera target to follow BILLY's pixel position
+    // If BILLY is walking, set camera target to follow BILLY's foot-center position
     if (billy && state.camera.followTarget === 'billy' && state.camera.zoom >= ZOOM_OVERVIEW_THRESHOLD) {
-      // Camera targets BILLY's center pixel position, offset to center in viewport
-      state.camera.targetX = billy.x * state.camera.zoom - canvasWidth / 2 + (TILE_SIZE * state.camera.zoom) / 2;
-      state.camera.targetY = billy.y * state.camera.zoom - canvasHeight / 2 + (TILE_SIZE * state.camera.zoom) / 2;
+      // Follow target: center of character's occupied tile (foot-center)
+      // Using foot-center keeps the ground plane natural with taller 24x32 sprites
+      const followX = billy.x + TILE_SIZE / 2;
+      const followY = billy.y + TILE_SIZE / 2;
+      state.camera.targetX = followX * state.camera.zoom - canvasWidth / 2;
+      state.camera.targetY = followY * state.camera.zoom - canvasHeight / 2;
     } else if (state.camera.zoom < ZOOM_OVERVIEW_THRESHOLD) {
       // Overview mode: center camera on the map
       state.camera.targetX = 0;

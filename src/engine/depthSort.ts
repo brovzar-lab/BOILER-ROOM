@@ -54,7 +54,9 @@ export function buildRenderables(
   }
 
   for (const ch of characters) {
-    // Use pixel Y for smooth interpolation during walk
+    // Character foot is at bottom of their occupied tile (ch.y + TILE_SIZE).
+    // baseRow uses foot position for Y-sort. The 24x32 sprite extends 16px
+    // above ch.y but sorting is by feet, not head — correct for JRPG 3/4 depth.
     const footRow = ch.y / TILE_SIZE;
     list.push({
       baseRow: footRow + 1, // bottom edge (foot) is one tile below ch.y origin
