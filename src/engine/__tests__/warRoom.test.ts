@@ -1,5 +1,5 @@
 /**
- * War Room engine tests: agent gathering/dispersal, seat positions, 'w' key shortcut.
+ * War Room engine tests: agent gathering/dispersal, seat positions, '6' key shortcut.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { TileType, TILE_SIZE, WALK_SPEED } from '../types';
@@ -469,9 +469,9 @@ describe('updateAllCharacters - War Room entry', () => {
   });
 });
 
-// ── 'w' key shortcut ──────────────────────────────────────────────────────────
+// ── '6' key shortcut (War Room) ───────────────────────────────────────────────
 
-describe("'w' key shortcut", () => {
+describe("'6' key shortcut", () => {
   let tileMap: TileType[][];
 
   beforeEach(() => {
@@ -522,8 +522,8 @@ describe("'w' key shortcut", () => {
     const canvas = document.createElement('canvas');
     const cleanup = setupInputHandlers(canvas);
 
-    // Simulate 'w' keypress
-    const event = new KeyboardEvent('keydown', { key: 'w' });
+    // Simulate '6' keypress (War Room shortcut)
+    const event = new KeyboardEvent('keydown', { key: '6' });
     window.dispatchEvent(event);
 
     // setTargetRoom should be called with 'war-room'

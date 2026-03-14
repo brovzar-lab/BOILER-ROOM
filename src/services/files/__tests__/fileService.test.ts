@@ -231,7 +231,7 @@ describe('fileService', () => {
       expect(copies).toHaveLength(5);
 
       const agentIds = copies.map((c: FileRecord) => c.agentId).sort();
-      expect(agentIds).toEqual(['patrik', 'marcos', 'isaac', 'sandra', 'wendy']);
+      expect(agentIds).toEqual(['isaac', 'marcos', 'patrik', 'sandra', 'wendy']);
 
       // Each copy has unique ID and shared text
       for (const copy of copies) {
