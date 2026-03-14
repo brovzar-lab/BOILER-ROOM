@@ -4,7 +4,7 @@ milestone: v1.1
 milestone_name: Visual Overhaul
 status: executing
 stopped_at: Completed 13-02-PLAN.md
-last_updated: "2026-03-14T20:36:40.187Z"
+last_updated: "2026-03-14T20:47:33.947Z"
 last_activity: 2026-03-14 — Chat panel redesign + always-visible deals sidebar (13-03)
 progress:
   total_phases: 5
