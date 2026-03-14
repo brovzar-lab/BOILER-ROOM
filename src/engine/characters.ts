@@ -19,6 +19,7 @@ import type { Character, Direction, TileCoord } from './types';
 import { findPath } from './tileMap';
 import { getRoomAtTile, ROOMS } from './officeLayout';
 import { useOfficeStore } from '@/store/officeStore';
+import { getAudioManager } from './audioManager';
 
 /** Number of walk animation frames in a cycle */
 const WALK_FRAMES = 4;
@@ -267,6 +268,7 @@ export function updateAllCharacters(
       } else {
         // BILLY entered an agent's room — start knock pause
         knockTimers.set('billy', KNOCK_DURATION);
+        void getAudioManager().playSfx('knock');
 
         // Make agent face BILLY
         const agent = characters.find((c) => c.id === room.id);

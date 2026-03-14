@@ -2,7 +2,9 @@ import { useOfficeStore } from '@/store/officeStore';
 import { useDealStore } from '@/store/dealStore';
 import { useFileStore } from '@/store/fileStore';
 import { useMemoryStore } from '@/store/memoryStore';
+import { useAudioStore } from '@/store/audioStore';
 import { getAgent } from '@/config/agents';
+import { getAudioManager } from '@/engine/audioManager';
 import type { AgentId, AgentStatus } from '@/types/agent';
 
 /** Agent IDs that correspond to valid agent rooms. */
@@ -40,6 +42,12 @@ export function Header({ sidebarOpen, onToggleSidebar }: HeaderProps) {
   const fileCount = isAgentId(activeRoomId)
     ? files.filter((f) => f.agentId === activeRoomId && (!activeDealId || f.dealId === activeDealId)).length
     : 0;
+
+  // Audio mute state
+  const ambientMuted = useAudioStore((s) => s.ambientMuted);
+  const sfxMuted = useAudioStore((s) => s.sfxMuted);
+  const toggleAmbient = useAudioStore((s) => s.toggleAmbient);
+  const toggleSfx = useAudioStore((s) => s.toggleSfx);
 
   // Memory fact count for current deal (all agents)
   const memoryFacts = useMemoryStore((s) => s.facts);
@@ -113,8 +121,56 @@ export function Header({ sidebarOpen, onToggleSidebar }: HeaderProps) {
         )}
       </div>
 
-      {/* Right: agent indicator + file count */}
+      {/* Right: audio controls + agent indicator + file count */}
       <div className="flex items-center gap-2">
+        {/* Ambient mute toggle */}
+        <button
+          onClick={() => {
+            const newMuted = !ambientMuted;
+            toggleAmbient();
+            const audio = getAudioManager();
+            audio.ensureContext();
+            if (newMuted) {
+              audio.setAmbientMuted(true);
+            } else {
+              void audio.playAmbient(activeRoomId);
+            }
+          }}
+          className="w-6 h-6 flex items-center justify-center text-neutral-500 hover:text-neutral-300 transition-colors"
+          title={ambientMuted ? 'Unmute ambient' : 'Mute ambient'}
+          aria-label={ambientMuted ? 'Unmute ambient sound' : 'Mute ambient sound'}
+        >
+          {ambientMuted ? (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            </svg>
+          )}
+        </button>
+
+        {/* SFX mute toggle */}
+        <button
+          onClick={() => toggleSfx()}
+          className="w-6 h-6 flex items-center justify-center text-neutral-500 hover:text-neutral-300 transition-colors"
+          title={sfxMuted ? 'Unmute SFX' : 'Mute SFX'}
+          aria-label={sfxMuted ? 'Unmute sound effects' : 'Mute sound effects'}
+        >
+          {sfxMuted ? (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+          )}
+        </button>
+
         <span className={dotClassName} style={dotStyle} />
         <span className="text-sm text-[--color-text-secondary]">
           {label}

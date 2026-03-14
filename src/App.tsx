@@ -14,6 +14,7 @@ import { ZoomControls } from '@/components/canvas/ZoomControls';
 import { DealSidebar } from '@/components/deal/DealSidebar';
 import { MigrationPrompt } from '@/components/deal/MigrationPrompt';
 import type { AgentId } from '@/types/agent';
+import { getAudioManager } from '@/engine/audioManager';
 
 const VALID_EXTENSIONS = new Set(['.pdf', '.docx', '.xlsx', '.xls']);
 const AGENT_IDS: AgentId[] = ['diana', 'marcos', 'sasha', 'roberto', 'valentina'];
@@ -60,6 +61,7 @@ function App() {
       const ext = '.' + file.name.split('.').pop()?.toLowerCase();
       if (VALID_EXTENSIONS.has(ext)) {
         void fileStore.addFile(file, agentId);
+        void getAudioManager().playSfx('paper');
       }
     }
   }, [resolveUploadAgent]);
@@ -95,6 +97,21 @@ function App() {
     setOnFileClick(handleFileClick);
     return () => setOnFileClick(null);
   }, [handleFileClick]);
+
+  // Initialize AudioContext on first user interaction (browser autoplay policy)
+  useEffect(() => {
+    const handler = () => {
+      getAudioManager().ensureContext();
+      document.removeEventListener('click', handler);
+      document.removeEventListener('keydown', handler);
+    };
+    document.addEventListener('click', handler, { once: true });
+    document.addEventListener('keydown', handler, { once: true });
+    return () => {
+      document.removeEventListener('click', handler);
+      document.removeEventListener('keydown', handler);
+    };
+  }, []);
 
   useEffect(() => {
     const init = async () => {
