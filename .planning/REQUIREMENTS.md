@@ -97,7 +97,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **PLSH-01**: Polished pixel art sprites for all 6 characters with multiple animation states
 - [x] **PLSH-02**: Rich office environments with personality-specific decorations per agent
 - [x] **PLSH-03**: Agent personality reflected in animations (Sasha stands, Roberto barely moves, Valentina has Post-its)
-- [ ] **PLSH-04**: Ambient sound design: office sounds, keyboard clicks, paper shuffle on file drops
+- [x] **PLSH-04**: Ambient sound design: office sounds, keyboard clicks, paper shuffle on file drops
 - [x] **PLSH-05**: Responsive design for different screen sizes
 
 ## v2 Requirements
@@ -203,7 +203,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PLSH-01 | Phase 8 | Complete |
 | PLSH-02 | Phase 8 | Complete |
 | PLSH-03 | Phase 8 | Complete |
-| PLSH-04 | Phase 8 | Pending |
+| PLSH-04 | Phase 8 | Complete |
 | PLSH-05 | Phase 8 | Complete |
 
 **Coverage:**
