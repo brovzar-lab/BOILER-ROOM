@@ -44,7 +44,7 @@ Requirements for v1.1 Visual Overhaul. Each maps to roadmap phases.
 - [x] **ENV-03**: Monitor screens glow with blue halo radiating onto desk and floor
 - [x] **ENV-04**: Desk lamps emit warm amber glow circles onto surrounding floor
 - [x] **ENV-05**: Area rugs visible under desks with woven geometric patterns
-- [ ] **ENV-06**: Plants render with detailed leaf fronds from above-and-front angle
+- [x] **ENV-06**: Plants render with detailed leaf fronds from above-and-front angle
 - [x] **ENV-07**: Personality decorations per office (Sasha whiteboard, Roberto minimal, Valentina Post-its, etc.)
 
 ### UI
@@ -107,7 +107,7 @@ Deferred to future release.
 | ENV-03 | Phase 13 | Complete |
 | ENV-04 | Phase 13 | Complete |
 | ENV-05 | Phase 13 | Complete |
-| ENV-06 | Phase 13 | Pending |
+| ENV-06 | Phase 13 | Complete |
 | ENV-07 | Phase 13 | Complete |
 | UI-01 | Phase 13 | Complete |
 | UI-02 | Phase 13 | Complete |

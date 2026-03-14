@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Visual Overhaul
-status: in-progress
-stopped_at: Completed 13-03-PLAN.md
-last_updated: "2026-03-14T21:00:00.000Z"
+status: executing
+stopped_at: Completed 13-02-PLAN.md
+last_updated: "2026-03-14T20:36:40.187Z"
 last_activity: 2026-03-14 — Chat panel redesign + always-visible deals sidebar (13-03)
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 14
-  completed_plans: 13
+  completed_plans: 14
   percent: 93
 ---
 
@@ -54,6 +54,7 @@ Progress: [█████████░] 93% (v1.1 overall)
 | Phase 12 P02 | 30min | 2 tasks | 3 files |
 | 13    | 00   | 1min     | 1     | 3     |
 | 13    | 03   | 5min     | 2     | 6     |
+| Phase 13 P02 | 6min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,8 @@ Recent decisions affecting current work:
 - [13-03]: Top border accent bar for chat header (spans full width, modern look)
 - [13-03]: Token counter hidden below 60%, amber 60-80%, red above 80%
 - [13-03]: Per-agent activity as colored initial + count (P:3 S:1) in sidebar cards
+- [Phase 13]: Rugs render as Layer 2c (after floor tint, before walls) using fillRect + dashed strokeRect
+- [Phase 13]: Personal items auto-render via existing Y-sort decoration pipeline (no Layer 4 changes needed)
 
 ### Pending Todos
 
@@ -104,6 +107,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T21:00:00Z
-Stopped at: Completed 13-03-PLAN.md
-Resume file: .planning/phases/13-polish-and-ui/13-03-SUMMARY.md
+Last session: 2026-03-14T20:36:40.185Z
+Stopped at: Completed 13-02-PLAN.md
+Resume file: None
