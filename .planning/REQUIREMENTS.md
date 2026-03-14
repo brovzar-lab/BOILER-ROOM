@@ -28,7 +28,7 @@ Requirements for v1.1 Visual Overhaul. Each maps to roadmap phases.
 - [x] **ZOOM-02**: Zoom centers on cursor/pinch point (not screen center)
 - [x] **ZOOM-03**: Zoom snaps to nearest half-integer at rest for pixel clarity
 - [x] **ZOOM-04**: Sprite cache uses quantized zoom keys to prevent memory bloat
-- [ ] **ZOOM-05**: Auto-fit zoom still works as default on initial load
+- [x] **ZOOM-05**: Auto-fit zoom still works as default on initial load
 
 ### Sprites
 
@@ -97,7 +97,7 @@ Deferred to future release.
 | ZOOM-02 | Phase 12 | Complete |
 | ZOOM-03 | Phase 12 | Complete |
 | ZOOM-04 | Phase 12 | Complete |
-| ZOOM-05 | Phase 12 | Pending |
+| ZOOM-05 | Phase 12 | Complete |
 | SPRT-01 | Phase 11 | Complete |
 | SPRT-02 | Phase 11 | Complete |
 | SPRT-03 | Phase 11 | Complete |

@@ -30,7 +30,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 - [x] **Phase 9: Compact Layout** - Redesign office grid from 42x34 sprawl to ~28x24 compact grid with validated pathfinding (completed 2026-03-14)
 - [x] **Phase 10: Rendering Pipeline** - Refactor renderer to ctx.setTransform() zoom, unified Y-sorted depth, and 3/4 wall rendering (completed 2026-03-14)
 - [x] **Phase 11: JRPG Sprite Integration** - 24x32 character sprites and 3/4 perspective environment tiles with correct anchoring (completed 2026-03-14)
-- [ ] **Phase 12: Smooth Zoom** - Trackpad pinch-to-zoom with cursor-centered scaling, snap-to-half-integer, and quantized sprite cache
+- [x] **Phase 12: Smooth Zoom** - Trackpad pinch-to-zoom with cursor-centered scaling, snap-to-half-integer, and quantized sprite cache (completed 2026-03-14)
 - [ ] **Phase 13: Polish and UI** - Ambient glow effects, environment detail, personality decorations, and chat/deal UI refinements
 
 ## Phase Details
@@ -90,7 +90,7 @@ Plans:
   3. When the user stops zooming, the view snaps to nearest half-integer for pixel-crisp rendering
   4. Memory usage stays stable during rapid zoom gestures (no sprite cache explosion)
   5. On initial page load, the office auto-fits to the viewport at an appropriate zoom level
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 12-01-PLAN.md — Zoom controller state machine + cursor-centered math + wheel handler
 - [ ] 12-02-PLAN.md — Game loop integration + ZoomControls UI redesign + visual verification
@@ -122,5 +122,5 @@ Plans:
 | 9. Compact Layout | 3/3 | Complete   | 2026-03-14 | - |
 | 10. Rendering Pipeline | v1.1 | Complete    | 2026-03-14 | 2026-03-14 |
 | 11. JRPG Sprite Integration | 3/3 | Complete    | 2026-03-14 | - |
-| 12. Smooth Zoom | 1/2 | In Progress|  | - |
+| 12. Smooth Zoom | 2/2 | Complete   | 2026-03-14 | - |
 | 13. Polish and UI | v1.1 | 0/? | Not started | - |

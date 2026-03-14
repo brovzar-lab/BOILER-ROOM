@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Visual Overhaul
 status: completed
-stopped_at: Completed 12-01-PLAN.md
-last_updated: "2026-03-14T16:53:48.502Z"
+stopped_at: Completed 12-02-PLAN.md
+last_updated: "2026-03-14T17:56:39.502Z"
 last_activity: 2026-03-14 — Zoom controller state machine with cursor-centered math and wheel handler (12-01)
 progress:
   total_phases: 5
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 10
-  completed_plans: 9
+  completed_plans: 10
   percent: 90
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 ## Current Position
 
 Phase: 12 of 13 (Smooth Zoom)
-Plan: 1 of 2 in current phase
-Status: Plan 12-01 Complete
-Last activity: 2026-03-14 — Zoom controller state machine with cursor-centered math and wheel handler (12-01)
+Plan: 2 of 2 in current phase (COMPLETE)
+Status: Phase 12 Complete
+Last activity: 2026-03-14 — Game loop zoom integration, ZoomControls redesign, drag-to-pan (12-02)
 
-Progress: [█████████░] 90% (Phase 12) | 70% (v1.1 overall)
+Progress: [██████████] 100% (Phase 12) | 80% (v1.1 overall)
 
 ## Performance Metrics
 
@@ -51,6 +51,7 @@ Progress: [█████████░] 90% (Phase 12) | 70% (v1.1 overall)
 | 11    | 02   | 5min     | 2     | 10    |
 | 11    | 03   | 3min     | 2     | 5     |
 | 12    | 01   | 4min     | 3     | 6     |
+| Phase 12 P02 | 30min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -81,6 +82,8 @@ Recent decisions affecting current work:
 - [12-01]: ZOOM_FACTOR=1.002 per pixel deltaY for natural trackpad/wheel sensitivity
 - [12-01]: computeAutoFitZoom floor lowered from 1.0 to 0.5 for sub-1.0 zoom on large screens
 - [12-01]: toggleZoom uses startAnimatedZoom for smooth Z-key and double-click transitions
+- [Phase 12]: Camera follow pauses during active zoom AND manual pan, re-engages when BILLY walks
+- [Phase 12]: Drag-to-pan with 3px threshold added as essential complement to zoom
 
 ### Pending Todos
 
@@ -94,6 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T16:53:48.500Z
-Stopped at: Completed 12-01-PLAN.md
+Last session: 2026-03-14T17:56:39.499Z
+Stopped at: Completed 12-02-PLAN.md
 Resume file: None
