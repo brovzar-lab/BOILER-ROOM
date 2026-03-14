@@ -237,6 +237,8 @@ export interface FurnitureItem {
   row: number;
   width: number;  // in tiles
   height: number; // in tiles
+  /** Visual height in tiles for 3/4 perspective (default: height). Tall items (bookshelf=2, whiteboard=2) occlude more. */
+  renderHeight?: number;
 }
 
 /**
@@ -247,7 +249,7 @@ export const FURNITURE: FurnitureItem[] = [
   // BILLY's Office (interior cols 10-14, rows 3-7)
   { roomId: 'billy', type: 'desk', col: 11, row: 3, width: 3, height: 1 },
   { roomId: 'billy', type: 'chair', col: 12, row: 4, width: 1, height: 1 },
-  { roomId: 'billy', type: 'bookshelf', col: 10, row: 3, width: 1, height: 2 },
+  { roomId: 'billy', type: 'bookshelf', col: 10, row: 3, width: 1, height: 2, renderHeight: 2 },
 
   // Sasha's Office (interior cols 18-22, rows 3-7)
   { roomId: 'sasha', type: 'desk', col: 19, row: 3, width: 2, height: 1 },
@@ -260,7 +262,7 @@ export const FURNITURE: FurnitureItem[] = [
   // Diana's Office (interior cols 2-6, rows 12-16)
   { roomId: 'diana', type: 'desk', col: 3, row: 13, width: 2, height: 1 },
   { roomId: 'diana', type: 'chair', col: 4, row: 14, width: 1, height: 1 },
-  { roomId: 'diana', type: 'bookshelf', col: 2, row: 12, width: 1, height: 2 },
+  { roomId: 'diana', type: 'bookshelf', col: 2, row: 12, width: 1, height: 2, renderHeight: 2 },
 
   // Marcos's Office (interior cols 25-29, rows 12-16)
   { roomId: 'marcos', type: 'desk', col: 26, row: 13, width: 2, height: 1 },
@@ -270,7 +272,7 @@ export const FURNITURE: FurnitureItem[] = [
   // Roberto's Office (interior cols 2-6, rows 21-25)
   { roomId: 'roberto', type: 'desk', col: 3, row: 22, width: 2, height: 1 },
   { roomId: 'roberto', type: 'chair', col: 4, row: 23, width: 1, height: 1 },
-  { roomId: 'roberto', type: 'bookshelf', col: 2, row: 21, width: 1, height: 2 },
+  { roomId: 'roberto', type: 'bookshelf', col: 2, row: 21, width: 1, height: 2, renderHeight: 2 },
 
   // Valentina's Office (interior cols 25-29, rows 21-25)
   { roomId: 'valentina', type: 'desk', col: 26, row: 22, width: 2, height: 1 },
