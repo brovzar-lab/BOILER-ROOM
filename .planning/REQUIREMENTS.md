@@ -41,19 +41,19 @@ Requirements for v1.1 Visual Overhaul. Each maps to roadmap phases.
 
 - [x] **ENV-01**: Floor tiles render as warm parquet with wood grain in 3/4 perspective
 - [x] **ENV-02**: Furniture renders with visible front face and depth (desks with drawer panels, bookshelves with spines)
-- [ ] **ENV-03**: Monitor screens glow with blue halo radiating onto desk and floor
-- [ ] **ENV-04**: Desk lamps emit warm amber glow circles onto surrounding floor
-- [ ] **ENV-05**: Area rugs visible under desks with woven geometric patterns
+- [x] **ENV-03**: Monitor screens glow with blue halo radiating onto desk and floor
+- [x] **ENV-04**: Desk lamps emit warm amber glow circles onto surrounding floor
+- [x] **ENV-05**: Area rugs visible under desks with woven geometric patterns
 - [ ] **ENV-06**: Plants render with detailed leaf fronds from above-and-front angle
-- [ ] **ENV-07**: Personality decorations per office (Sasha whiteboard, Roberto minimal, Valentina Post-its, etc.)
+- [x] **ENV-07**: Personality decorations per office (Sasha whiteboard, Roberto minimal, Valentina Post-its, etc.)
 
 ### UI
 
 - [ ] **UI-01**: Chat panel matches mockup style — agent name/role, file count badge, inline Attach/Memory buttons
 - [ ] **UI-02**: Deals sidebar always visible on left (not hidden behind toggle)
-- [ ] **UI-03**: Deal switcher shows per-agent activity summary (DEAL-05 from v1.0)
+- [x] **UI-03**: Deal switcher shows per-agent activity summary (DEAL-05 from v1.0)
 - [ ] **UI-04**: Active deal name prominently displayed (DEAL-06 from v1.0)
-- [ ] **UI-05**: Room labels ("Agent Office", "War Room") visible on canvas matching mockup style
+- [x] **UI-05**: Room labels ("Agent Office", "War Room") visible on canvas matching mockup style
 
 ## v2 Requirements
 
@@ -104,16 +104,16 @@ Deferred to future release.
 | SPRT-04 | Phase 11 | Complete |
 | ENV-01 | Phase 11 | Complete |
 | ENV-02 | Phase 11 | Complete |
-| ENV-03 | Phase 13 | Pending |
-| ENV-04 | Phase 13 | Pending |
-| ENV-05 | Phase 13 | Pending |
+| ENV-03 | Phase 13 | Complete |
+| ENV-04 | Phase 13 | Complete |
+| ENV-05 | Phase 13 | Complete |
 | ENV-06 | Phase 13 | Pending |
-| ENV-07 | Phase 13 | Pending |
+| ENV-07 | Phase 13 | Complete |
 | UI-01 | Phase 13 | Pending |
 | UI-02 | Phase 13 | Pending |
-| UI-03 | Phase 13 | Pending |
+| UI-03 | Phase 13 | Complete |
 | UI-04 | Phase 13 | Pending |
-| UI-05 | Phase 13 | Pending |
+| UI-05 | Phase 13 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 30 total

@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Visual Overhaul
-status: completed
-stopped_at: Phase 13 context gathered
-last_updated: "2026-03-14T19:33:18.934Z"
+status: in-progress
+stopped_at: Completed 13-00-PLAN.md
+last_updated: "2026-03-14T19:59:14.682Z"
 last_activity: 2026-03-14 — Game loop zoom integration, ZoomControls redesign, drag-to-pan (12-02)
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 10
-  completed_plans: 10
+  total_plans: 14
+  completed_plans: 11
   percent: 100
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-14)
 
 **Core value:** Multi-perspective, context-aware AI advisory for complex production deals
-**Current focus:** Phase 12 - Smooth Zoom (v1.1 Visual Overhaul)
+**Current focus:** Phase 13 - Polish and UI (v1.1 Visual Overhaul)
 
 ## Current Position
 
-Phase: 12 of 13 (Smooth Zoom)
-Plan: 2 of 2 in current phase (COMPLETE)
-Status: Phase 12 Complete
-Last activity: 2026-03-14 — Game loop zoom integration, ZoomControls redesign, drag-to-pan (12-02)
+Phase: 13 of 13 (Polish and UI)
+Plan: 1 of 4 in current phase
+Status: Phase 13 In Progress
+Last activity: 2026-03-14 — Wave 0 test stubs for glow, lamp, rug, room-label, decoration, activity (13-00)
 
-Progress: [██████████] 100% (Phase 12) | 80% (v1.1 overall)
+Progress: [████████░░] 79% (v1.1 overall)
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Progress: [██████████] 100% (Phase 12) | 80% (v1.1 overall)
 | 11    | 03   | 3min     | 2     | 5     |
 | 12    | 01   | 4min     | 3     | 6     |
 | Phase 12 P02 | 30min | 2 tasks | 3 files |
+| 13    | 00   | 1min     | 1     | 3     |
 
 ## Accumulated Context
 
@@ -84,6 +85,7 @@ Recent decisions affecting current work:
 - [12-01]: toggleZoom uses startAnimatedZoom for smooth Z-key and double-click transitions
 - [Phase 12]: Camera follow pauses during active zoom AND manual pan, re-engages when BILLY walks
 - [Phase 12]: Drag-to-pan with 3px threshold added as essential complement to zoom
+- [13-00]: All stubs use it.todo() so they report as todo not failures, keeping CI green
 
 ### Pending Todos
 
@@ -97,6 +99,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T19:33:18.927Z
-Stopped at: Phase 13 context gathered
-Resume file: .planning/phases/13-polish-and-ui/13-CONTEXT.md
+Last session: 2026-03-14T19:58:30Z
+Stopped at: Completed 13-00-PLAN.md
+Resume file: .planning/phases/13-polish-and-ui/13-00-SUMMARY.md
