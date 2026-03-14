@@ -1,17 +1,17 @@
 /**
  * Layered Canvas 2D rendering pipeline using ctx.setTransform().
  *
- * Draw order per frame:
+ * Draw order per frame (6-layer):
  *   Layer 1: Clear canvas at identity transform
  *   Layer 2: Floor tiles at world transform (with viewport culling)
- *   Layer 3: Furniture sprites + personality decorations at world transform
+ *   Layer 3: 3/4 perspective wall strips + shadows at world transform
  *   Layer 3b: Drop zone highlight at world transform
- *   Layer 4: Characters (Y-sorted) at world transform
+ *   Layer 4: Y-sorted renderables (furniture + decorations + characters merged) at world transform
  *   --- Reset to identity transform ---
- *   Layer 4b: Status Overlays (speech bubbles, thinking dots) at screen coords
- *   Layer 4c: File icons on agent desks at screen coords
- *   Layer 5: UI overlays (room labels) at screen coords
- *   Layer 5b: Invalid drop tooltip at screen coords
+ *   Layer 5: Status overlays (speech bubbles, thinking dots) at screen coords
+ *   Layer 5b: File icons on agent desks at screen coords
+ *   Layer 6: UI overlays (room labels) at screen coords
+ *   Layer 6b: Invalid drop tooltip at screen coords
  *
  * World-space layers use ctx.setTransform(zoom, 0, 0, zoom, tx, ty) so all
  * drawing happens at world coordinates (col * TILE_SIZE). The transform handles
@@ -21,9 +21,11 @@
  */
 import { TileType, TILE_SIZE } from './types';
 import type { Camera, Character } from './types';
-import { OFFICE_TILE_MAP, ROOMS, FURNITURE, DECORATIONS, getRoomAtTile } from './officeLayout';
+import type { FurnitureItem, DecorationItem } from './officeLayout';
+import { OFFICE_TILE_MAP, ROOMS, getRoomAtTile } from './officeLayout';
 import { PLACEHOLDER_COLORS, getCharacterSheet, getEnvironmentSheet } from './spriteSheet';
 import { CHARACTER_FRAMES, ENVIRONMENT_ATLAS, DECORATION_ATLAS } from './spriteAtlas';
+import { buildRenderables } from './depthSort';
 import { useFileStore } from '@/store/fileStore';
 import { dragOverRoomId, invalidDropMessage, invalidDropX, invalidDropY, hoverTileCol, hoverTileRow } from './input';
 
@@ -116,28 +118,33 @@ export function renderFrame(
     }
   }
 
-  // ── Layer 3: Furniture Sprites ─────────────────────────────────────────
-  renderFurniture(ctx, envSheet);
+  // ── Layer 3: 3/4 Wall Strips + Shadows ───────────────────────────────
+  renderWalls(ctx, minCol, maxCol, minRow, maxRow);
 
   // ── Layer 3b: Drop Zone Highlight ──────────────────────────────────────
   renderDropZoneHighlight(ctx, zoom, tx, ty, canvasWidth, canvasHeight);
 
-  // ── Layer 4: Characters (Y-sorted for depth) ──────────────────────────
-  const sortedChars = [...characters].sort((a, b) => a.y - b.y);
-  for (const ch of sortedChars) {
-    renderCharacter(ctx, ch, zoom, agentStatuses);
+  // ── Layer 4: Y-sorted Renderables (furniture + decorations + characters) ──
+  const renderables = buildRenderables(
+    characters,
+    (rCtx, ch) => renderCharacterWorld(rCtx, ch, zoom, agentStatuses),
+    (rCtx, item) => renderFurnitureItemWorld(rCtx, item, envSheet),
+    (rCtx, dec) => renderDecorationWorld(rCtx, dec, envSheet),
+  );
+  for (const r of renderables) {
+    r.draw(ctx);
   }
 
   // ── Reset to identity for UI overlays ──────────────────────────────────
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-  // ── Layer 4b: Status Overlays (speech bubbles, thinking dots) ──────────
+  // ── Layer 5: Status Overlays (speech bubbles, thinking dots) ──────────
   renderStatusOverlays(ctx, characters, agentStatuses, zoom, worldToScreen);
 
-  // ── Layer 4c: File Icons on Desks ──────────────────────────────────────
+  // ── Layer 5b: File Icons on Desks ──────────────────────────────────────
   renderFileIcons(ctx, zoom, worldToScreen);
 
-  // ── Layer 5: UI Overlays ───────────────────────────────────────────────
+  // ── Layer 6: UI Overlays ───────────────────────────────────────────────
   if (activeRoomId) {
     renderRoomLabel(ctx, activeRoomId, zoom, worldToScreen);
   }
@@ -181,29 +188,118 @@ function getTileColor(tile: TileType, col: number, row: number): string {
   }
 }
 
-// ── Furniture Rendering ─────────────────────────────────────────────────────
+// ── 3/4 Wall Rendering ─────────────────────────────────────────────────────
 
-function renderFurniture(
+/** Wall strip colors */
+const WALL_COLOR_OFFICE = '#d4c8a8';   // cream/beige for office walls
+const WALL_COLOR_WAR_ROOM = '#6b7280'; // slate gray for War Room walls
+const WALL_SHADOW = 'rgba(0, 0, 0, 0.15)';
+
+/**
+ * Renders 3/4 perspective wall strips by checking tile neighbors.
+ * North walls: 3px colored strip at bottom of wall tile + 2px shadow on floor below.
+ * East/west walls: 2px colored strip on the inner edge facing the room.
+ */
+function renderWalls(
   ctx: CanvasRenderingContext2D,
-  envSheet: HTMLImageElement | null,
+  minCol: number,
+  maxCol: number,
+  minRow: number,
+  maxRow: number,
 ): void {
-  for (const item of FURNITURE) {
-    const x = item.col * TILE_SIZE;
-    const y = item.row * TILE_SIZE;
+  const mapRows = OFFICE_TILE_MAP.length;
+  const mapCols = OFFICE_TILE_MAP[0]!.length;
 
-    if (envSheet) {
-      renderFurnitureSprite(ctx, envSheet, item.type, x, y, item.width, item.height);
-    } else {
-      // Fallback: brown rectangles (world coordinates)
-      ctx.fillStyle = item.type === 'table' ? '#4a3528' : '#5c3d2e';
-      ctx.fillRect(x, y, item.width * TILE_SIZE, item.height * TILE_SIZE);
+  for (let row = minRow; row <= maxRow; row++) {
+    const tileRow = OFFICE_TILE_MAP[row];
+    if (!tileRow) continue;
+    for (let col = minCol; col <= maxCol; col++) {
+      const tile = tileRow[col];
+      if (tile !== TileType.WALL) continue;
+
+      // Check south neighbor — north wall face (visible from below)
+      if (row + 1 < mapRows) {
+        const south = OFFICE_TILE_MAP[row + 1]![col];
+        if (south === TileType.FLOOR || south === TileType.DOOR) {
+          const wallColor = getWallColor(col, row + 1);
+          // 3px strip at bottom of wall tile
+          ctx.fillStyle = wallColor;
+          ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE + TILE_SIZE - 3, TILE_SIZE, 3);
+          // 2px shadow on floor tile below
+          ctx.fillStyle = WALL_SHADOW;
+          ctx.fillRect(col * TILE_SIZE, (row + 1) * TILE_SIZE, TILE_SIZE, 2);
+        }
+      }
+
+      // Check west neighbor — east wall face (left edge visible from room to the left)
+      if (col - 1 >= 0) {
+        const west = OFFICE_TILE_MAP[row]![col - 1];
+        if (west === TileType.FLOOR || west === TileType.DOOR) {
+          ctx.fillStyle = getWallColor(col - 1, row);
+          ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE, 2, TILE_SIZE);
+        }
+      }
+
+      // Check east neighbor — west wall face (right edge visible from room to the right)
+      if (col + 1 < mapCols) {
+        const east = OFFICE_TILE_MAP[row]![col + 1];
+        if (east === TileType.FLOOR || east === TileType.DOOR) {
+          ctx.fillStyle = getWallColor(col + 1, row);
+          ctx.fillRect(col * TILE_SIZE + TILE_SIZE - 2, row * TILE_SIZE, 2, TILE_SIZE);
+        }
+      }
     }
   }
+}
 
-  // Personality decorations (only with sprites)
+/**
+ * Determines wall strip color based on which room the adjacent floor tile belongs to.
+ * War Room floors -> slate gray; all others (offices, corridors) -> cream.
+ */
+function getWallColor(floorCol: number, floorRow: number): string {
+  const room = getRoomAtTile(floorCol, floorRow);
+  if (room?.id === 'war-room') return WALL_COLOR_WAR_ROOM;
+  return WALL_COLOR_OFFICE;
+}
+
+// ── Individual Item Rendering (for Y-sort) ──────────────────────────────────
+
+/**
+ * Renders a single furniture item at world coordinates.
+ * Called by buildRenderables via callback.
+ */
+function renderFurnitureItemWorld(
+  ctx: CanvasRenderingContext2D,
+  item: FurnitureItem,
+  envSheet: HTMLImageElement | null,
+): void {
+  const x = item.col * TILE_SIZE;
+  const y = item.row * TILE_SIZE;
+
   if (envSheet) {
-    renderDecorations(ctx, envSheet);
+    renderFurnitureSprite(ctx, envSheet, item.type, x, y, item.width, item.height);
+  } else {
+    // Fallback: brown rectangles (world coordinates)
+    ctx.fillStyle = item.type === 'table' ? '#4a3528' : '#5c3d2e';
+    ctx.fillRect(x, y, item.width * TILE_SIZE, item.height * TILE_SIZE);
   }
+}
+
+/**
+ * Renders a single decoration item at world coordinates.
+ * Called by buildRenderables via callback.
+ */
+function renderDecorationWorld(
+  ctx: CanvasRenderingContext2D,
+  dec: DecorationItem,
+  envSheet: HTMLImageElement | null,
+): void {
+  if (!envSheet) return;
+  const frame = DECORATION_ATLAS[dec.key] ?? ENVIRONMENT_ATLAS[dec.key];
+  if (!frame) return;
+  const x = dec.col * TILE_SIZE;
+  const y = dec.row * TILE_SIZE;
+  ctx.drawImage(envSheet, frame.x, frame.y, frame.w, frame.h, x, y, TILE_SIZE, TILE_SIZE);
 }
 
 function renderFurnitureSprite(
@@ -273,21 +369,6 @@ function renderFurnitureSprite(
     }
     default:
       break;
-  }
-}
-
-// ── Personality Decorations ──────────────────────────────────────────────────
-
-function renderDecorations(
-  ctx: CanvasRenderingContext2D,
-  sheet: HTMLImageElement,
-): void {
-  for (const deco of DECORATIONS) {
-    const frame = DECORATION_ATLAS[deco.key] ?? ENVIRONMENT_ATLAS[deco.key];
-    if (!frame) continue;
-    const x = deco.col * TILE_SIZE;
-    const y = deco.row * TILE_SIZE;
-    ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, x, y, TILE_SIZE, TILE_SIZE);
   }
 }
 
@@ -504,7 +585,11 @@ export function renderFileIcons(
 
 // ── Character Rendering ─────────────────────────────────────────────────────
 
-function renderCharacter(
+/**
+ * Renders a single character at world coordinates.
+ * Called by buildRenderables via callback.
+ */
+function renderCharacterWorld(
   ctx: CanvasRenderingContext2D,
   ch: Character,
   zoom: number,
