@@ -38,6 +38,10 @@
  *   Rows 20-26:  Lower side offices (Roberto left, Valentina right)
  *   Rows 27-28:  Horizontal corridor below side offices
  *   Row  29:     VOID border
+ *
+ * Recreation Area (open-plan, no walls):
+ *   Cols 10-21, Rows 23-26 — open break area below War Room south wall
+ *   Contains water cooler, ping pong table, and couch
  */
 import { TileType } from './types';
 import type { Room, TileCoord } from './types';
@@ -153,9 +157,9 @@ function buildTileMap(): TileType[][] {
   // Right vertical corridor: cols 22-23, rows 9-28
   fill(22, 9, 2, 19, F);
 
-  // Connecting corridor below War Room south door to lower horizontal corridor
-  // (rows 23-26, cols 14-17 -- narrow passage)
-  fill(14, 23, 4, 4, F);
+  // Recreation / break area below War Room south wall (open-plan, no walls)
+  // Widens the narrow south passage into an open common area (cols 10-21, rows 23-26)
+  fill(10, 23, 12, 4, F);
 
   // Corridor between upper and lower side offices on the left (rows 18-19, cols 1-7)
   fill(1, 18, 7, 2, F);
@@ -239,7 +243,7 @@ export const ROOMS: Room[] = [
 
 export interface FurnitureItem {
   roomId: string;
-  type: 'desk' | 'chair' | 'table' | 'bookshelf' | 'plant' | 'water-cooler' | 'artwork';
+  type: 'desk' | 'chair' | 'table' | 'bookshelf' | 'plant' | 'water-cooler' | 'artwork' | 'couch';
   col: number;
   row: number;
   width: number;  // in tiles
@@ -299,6 +303,13 @@ export const FURNITURE: FurnitureItem[] = [
   { roomId: 'hallway', type: 'plant', col: 23, row: 9, width: 1, height: 1 },
   { roomId: 'hallway', type: 'plant', col: 8, row: 27, width: 1, height: 1 },
   { roomId: 'hallway', type: 'plant', col: 23, row: 27, width: 1, height: 1 },
+
+  // Recreation area (open-plan break area below War Room, cols 10-21, rows 23-26)
+  { roomId: 'hallway', type: 'water-cooler', col: 10, row: 23, width: 1, height: 1 },
+  { roomId: 'hallway', type: 'table', col: 14, row: 24, width: 3, height: 1 },  // ping pong table
+  { roomId: 'hallway', type: 'couch', col: 18, row: 25, width: 3, height: 1 },
+  { roomId: 'hallway', type: 'plant', col: 11, row: 26, width: 1, height: 1 },
+  { roomId: 'hallway', type: 'plant', col: 20, row: 23, width: 1, height: 1 },
 ];
 
 // -- War Room Seats -----------------------------------------------------------

@@ -53,6 +53,7 @@ export function renderFrame(
   agentStatuses: Record<string, string>,
 ): void {
   const zoom = camera.zoom;
+  const dpr = window.devicePixelRatio || 1;
   const mapCols = OFFICE_TILE_MAP[0]!.length;
   const mapRows = OFFICE_TILE_MAP.length;
   const mapWorldW = mapCols * TILE_SIZE;
@@ -80,12 +81,12 @@ export function renderFrame(
   }
 
   // ── Layer 1: Clear (identity transform) ────────────────────────────────
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = BG_COLOR;
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
   // ── Apply world transform ──────────────────────────────────────────────
-  ctx.setTransform(zoom, 0, 0, zoom, tx, ty);
+  ctx.setTransform(zoom * dpr, 0, 0, zoom * dpr, tx * dpr, ty * dpr);
   ctx.imageSmoothingEnabled = false;
 
   // ── Layer 2: Floor Tiles ───────────────────────────────────────────────
@@ -122,7 +123,7 @@ export function renderFrame(
   renderWalls(ctx, minCol, maxCol, minRow, maxRow);
 
   // ── Layer 3b: Drop Zone Highlight ──────────────────────────────────────
-  renderDropZoneHighlight(ctx, zoom, tx, ty, canvasWidth, canvasHeight);
+  renderDropZoneHighlight(ctx, zoom, tx, ty, canvasWidth, canvasHeight, dpr);
 
   // ── Layer 4: Y-sorted Renderables (furniture + decorations + characters) ──
   const renderables = buildRenderables(
@@ -136,7 +137,7 @@ export function renderFrame(
   }
 
   // ── Reset to identity for UI overlays ──────────────────────────────────
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   // ── Layer 5: Status Overlays (speech bubbles, thinking dots) ──────────
   renderStatusOverlays(ctx, characters, agentStatuses, zoom, worldToScreen);
@@ -367,6 +368,16 @@ function renderFurnitureSprite(
       if (frame) ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, x, y, TILE_SIZE, TILE_SIZE);
       break;
     }
+    case 'couch': {
+      // Render couch segments using table-segment atlas (fallback) or a dedicated couch sprite
+      const frame = ENVIRONMENT_ATLAS['couch'] ?? ENVIRONMENT_ATLAS['table-segment'];
+      if (frame) {
+        for (let t = 0; t < widthTiles; t++) {
+          ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, x + t * TILE_SIZE, y, TILE_SIZE, TILE_SIZE);
+        }
+      }
+      break;
+    }
     default:
       break;
   }
@@ -385,6 +396,7 @@ export function renderDropZoneHighlight(
   ty: number,
   canvasWidth: number,
   canvasHeight: number,
+  dpr: number = 1,
 ): void {
   if (dragOverRoomId) {
     const room = ROOMS.find(r => r.id === dragOverRoomId);
@@ -415,7 +427,7 @@ export function renderDropZoneHighlight(
 
   if (invalidDropMessage) {
     // Tooltip renders at screen coords — switch to identity
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     const tooltipX = Math.min(invalidDropX, canvasWidth - 200);
     const tooltipY = Math.max(invalidDropY - 30, 10);
@@ -439,7 +451,7 @@ export function renderDropZoneHighlight(
     ctx.fillText(text, tooltipX + padX, tooltipY + th / 2);
 
     // Restore world transform
-    ctx.setTransform(zoom, 0, 0, zoom, tx, ty);
+    ctx.setTransform(zoom * dpr, 0, 0, zoom * dpr, tx * dpr, ty * dpr);
   }
 }
 
