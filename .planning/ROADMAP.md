@@ -59,7 +59,7 @@ Plans:
   2. North walls of rooms render as visible cream-colored strips giving 3/4 perspective depth
   3. No tile gaps or seams appear at any zoom level (integer or fractional)
   4. Click-to-walk targeting still works correctly after the setTransform refactor
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
 - [ ] 10-01-PLAN.md — setTransform zoom refactor + float zoom infrastructure + click targeting
 - [ ] 10-02-PLAN.md — Unified Y-sorted depth rendering + 3/4 wall strips
@@ -113,7 +113,7 @@ Plans:
 | 7. Agent Memory | v1.0 | 4/4 | Complete | 2026-03-13 |
 | 8. Polish | v1.0 | 3/3 | Complete | 2026-03-14 |
 | 9. Compact Layout | 3/3 | Complete   | 2026-03-14 | - |
-| 10. Rendering Pipeline | v1.1 | 0/2 | Planning complete | - |
+| 10. Rendering Pipeline | 1/2 | In Progress|  | - |
 | 11. JRPG Sprite Integration | v1.1 | 0/? | Not started | - |
 | 12. Smooth Zoom | v1.1 | 0/? | Not started | - |
 | 13. Polish and UI | v1.1 | 0/? | Not started | - |

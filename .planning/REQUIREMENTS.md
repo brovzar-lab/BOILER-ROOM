@@ -17,10 +17,10 @@ Requirements for v1.1 Visual Overhaul. Each maps to roadmap phases.
 
 ### Renderer
 
-- [ ] **RNDR-01**: Renderer uses ctx.setTransform() for zoom instead of manual coordinate multiplication
+- [x] **RNDR-01**: Renderer uses ctx.setTransform() for zoom instead of manual coordinate multiplication
 - [ ] **RNDR-02**: Unified Y-sorted depth rendering — characters correctly occlude behind/in front of furniture
 - [ ] **RNDR-03**: North walls render as visible cream strips in 3/4 perspective
-- [ ] **RNDR-04**: No tile gaps or seams at any zoom level (fractional or integer)
+- [x] **RNDR-04**: No tile gaps or seams at any zoom level (fractional or integer)
 
 ### Zoom
 
@@ -89,10 +89,10 @@ Deferred to future release.
 | LAYOUT-03 | Phase 9 | Complete |
 | LAYOUT-04 | Phase 9 | Complete |
 | LAYOUT-05 | Phase 9 | Complete |
-| RNDR-01 | Phase 10 | Pending |
+| RNDR-01 | Phase 10 | Complete |
 | RNDR-02 | Phase 10 | Pending |
 | RNDR-03 | Phase 10 | Pending |
-| RNDR-04 | Phase 10 | Pending |
+| RNDR-04 | Phase 10 | Complete |
 | ZOOM-01 | Phase 12 | Pending |
 | ZOOM-02 | Phase 12 | Pending |
 | ZOOM-03 | Phase 12 | Pending |
