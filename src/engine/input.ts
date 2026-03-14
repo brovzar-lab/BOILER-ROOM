@@ -9,10 +9,17 @@
  */
 import { useOfficeStore } from '@/store/officeStore';
 import { useFileStore } from '@/store/fileStore';
-import { screenToTile } from './camera';
+import { screenToTile, computeAutoFitZoom } from './camera';
 import { getRoomAtTile, ROOMS, OFFICE_TILE_MAP } from './officeLayout';
 import { startWalk } from './characters';
 import { WALK_SPEED, ZOOM_OVERVIEW_THRESHOLD } from './types';
+import {
+  createZoomState,
+  onZoomInput,
+  startAnimatedZoom,
+  nearestHalf,
+  MAX_ZOOM,
+} from './zoomController';
 import type { AgentId } from '@/types/agent';
 
 /** Valid agent room IDs (excludes war-room and billy) */
@@ -35,6 +42,13 @@ const KEY_TO_ROOM: Record<string, string> = {
 
 /** Speed walk for keyboard shortcuts: 3.5x normal speed */
 const WALK_SPEED_KEYBOARD = WALK_SPEED * 3.5;
+
+/** Module-level cursor screen position for game loop to pass to tickZoom */
+export let cursorScreenX = 0;
+export let cursorScreenY = 0;
+
+/** Shared zoom state instance -- game loop reads this for tickZoom */
+export const zoomState = createZoomState();
 
 /** Module-level hover position for renderer to read */
 export let hoverTileCol = -1;
@@ -129,6 +143,34 @@ export function setupInputHandlers(canvas: HTMLCanvasElement): () => void {
       return;
     }
 
+    // 0 key: reset to auto-fit zoom
+    if (e.key === '0') {
+      const rect = canvas.getBoundingClientRect();
+      const fitZoom = computeAutoFitZoom(rect.width, rect.height);
+      startAnimatedZoom(zoomState, fitZoom, rect.width / 2, rect.height / 2);
+      (globalThis as Record<string, unknown>).__boiler_reset_autofit = true;
+      return;
+    }
+
+    // + or = key: zoom in by 0.5 step
+    if (e.key === '+' || e.key === '=') {
+      const currentZoom = useOfficeStore.getState().camera.zoom;
+      const target = Math.min(nearestHalf(currentZoom) + 0.5, MAX_ZOOM);
+      const rect = canvas.getBoundingClientRect();
+      startAnimatedZoom(zoomState, target, rect.width / 2, rect.height / 2);
+      return;
+    }
+
+    // - key: zoom out by 0.5 step
+    if (e.key === '-') {
+      const currentZoom = useOfficeStore.getState().camera.zoom;
+      const rect = canvas.getBoundingClientRect();
+      const minZoom = computeAutoFitZoom(rect.width, rect.height);
+      const target = Math.max(nearestHalf(currentZoom) - 0.5, minZoom);
+      startAnimatedZoom(zoomState, target, rect.width / 2, rect.height / 2);
+      return;
+    }
+
     // Escape: navigate BILLY back to his office (separate from KEY_TO_ROOM)
     if (e.key === 'Escape') {
       const state = useOfficeStore.getState();
@@ -167,6 +209,10 @@ export function setupInputHandlers(canvas: HTMLCanvasElement): () => void {
     const cssX = e.clientX - rect.left;
     const cssY = e.clientY - rect.top;
 
+    // Update cursor tracking for zoom centering
+    cursorScreenX = cssX;
+    cursorScreenY = cssY;
+
     const state = useOfficeStore.getState();
     const tile = screenToTile(cssX, cssY, state.camera, rect.width, rect.height);
 
@@ -182,6 +228,24 @@ export function setupInputHandlers(canvas: HTMLCanvasElement): () => void {
   function handleMouseLeave(): void {
     hoverTileCol = -1;
     hoverTileRow = -1;
+  }
+
+  // ── Wheel / Pinch Zoom Handler ──────────────────────────────────────────
+
+  function handleWheel(e: WheelEvent): void {
+    // CRITICAL: prevents browser zoom on trackpad pinch (ctrlKey=true)
+    e.preventDefault();
+
+    // Disable zoom during file drag-and-drop
+    if (dragOverRoomId !== null) return;
+
+    // Normalize deltaY: mode 0 = pixels (default), 1 = lines, 2 = pages
+    let deltaY = e.deltaY;
+    if (e.deltaMode === 1) deltaY *= 16;
+    else if (e.deltaMode === 2) deltaY *= 100;
+
+    // Negative deltaY because positive scroll = zoom in
+    onZoomInput(zoomState, -deltaY, cursorScreenX, cursorScreenY);
   }
 
   // ── Drag-and-Drop Handlers ──────────────────────────────────────────────
@@ -260,6 +324,7 @@ export function setupInputHandlers(canvas: HTMLCanvasElement): () => void {
   canvas.addEventListener('dblclick', handleDblClick);
   canvas.addEventListener('mousemove', handleMouseMove);
   canvas.addEventListener('mouseleave', handleMouseLeave);
+  canvas.addEventListener('wheel', handleWheel, { passive: false });
   canvas.addEventListener('dragover', handleDragOver);
   canvas.addEventListener('drop', handleDrop);
   canvas.addEventListener('dragleave', handleDragLeave);
@@ -271,6 +336,7 @@ export function setupInputHandlers(canvas: HTMLCanvasElement): () => void {
     canvas.removeEventListener('dblclick', handleDblClick);
     canvas.removeEventListener('mousemove', handleMouseMove);
     canvas.removeEventListener('mouseleave', handleMouseLeave);
+    canvas.removeEventListener('wheel', handleWheel);
     canvas.removeEventListener('dragover', handleDragOver);
     canvas.removeEventListener('drop', handleDrop);
     canvas.removeEventListener('dragleave', handleDragLeave);
@@ -287,12 +353,21 @@ export function removeInputHandlers(cleanup: () => void): void {
 }
 
 /**
- * Toggles zoom between overview (1) and follow (2).
+ * Toggles zoom between auto-fit and 2x with smooth animation.
  */
 function toggleZoom(): void {
   const state = useOfficeStore.getState();
-  const newLevel = state.zoomLevel < ZOOM_OVERVIEW_THRESHOLD ? 2 : 1;
-  state.setZoomLevel(newLevel);
+  const rect = document.querySelector('canvas')?.getBoundingClientRect();
+  const canvasW = rect?.width ?? 800;
+  const canvasH = rect?.height ?? 600;
+
+  const fitZoom = computeAutoFitZoom(canvasW, canvasH);
+  const targetZoom = state.camera.zoom >= ZOOM_OVERVIEW_THRESHOLD ? fitZoom : 2;
+  startAnimatedZoom(zoomState, targetZoom, canvasW / 2, canvasH / 2);
+
+  if (targetZoom === fitZoom) {
+    (globalThis as Record<string, unknown>).__boiler_reset_autofit = true;
+  }
 }
 
 /**
