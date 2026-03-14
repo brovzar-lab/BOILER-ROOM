@@ -12,6 +12,7 @@ import { useFileStore } from '@/store/fileStore';
 import { screenToTile } from './camera';
 import { getRoomAtTile, ROOMS, OFFICE_TILE_MAP } from './officeLayout';
 import { startWalk } from './characters';
+import { WALK_SPEED } from './types';
 import type { AgentId } from '@/types/agent';
 
 /** Valid agent room IDs (excludes war-room and billy) */
@@ -20,14 +21,19 @@ const AGENT_ROOM_IDS = new Set<string>(['diana', 'marcos', 'sasha', 'roberto', '
 /** Valid file extensions for drag-and-drop */
 const VALID_EXTENSIONS = new Set(['.pdf', '.docx']);
 
-/** Maps number keys to agent room IDs */
-const KEY_TO_AGENT: Record<string, string> = {
-  '1': 'diana',
-  '2': 'marcos',
-  '3': 'sasha',
-  '4': 'roberto',
-  '5': 'valentina',
+/** Maps first-letter keys to room IDs for keyboard navigation */
+const KEY_TO_ROOM: Record<string, string> = {
+  'd': 'diana',
+  'm': 'marcos',
+  's': 'sasha',
+  'r': 'roberto',
+  'v': 'valentina',
+  'w': 'war-room',
+  'b': 'billy',
 };
+
+/** Speed walk for keyboard shortcuts: 3.5x normal speed */
+const WALK_SPEED_KEYBOARD = WALK_SPEED * 3.5;
 
 /** Module-level hover position for renderer to read */
 export let hoverTileCol = -1;
@@ -79,6 +85,19 @@ export function setupInputHandlers(canvas: HTMLCanvasElement): () => void {
       }
     }
 
+    // Check if clicking on an agent sprite -- navigate to their room
+    for (const ch of state.characters) {
+      if (ch.id === 'billy') continue; // Don't navigate to self
+      if (ch.tileCol === tile.col && ch.tileRow === tile.row) {
+        const agentRoom = ROOMS.find(r => r.id === ch.id);
+        if (agentRoom && agentRoom.id !== state.activeRoomId) {
+          state.setTargetRoom(agentRoom.id);
+          startWalk('billy', agentRoom.billyStandTile.col, agentRoom.billyStandTile.row, OFFICE_TILE_MAP);
+          return;
+        }
+      }
+    }
+
     const room = getRoomAtTile(tile.col, tile.row);
     if (!room) return; // Click on hallway/void -- ignore per user decision
 
@@ -104,30 +123,12 @@ export function setupInputHandlers(canvas: HTMLCanvasElement): () => void {
     const tag = document.activeElement?.tagName;
     if (tag === 'TEXTAREA' || tag === 'INPUT') return;
 
-    // 'w' key: navigate BILLY to the War Room
-    if (e.key === 'w' || e.key === 'W') {
-      const state = useOfficeStore.getState();
-      if (state.activeRoomId === 'war-room') return;
-
-      const warRoom = ROOMS.find((r) => r.id === 'war-room');
-      if (!warRoom) return;
-
-      state.setTargetRoom('war-room');
-      startWalk(
-        'billy',
-        warRoom.billyStandTile.col,
-        warRoom.billyStandTile.row,
-        OFFICE_TILE_MAP,
-      );
-      return;
-    }
-
     if (e.key === 'z' || e.key === 'Z') {
       toggleZoom();
       return;
     }
 
-    // Escape: navigate BILLY back to his office
+    // Escape: navigate BILLY back to his office (separate from KEY_TO_ROOM)
     if (e.key === 'Escape') {
       const state = useOfficeStore.getState();
       if (state.activeRoomId === 'billy') return;
@@ -136,32 +137,27 @@ export function setupInputHandlers(canvas: HTMLCanvasElement): () => void {
       if (!billyRoom) return;
 
       state.setTargetRoom('billy');
-      startWalk(
-        'billy',
-        billyRoom.billyStandTile.col,
-        billyRoom.billyStandTile.row,
-        OFFICE_TILE_MAP,
-      );
+      startWalk('billy', billyRoom.billyStandTile.col, billyRoom.billyStandTile.row, OFFICE_TILE_MAP);
+      // Apply speed walk for keyboard navigation
+      const billy = state.characters.find(c => c.id === 'billy');
+      if (billy) billy.speed = WALK_SPEED_KEYBOARD;
       return;
     }
 
-    // Number keys 1-5: navigate BILLY to agent rooms
-    const agentId = KEY_TO_AGENT[e.key];
-    if (agentId) {
+    // First-letter keyboard shortcuts: D, M, S, R, V, W, B
+    const roomId = KEY_TO_ROOM[e.key.toLowerCase()];
+    if (roomId) {
       const state = useOfficeStore.getState();
-      // Ignore if already in that room
-      if (state.activeRoomId === agentId) return;
+      if (state.activeRoomId === roomId) return;
 
-      const room = ROOMS.find((r) => r.id === agentId);
+      const room = ROOMS.find((r) => r.id === roomId);
       if (!room) return;
 
       state.setTargetRoom(room.id);
-      startWalk(
-        'billy',
-        room.billyStandTile.col,
-        room.billyStandTile.row,
-        OFFICE_TILE_MAP,
-      );
+      startWalk('billy', room.billyStandTile.col, room.billyStandTile.row, OFFICE_TILE_MAP);
+      // Apply speed walk for keyboard navigation
+      const billy = state.characters.find(c => c.id === 'billy');
+      if (billy) billy.speed = WALK_SPEED_KEYBOARD;
     }
   }
 
