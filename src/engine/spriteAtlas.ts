@@ -149,4 +149,15 @@ export const DECORATION_ATLAS: Record<string, SpriteFrame> = {
   'patrik-monitor': makeEnvFrame(1, 5),      // Patrik (CFO): monitor showing numbers
   'wendy-cushion': makeEnvFrame(2, 5),       // Wendy (Coach): comfort cushion
   'wendy-motivational': makeEnvFrame(3, 5),  // Wendy (Coach): framed motivational piece
+
+  // Row 6: Personal touch items (coffee mugs, pen holders, photo frames, etc.)
+  'coffee-mug': makeEnvFrame(0, 6),          // Small brown/white mug
+  'pen-holder': makeEnvFrame(1, 6),          // Dark rectangle with pencil tips
+  'calculator': makeEnvFrame(2, 6),          // Gray rectangle with button grid
+  'photo-frame': makeEnvFrame(3, 6),         // Small brown frame with lighter inner
+  'desk-plant': makeEnvFrame(4, 6),          // Tiny green pot plant (2-3 leaves)
+  'figurine': makeEnvFrame(5, 6),            // Small colorful standing figure
+  'candle': makeEnvFrame(6, 6),              // Cream cylinder with orange dot
+  'papers': makeEnvFrame(7, 6),              // White rectangles with gray lines
+  'water-glass': makeEnvFrame(8, 6),         // Clear/light blue small cylinder
 };

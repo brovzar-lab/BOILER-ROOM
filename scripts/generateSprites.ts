@@ -967,6 +967,117 @@ function generateEnvironmentSheet(): Buffer {
   tileRect(3, 5, 4, 8, 8, 1, '#666');
   tileRect(3, 5, 6, 10, 4, 1, '#ec4899');
 
+  // ── Row 6: Personal touch items ──
+
+  // (0,6) Coffee mug -- small brown/white cylinder
+  fillTile(0, 6, 'transparent');
+  tileRect(0, 6, 5, 4, 6, 7, '#8b6040');   // mug body
+  tileRect(0, 6, 6, 5, 4, 5, '#f0e8d8');   // inner/highlight
+  tileRect(0, 6, 11, 6, 2, 4, '#8b6040');  // handle
+  tileRect(0, 6, 12, 7, 1, 2, '#8b6040');  // handle outer
+  tileRect(0, 6, 5, 3, 6, 1, '#705030');   // rim
+  // Coffee inside
+  tileRect(0, 6, 6, 4, 4, 2, '#4a2810');
+
+  // (1,6) Pen holder -- dark rectangle with colored pencil tips
+  fillTile(1, 6, 'transparent');
+  tileRect(1, 6, 5, 6, 6, 8, '#3a3a40');   // holder body
+  tileRect(1, 6, 6, 7, 4, 6, '#4a4a50');   // front highlight
+  // Pencil tips sticking up
+  tileRect(1, 6, 6, 2, 1, 5, '#e8d040');   // yellow pencil
+  tileRect(1, 6, 8, 3, 1, 4, '#4488cc');   // blue pencil
+  tileRect(1, 6, 10, 1, 1, 6, '#cc4444');  // red pencil
+  tilePx(1, 6, 6, 2, '#333');               // pencil tip
+  tilePx(1, 6, 8, 3, '#333');
+  tilePx(1, 6, 10, 1, '#333');
+
+  // (2,6) Calculator -- gray rectangle with grid of tiny dots
+  fillTile(2, 6, 'transparent');
+  tileRect(2, 6, 3, 3, 10, 11, '#808890');  // body
+  tileRect(2, 6, 4, 4, 8, 3, '#1a2a1a');   // screen
+  tileRect(2, 6, 5, 5, 4, 1, '#33cc66');   // numbers on screen
+  // Button grid (3x4)
+  for (let by = 0; by < 4; by++) {
+    for (let bx = 0; bx < 3; bx++) {
+      tileRect(2, 6, 5 + bx * 2, 8 + by * 1.5 | 0, 1, 1, '#c0c0c0');
+    }
+  }
+
+  // (3,6) Photo frame -- small brown rectangle with lighter inner area
+  fillTile(3, 6, 'transparent');
+  tileRect(3, 6, 3, 3, 10, 10, '#8b7355');  // frame outer
+  tileRect(3, 6, 4, 4, 8, 8, '#705830');    // frame inner
+  tileRect(3, 6, 5, 5, 6, 6, '#d4c8b0');    // photo area
+  tileRect(3, 6, 6, 6, 4, 3, '#c0a080');    // face hint (warm tone)
+  tileRect(3, 6, 7, 7, 2, 1, '#a08060');    // darker detail
+
+  // (4,6) Desk plant -- tiny green pot plant (2-3 leaves)
+  fillTile(4, 6, 'transparent');
+  // Tiny pot
+  tileRect(4, 6, 6, 10, 4, 4, '#8b5c38');
+  tileRect(4, 6, 5, 10, 6, 1, '#9a6c48');   // rim
+  // Leaves
+  tileRect(4, 6, 7, 6, 2, 4, '#2a7a40');    // stem
+  tileRect(4, 6, 5, 4, 3, 3, '#3a9a50');    // left leaf
+  tileRect(4, 6, 9, 3, 3, 3, '#3a9a50');    // right leaf
+  tileRect(4, 6, 7, 2, 2, 3, '#2d8b4e');    // top leaf
+  tilePx(4, 6, 6, 4, '#1a6b3a');            // leaf shadow
+  tilePx(4, 6, 10, 3, '#1a6b3a');
+
+  // (5,6) Figurine -- small colorful standing figure
+  fillTile(5, 6, 'transparent');
+  // Head
+  tileRect(5, 6, 7, 3, 2, 2, '#c8a070');
+  // Body
+  tileRect(5, 6, 6, 5, 4, 4, '#cc4444');
+  tileRect(5, 6, 7, 6, 2, 2, '#dd6666');    // highlight
+  // Legs
+  tileRect(5, 6, 6, 9, 2, 3, '#3a3a48');
+  tileRect(5, 6, 8, 9, 2, 3, '#3a3a48');
+  // Base
+  tileRect(5, 6, 5, 12, 6, 2, '#505050');
+
+  // (6,6) Candle -- small cream cylinder with orange dot
+  fillTile(6, 6, 'transparent');
+  // Candle body
+  tileRect(6, 6, 6, 6, 4, 8, '#f0e8d0');
+  tileRect(6, 6, 7, 7, 2, 6, '#e8dcc0');    // shadow
+  // Rim/holder
+  tileRect(6, 6, 5, 13, 6, 2, '#a09080');
+  // Wick
+  tileRect(6, 6, 7, 4, 2, 2, '#333');
+  // Flame
+  tilePx(6, 6, 7, 3, '#ff8800');
+  tilePx(6, 6, 8, 3, '#ffaa00');
+  tilePx(6, 6, 8, 2, '#ffcc44');
+
+  // (7,6) Papers -- scattered white rectangles with gray line suggestions
+  fillTile(7, 6, 'transparent');
+  // Bottom paper (rotated slightly via offset)
+  tileRect(7, 6, 2, 5, 10, 9, '#e8e0d0');
+  // Top paper
+  tileRect(7, 6, 4, 3, 9, 10, '#f4f0e8');
+  // Text lines on top paper
+  tileRect(7, 6, 5, 5, 7, 1, '#999');
+  tileRect(7, 6, 5, 7, 5, 1, '#999');
+  tileRect(7, 6, 5, 9, 6, 1, '#aaa');
+  tileRect(7, 6, 5, 11, 4, 1, '#aaa');
+  // Folded corner
+  tileRect(7, 6, 11, 3, 2, 2, '#ddd8c8');
+
+  // (8,6) Water glass -- clear/light blue small cylinder
+  fillTile(8, 6, 'transparent');
+  // Glass body (semi-transparent look)
+  tileRect(8, 6, 6, 4, 4, 9, '#c0d8e8');
+  tileRect(8, 6, 7, 5, 2, 7, '#d8e8f0');    // highlight
+  // Rim
+  tileRect(8, 6, 5, 3, 6, 1, '#a0b8c8');
+  tileRect(8, 6, 6, 4, 4, 1, '#b0c8d8');
+  // Water level inside
+  tileRect(8, 6, 7, 6, 2, 5, '#88b0d0');
+  // Base
+  tileRect(8, 6, 6, 13, 4, 1, '#90a8b8');
+
   return canvas.toBuffer('image/png');
 }
 

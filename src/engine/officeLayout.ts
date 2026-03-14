@@ -396,6 +396,63 @@ export const DECORATIONS: DecorationItem[] = [
   // Wendy (Performance Coach): motivational artwork + cozy items
   { roomId: 'wendy', key: 'artwork', col: 27, row: 21 },         // motivational artwork on wall
   { roomId: 'wendy', key: 'wendy-cushion', col: 28, row: 22 },   // comfort cushion near couch
+
+  // ── Personal Touches (1-2 per office) ─────────────────────────────────────
+  // BILLY: coffee mug + pen holder on desk
+  { roomId: 'billy', key: 'coffee-mug', col: 11, row: 3 },
+  { roomId: 'billy', key: 'pen-holder', col: 12, row: 3 },
+  // Patrik: calculator + small photo frame
+  { roomId: 'patrik', key: 'calculator', col: 20, row: 3 },
+  { roomId: 'patrik', key: 'photo-frame', col: 18, row: 5 },
+  // Sandra: coffee mug on desk + desk plant
+  { roomId: 'sandra', key: 'coffee-mug', col: 5, row: 13 },
+  { roomId: 'sandra', key: 'desk-plant', col: 2, row: 14 },
+  // Marcos: pen holder + small photo frame
+  { roomId: 'marcos', key: 'pen-holder', col: 28, row: 13 },
+  { roomId: 'marcos', key: 'photo-frame', col: 25, row: 14 },
+  // Isaac: coffee mug + figurine
+  { roomId: 'isaac', key: 'coffee-mug', col: 2, row: 22 },
+  { roomId: 'isaac', key: 'figurine', col: 5, row: 23 },
+  // Wendy: candle + small photo frame
+  { roomId: 'wendy', key: 'candle', col: 29, row: 22 },
+  { roomId: 'wendy', key: 'photo-frame', col: 27, row: 23 },
+
+  // ── War Room Table Detail ─────────────────────────────────────────────────
+  { roomId: 'war-room', key: 'papers', col: 15, row: 16 },
+  { roomId: 'war-room', key: 'water-glass', col: 14, row: 15 },
+  { roomId: 'war-room', key: 'water-glass', col: 17, row: 18 },
+];
+
+// -- Room Rugs ----------------------------------------------------------------
+
+/**
+ * Area rug placement per agent office. Each rug is a colored rectangle
+ * drawn on the floor layer (after floor tiles, before walls) with a
+ * woven-edge border using the agent's muted signature color.
+ */
+export interface RoomRug {
+  roomId: string;
+  col: number;
+  row: number;
+  w: number;
+  h: number;
+  color: string;
+  borderColor: string;
+}
+
+export const ROOM_RUGS: RoomRug[] = [
+  // BILLY: muted amber rug under desk area
+  { roomId: 'billy', col: 11, row: 5, w: 3, h: 2, color: 'rgba(255, 191, 64, 0.12)', borderColor: 'rgba(255, 191, 64, 0.25)' },
+  // Patrik: muted purple rug
+  { roomId: 'patrik', col: 19, row: 5, w: 2, h: 2, color: 'rgba(139, 92, 246, 0.12)', borderColor: 'rgba(139, 92, 246, 0.25)' },
+  // Sandra: muted green rug
+  { roomId: 'sandra', col: 3, row: 14, w: 2, h: 2, color: 'rgba(16, 185, 129, 0.12)', borderColor: 'rgba(16, 185, 129, 0.25)' },
+  // Marcos: muted blue rug
+  { roomId: 'marcos', col: 26, row: 14, w: 2, h: 2, color: 'rgba(59, 130, 246, 0.12)', borderColor: 'rgba(59, 130, 246, 0.25)' },
+  // Isaac: muted amber rug
+  { roomId: 'isaac', col: 3, row: 23, w: 2, h: 2, color: 'rgba(245, 158, 11, 0.12)', borderColor: 'rgba(245, 158, 11, 0.25)' },
+  // Wendy: muted pink rug
+  { roomId: 'wendy', col: 26, row: 23, w: 2, h: 2, color: 'rgba(236, 72, 153, 0.12)', borderColor: 'rgba(236, 72, 153, 0.25)' },
 ];
 
 // -- Room Lookup --------------------------------------------------------------
