@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Visual Overhaul
 status: in-progress
-stopped_at: Completed 11-01-PLAN.md
-last_updated: "2026-03-14T15:23:19Z"
-last_activity: 2026-03-14 — Agent identity rename + persona prompts + office layout (11-01)
+stopped_at: Completed 11-02-PLAN.md
+last_updated: "2026-03-14T15:31:06Z"
+last_activity: 2026-03-14 — 24x32 JRPG sprite generation + atlas update (11-02)
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 8
-  completed_plans: 6
-  percent: 75
+  completed_plans: 7
+  percent: 88
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 ## Current Position
 
 Phase: 11 of 13 (JRPG Sprite Integration)
-Plan: 1 of 3 in current phase
-Status: Plan 11-01 Complete
-Last activity: 2026-03-14 — Agent identity rename + persona prompts + office layout (11-01)
+Plan: 2 of 3 in current phase
+Status: Plan 11-02 Complete
+Last activity: 2026-03-14 — 24x32 JRPG sprite generation + atlas update (11-02)
 
-Progress: [███████░░░] 75% (Phase 11) | 46% (v1.1 overall)
+Progress: [████████░░] 88% (Phase 11) | 54% (v1.1 overall)
 
 ## Performance Metrics
 
@@ -48,6 +48,7 @@ Progress: [███████░░░] 75% (Phase 11) | 46% (v1.1 overall)
 | 10    | 01   | 6min     | 2     | 8     |
 | 10    | 02   | 3min     | 2     | 3     |
 | 11    | 01   | 11min    | 3     | 61    |
+| 11    | 02   | 5min     | 2     | 10    |
 
 ## Accumulated Context
 
@@ -69,6 +70,9 @@ Recent decisions affecting current work:
 - [11-01]: Wendy's coaching room: couch + 3 plants + secondary desk (non-standard layout)
 - [11-01]: War Room via '6' key (W now goes to Wendy)
 - [11-01]: Signature colors: Patrik=#8B5CF6, Sandra=#10B981, Isaac=#F59E0B, Wendy=#EC4899, Marcos=#3B82F6
+- [11-02]: Split makeCharFrame (24x32) vs makeEnvFrame (16x16) for frame coordinate builders
+- [11-02]: Environment sheet expanded to 16x12 rows for couch, corkboard, motivational tiles
+- [11-02]: Character-specific appearance via drawCharacterSpecifics dispatch function
 
 ### Pending Todos
 
@@ -82,6 +86,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T15:23:19Z
-Stopped at: Completed 11-01-PLAN.md
-Resume file: .planning/phases/11-jrpg-sprite-integration/11-01-SUMMARY.md
+Last session: 2026-03-14T15:31:06Z
+Stopped at: Completed 11-02-PLAN.md
+Resume file: .planning/phases/11-jrpg-sprite-integration/11-02-SUMMARY.md

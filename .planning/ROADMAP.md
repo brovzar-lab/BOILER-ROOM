@@ -74,10 +74,10 @@ Plans:
   3. Floor tiles show warm parquet wood grain and furniture has visible front-face depth (drawer panels, bookshelf spines)
   4. Drop shadows appear under all characters grounding them in the scene
   5. New sprite PNGs can be swapped in without code changes (asset pipeline supports easy replacement)
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 Plans:
-- [ ] 11-01-PLAN.md — Agent rename (patrik/sandra/isaac/wendy) + persona prompts + office layout updates
-- [ ] 11-02-PLAN.md — Sprite pipeline rewrite (24x32 characters + 3/4 environment tiles) + atlas update
+- [x] 11-01-PLAN.md — Agent rename (patrik/sandra/isaac/wendy) + persona prompts + office layout updates
+- [x] 11-02-PLAN.md — Sprite pipeline rewrite (24x32 characters + 3/4 environment tiles) + atlas update
 - [ ] 11-03-PLAN.md — Renderer foot-center anchoring + drop shadows + depth sort update
 
 ### Phase 12: Smooth Zoom
@@ -118,6 +118,6 @@ Plans:
 | 8. Polish | v1.0 | 3/3 | Complete | 2026-03-14 |
 | 9. Compact Layout | 3/3 | Complete   | 2026-03-14 | - |
 | 10. Rendering Pipeline | v1.1 | Complete    | 2026-03-14 | 2026-03-14 |
-| 11. JRPG Sprite Integration | 1/3 | In Progress|  | - |
+| 11. JRPG Sprite Integration | 2/3 | In Progress|  | - |
 | 12. Smooth Zoom | v1.1 | 0/? | Not started | - |
 | 13. Polish and UI | v1.1 | 0/? | Not started | - |
