@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Visual Overhaul
 status: in-progress
-stopped_at: Completed 13-00-PLAN.md
-last_updated: "2026-03-14T19:59:14.682Z"
-last_activity: 2026-03-14 — Game loop zoom integration, ZoomControls redesign, drag-to-pan (12-02)
+stopped_at: Completed 13-03-PLAN.md
+last_updated: "2026-03-14T21:00:00.000Z"
+last_activity: 2026-03-14 — Chat panel redesign + always-visible deals sidebar (13-03)
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 14
-  completed_plans: 11
-  percent: 100
+  completed_plans: 13
+  percent: 93
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 ## Current Position
 
 Phase: 13 of 13 (Polish and UI)
-Plan: 1 of 4 in current phase
+Plan: 4 of 4 in current phase
 Status: Phase 13 In Progress
-Last activity: 2026-03-14 — Wave 0 test stubs for glow, lamp, rug, room-label, decoration, activity (13-00)
+Last activity: 2026-03-14 — Chat panel redesign + always-visible deals sidebar (13-03)
 
-Progress: [████████░░] 79% (v1.1 overall)
+Progress: [█████████░] 93% (v1.1 overall)
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Progress: [████████░░] 79% (v1.1 overall)
 | 12    | 01   | 4min     | 3     | 6     |
 | Phase 12 P02 | 30min | 2 tasks | 3 files |
 | 13    | 00   | 1min     | 1     | 3     |
+| 13    | 03   | 5min     | 2     | 6     |
 
 ## Accumulated Context
 
@@ -86,6 +87,10 @@ Recent decisions affecting current work:
 - [Phase 12]: Camera follow pauses during active zoom AND manual pan, re-engages when BILLY walks
 - [Phase 12]: Drag-to-pan with 3px threshold added as essential complement to zoom
 - [13-00]: All stubs use it.todo() so they report as todo not failures, keeping CI green
+- [13-03]: Sidebar self-manages collapsed state internally (no parent prop needed)
+- [13-03]: Top border accent bar for chat header (spans full width, modern look)
+- [13-03]: Token counter hidden below 60%, amber 60-80%, red above 80%
+- [13-03]: Per-agent activity as colored initial + count (P:3 S:1) in sidebar cards
 
 ### Pending Todos
 
@@ -99,6 +104,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T19:58:30Z
-Stopped at: Completed 13-00-PLAN.md
-Resume file: .planning/phases/13-polish-and-ui/13-00-SUMMARY.md
+Last session: 2026-03-14T21:00:00Z
+Stopped at: Completed 13-03-PLAN.md
+Resume file: .planning/phases/13-polish-and-ui/13-03-SUMMARY.md

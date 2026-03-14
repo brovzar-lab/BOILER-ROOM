@@ -49,10 +49,10 @@ Requirements for v1.1 Visual Overhaul. Each maps to roadmap phases.
 
 ### UI
 
-- [ ] **UI-01**: Chat panel matches mockup style — agent name/role, file count badge, inline Attach/Memory buttons
-- [ ] **UI-02**: Deals sidebar always visible on left (not hidden behind toggle)
+- [x] **UI-01**: Chat panel matches mockup style — agent name/role, file count badge, inline Attach/Memory buttons
+- [x] **UI-02**: Deals sidebar always visible on left (not hidden behind toggle)
 - [x] **UI-03**: Deal switcher shows per-agent activity summary (DEAL-05 from v1.0)
-- [ ] **UI-04**: Active deal name prominently displayed (DEAL-06 from v1.0)
+- [x] **UI-04**: Active deal name prominently displayed (DEAL-06 from v1.0)
 - [x] **UI-05**: Room labels ("Agent Office", "War Room") visible on canvas matching mockup style
 
 ## v2 Requirements
@@ -109,10 +109,10 @@ Deferred to future release.
 | ENV-05 | Phase 13 | Complete |
 | ENV-06 | Phase 13 | Pending |
 | ENV-07 | Phase 13 | Complete |
-| UI-01 | Phase 13 | Pending |
-| UI-02 | Phase 13 | Pending |
+| UI-01 | Phase 13 | Complete |
+| UI-02 | Phase 13 | Complete |
 | UI-03 | Phase 13 | Complete |
-| UI-04 | Phase 13 | Pending |
+| UI-04 | Phase 13 | Complete |
 | UI-05 | Phase 13 | Complete |
 
 **Coverage:**
