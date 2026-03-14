@@ -16,6 +16,11 @@ export const enum TileType {
 /** Native tile size in pixels (displayed at 2x zoom as 32x32) */
 export const TILE_SIZE = 16;
 
+/** Character sprite width (24px, wider than TILE_SIZE for JRPG 3/4 proportions) */
+export const CHAR_SPRITE_W = 24;
+/** Character sprite height (32px, taller than TILE_SIZE for JRPG 3/4 proportions) */
+export const CHAR_SPRITE_H = 32;
+
 /** Zoom levels below this threshold are treated as overview mode (no camera follow) */
 export const ZOOM_OVERVIEW_THRESHOLD = 1.5;
 
