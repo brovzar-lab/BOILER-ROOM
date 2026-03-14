@@ -435,3 +435,23 @@ describe('renderFileIcons', () => {
     expect(fillCalls.length).toBe(0);
   });
 });
+
+// -- Phase 13 Test Stubs -------------------------------------------------------
+
+describe('Phase 13: glow effects', () => {
+  it.todo('glow - renderGlowEffects is called during renderFrame with elapsedTime');
+  it.todo('glow - monitor glow sources use blue color (100, 149, 237)');
+  it.todo('lamp - desk lamp glow sources use amber color (255, 191, 64)');
+  it.todo('lamp - War Room has no desk lamp glow source');
+});
+
+describe('Phase 13: room labels', () => {
+  it.todo('room label - all rooms get labels when zoom >= 1.5');
+  it.todo('room label - labels show Name -- Title format for agent offices');
+  it.todo('room label - no labels rendered when zoom < 1.5');
+});
+
+describe('Phase 13: area rugs', () => {
+  it.todo('rug - ROOM_RUGS are rendered in floor layer before walls');
+  it.todo('rug - each agent office has a rug with muted signature color');
+});

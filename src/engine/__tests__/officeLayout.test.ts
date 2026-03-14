@@ -370,3 +370,11 @@ describe('DECORATIONS', () => {
     expect(roomsWithDecos.has('billy')).toBe(true);
   });
 });
+
+// -- Phase 13 Test Stubs -------------------------------------------------------
+
+describe('Phase 13: expanded decorations', () => {
+  it.todo('decoration - each agent office has at least 1 personal touch item');
+  it.todo('decoration - War Room has papers and water-glass decorations');
+  it.todo('decoration - personal touch keys include coffee-mug, pen-holder, photo-frame, or similar');
+});
