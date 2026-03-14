@@ -94,7 +94,7 @@ const spriteCache = new Map<number, Map<string, HTMLCanvasElement>>();
  * Quantizes zoom to nearest 0.5 increment (e.g. 1.0, 1.5, 2.0, 2.5).
  * Prevents cache explosion when zoom is a continuous float.
  */
-function getQuantizedZoom(zoom: number): number {
+export function getQuantizedZoom(zoom: number): number {
   return Math.round(zoom * 2) / 2;
 }
 
