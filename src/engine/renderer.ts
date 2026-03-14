@@ -1,24 +1,28 @@
 /**
- * Layered Canvas 2D rendering pipeline.
+ * Layered Canvas 2D rendering pipeline using ctx.setTransform().
  *
  * Draw order per frame:
- *   Layer 1: Clear canvas with background color
- *   Layer 2: Floor tiles (with viewport culling) -- sprite-based with fallback
- *   Layer 3: Furniture sprites + personality decorations
- *   Layer 3b: Drop zone highlight (amber dashed border on desk area)
- *   Layer 4: Characters (Y-sorted for depth) -- sprite-based with fallback
- *   Layer 4b: Status Overlays (speech bubbles, thinking dots)
- *   Layer 4c: File icons on agent desks
- *   Layer 5: UI overlays (room labels, selection highlights)
- *   Layer 5b: Invalid drop tooltip + file hover tooltip
+ *   Layer 1: Clear canvas at identity transform
+ *   Layer 2: Floor tiles at world transform (with viewport culling)
+ *   Layer 3: Furniture sprites + personality decorations at world transform
+ *   Layer 3b: Drop zone highlight at world transform
+ *   Layer 4: Characters (Y-sorted) at world transform
+ *   --- Reset to identity transform ---
+ *   Layer 4b: Status Overlays (speech bubbles, thinking dots) at screen coords
+ *   Layer 4c: File icons on agent desks at screen coords
+ *   Layer 5: UI overlays (room labels) at screen coords
+ *   Layer 5b: Invalid drop tooltip at screen coords
  *
- * All positions use integer math for pixel-perfect rendering.
- * Phase 8: Uses pixel art sprites; falls back to colored rectangles if sprites not loaded.
+ * World-space layers use ctx.setTransform(zoom, 0, 0, zoom, tx, ty) so all
+ * drawing happens at world coordinates (col * TILE_SIZE). The transform handles
+ * zoom scaling uniformly, eliminating tile gaps at fractional zoom levels.
+ *
+ * UI overlays reset to identity and use worldToScreen() for positioning.
  */
 import { TileType, TILE_SIZE } from './types';
 import type { Camera, Character } from './types';
 import { OFFICE_TILE_MAP, ROOMS, FURNITURE, DECORATIONS, getRoomAtTile } from './officeLayout';
-import { PLACEHOLDER_COLORS, getCachedSprite, getCharacterSheet, getEnvironmentSheet } from './spriteSheet';
+import { PLACEHOLDER_COLORS, getCharacterSheet, getEnvironmentSheet } from './spriteSheet';
 import { CHARACTER_FRAMES, ENVIRONMENT_ATLAS, DECORATION_ATLAS } from './spriteAtlas';
 import { useFileStore } from '@/store/fileStore';
 import { dragOverRoomId, invalidDropMessage, invalidDropX, invalidDropY, hoverTileCol, hoverTileRow } from './input';
@@ -46,33 +50,43 @@ export function renderFrame(
   canvasHeight: number,
   agentStatuses: Record<string, string>,
 ): void {
-  // Pixel-perfect rendering: disable anti-aliasing every frame
-  ctx.imageSmoothingEnabled = false;
-
   const zoom = camera.zoom;
-  const tileSize = TILE_SIZE * zoom;
   const mapCols = OFFICE_TILE_MAP[0]!.length;
   const mapRows = OFFICE_TILE_MAP.length;
-  const mapW = mapCols * tileSize;
-  const mapH = mapRows * tileSize;
+  const mapWorldW = mapCols * TILE_SIZE;
+  const mapWorldH = mapRows * TILE_SIZE;
 
-  // Center the map in the canvas, shifted by camera offset
-  const offsetX = Math.floor((canvasWidth - mapW) / 2) - Math.round(camera.x);
-  const offsetY = Math.floor((canvasHeight - mapH) / 2) - Math.round(camera.y);
+  // Compute transform: world point (wx, wy) -> screen (wx * zoom + tx, wy * zoom + ty)
+  const tx = (canvasWidth - mapWorldW * zoom) / 2 - camera.x;
+  const ty = (canvasHeight - mapWorldH * zoom) / 2 - camera.y;
 
-  // Viewport culling bounds (which tiles are visible)
-  const minCol = Math.max(0, Math.floor(-offsetX / tileSize));
-  const maxCol = Math.min(mapCols - 1, Math.floor((canvasWidth - offsetX) / tileSize));
-  const minRow = Math.max(0, Math.floor(-offsetY / tileSize));
-  const maxRow = Math.min(mapRows - 1, Math.floor((canvasHeight - offsetY) / tileSize));
+  // Viewport culling: compute visible world rect from screen bounds
+  const worldLeft = -tx / zoom;
+  const worldTop = -ty / zoom;
+  const worldRight = (canvasWidth - tx) / zoom;
+  const worldBottom = (canvasHeight - ty) / zoom;
+  const minCol = Math.max(0, Math.floor(worldLeft / TILE_SIZE));
+  const maxCol = Math.min(mapCols - 1, Math.floor(worldRight / TILE_SIZE));
+  const minRow = Math.max(0, Math.floor(worldTop / TILE_SIZE));
+  const maxRow = Math.min(mapRows - 1, Math.floor(worldBottom / TILE_SIZE));
 
   const envSheet = getEnvironmentSheet();
 
-  // ── Layer 1: Clear ──────────────────────────────────────────────────────
+  // Helper: convert world coordinates to screen coordinates (for UI overlays)
+  function worldToScreen(worldX: number, worldY: number): { x: number; y: number } {
+    return { x: worldX * zoom + tx, y: worldY * zoom + ty };
+  }
+
+  // ── Layer 1: Clear (identity transform) ────────────────────────────────
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = BG_COLOR;
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-  // ── Layer 2: Floor Tiles ────────────────────────────────────────────────
+  // ── Apply world transform ──────────────────────────────────────────────
+  ctx.setTransform(zoom, 0, 0, zoom, tx, ty);
+  ctx.imageSmoothingEnabled = false;
+
+  // ── Layer 2: Floor Tiles ───────────────────────────────────────────────
   for (let row = minRow; row <= maxRow; row++) {
     const tileRow = OFFICE_TILE_MAP[row];
     if (!tileRow) continue;
@@ -80,46 +94,52 @@ export function renderFrame(
       const tile = tileRow[col];
       if (tile === undefined || tile === TileType.VOID) continue;
 
-      const x = Math.floor(col * tileSize + offsetX);
-      const y = Math.floor(row * tileSize + offsetY);
+      const x = col * TILE_SIZE;
+      const y = row * TILE_SIZE;
 
       if (envSheet) {
         const atlasKey = getTileAtlasKey(tile, col, row);
         const frame = ENVIRONMENT_ATLAS[atlasKey];
         if (frame) {
-          const cached = getCachedSprite(envSheet, frame, zoom);
-          ctx.drawImage(cached, x, y);
+          ctx.drawImage(
+            envSheet,
+            frame.x, frame.y, frame.w, frame.h,
+            x, y, TILE_SIZE, TILE_SIZE,
+          );
           continue;
         }
       }
 
       // Fallback: colored rectangles
       ctx.fillStyle = getTileColor(tile, col, row);
-      ctx.fillRect(x, y, tileSize, tileSize);
+      ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
     }
   }
 
-  // ── Layer 3: Furniture Sprites ────────────────────────────────────────────
-  renderFurniture(ctx, tileSize, offsetX, offsetY, zoom);
+  // ── Layer 3: Furniture Sprites ─────────────────────────────────────────
+  renderFurniture(ctx, envSheet);
 
-  // ── Layer 3b: Drop Zone Highlight ───────────────────────────────────────
-  renderDropZoneHighlight(ctx, tileSize, offsetX, offsetY, canvasWidth, canvasHeight);
+  // ── Layer 3b: Drop Zone Highlight ──────────────────────────────────────
+  renderDropZoneHighlight(ctx, zoom, tx, ty, canvasWidth, canvasHeight);
 
-  // ── Layer 4: Characters (Y-sorted for depth) ───────────────────────────
+  // ── Layer 4: Characters (Y-sorted for depth) ──────────────────────────
   const sortedChars = [...characters].sort((a, b) => a.y - b.y);
   for (const ch of sortedChars) {
-    renderCharacter(ctx, ch, tileSize, offsetX, offsetY, zoom, agentStatuses);
+    renderCharacter(ctx, ch, zoom, agentStatuses);
   }
 
-  // ── Layer 4b: Status Overlays (speech bubbles, thinking dots) ─────────
-  renderStatusOverlays(ctx, characters, agentStatuses, tileSize, offsetX, offsetY, zoom);
+  // ── Reset to identity for UI overlays ──────────────────────────────────
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-  // ── Layer 4c: File Icons on Desks ───────────────────────────────────────
-  renderFileIcons(ctx, tileSize, offsetX, offsetY, zoom);
+  // ── Layer 4b: Status Overlays (speech bubbles, thinking dots) ──────────
+  renderStatusOverlays(ctx, characters, agentStatuses, zoom, worldToScreen);
 
-  // ── Layer 5: UI Overlays ────────────────────────────────────────────────
+  // ── Layer 4c: File Icons on Desks ──────────────────────────────────────
+  renderFileIcons(ctx, zoom, worldToScreen);
+
+  // ── Layer 5: UI Overlays ───────────────────────────────────────────────
   if (activeRoomId) {
-    renderRoomLabel(ctx, activeRoomId, tileSize, offsetX, offsetY, zoom);
+    renderRoomLabel(ctx, activeRoomId, zoom, worldToScreen);
   }
 }
 
@@ -165,29 +185,24 @@ function getTileColor(tile: TileType, col: number, row: number): string {
 
 function renderFurniture(
   ctx: CanvasRenderingContext2D,
-  tileSize: number,
-  offsetX: number,
-  offsetY: number,
-  zoom: number,
+  envSheet: HTMLImageElement | null,
 ): void {
-  const envSheet = getEnvironmentSheet();
-
   for (const item of FURNITURE) {
-    const x = Math.floor(item.col * tileSize + offsetX);
-    const y = Math.floor(item.row * tileSize + offsetY);
+    const x = item.col * TILE_SIZE;
+    const y = item.row * TILE_SIZE;
 
     if (envSheet) {
-      renderFurnitureSprite(ctx, envSheet, item.type, x, y, item.width, item.height, tileSize, zoom);
+      renderFurnitureSprite(ctx, envSheet, item.type, x, y, item.width, item.height);
     } else {
-      // Fallback: brown rectangles
+      // Fallback: brown rectangles (world coordinates)
       ctx.fillStyle = item.type === 'table' ? '#4a3528' : '#5c3d2e';
-      ctx.fillRect(x, y, item.width * tileSize, item.height * tileSize);
+      ctx.fillRect(x, y, item.width * TILE_SIZE, item.height * TILE_SIZE);
     }
   }
 
   // Personality decorations (only with sprites)
   if (envSheet) {
-    renderDecorations(ctx, envSheet, tileSize, offsetX, offsetY, zoom);
+    renderDecorations(ctx, envSheet);
   }
 }
 
@@ -199,47 +214,43 @@ function renderFurnitureSprite(
   y: number,
   widthTiles: number,
   heightTiles: number,
-  tileSize: number,
-  zoom: number,
 ): void {
   switch (type) {
     case 'desk': {
-      // Desk: use left + right halves, or tile the left half across width
       const leftFrame = ENVIRONMENT_ATLAS['desk-left'];
       const rightFrame = ENVIRONMENT_ATLAS['desk-right'];
       if (leftFrame && rightFrame && widthTiles >= 2) {
         for (let t = 0; t < widthTiles; t++) {
           const frame = t < widthTiles - 1 ? leftFrame : rightFrame;
-          ctx.drawImage(getCachedSprite(sheet, frame, zoom), x + t * tileSize, y);
+          ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, x + t * TILE_SIZE, y, TILE_SIZE, TILE_SIZE);
         }
       } else if (leftFrame) {
         for (let t = 0; t < widthTiles; t++) {
-          ctx.drawImage(getCachedSprite(sheet, leftFrame, zoom), x + t * tileSize, y);
+          ctx.drawImage(sheet, leftFrame.x, leftFrame.y, leftFrame.w, leftFrame.h, x + t * TILE_SIZE, y, TILE_SIZE, TILE_SIZE);
         }
       }
       break;
     }
     case 'chair': {
       const frame = ENVIRONMENT_ATLAS['chair'];
-      if (frame) ctx.drawImage(getCachedSprite(sheet, frame, zoom), x, y);
+      if (frame) ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, x, y, TILE_SIZE, TILE_SIZE);
       break;
     }
     case 'bookshelf': {
       const topFrame = ENVIRONMENT_ATLAS['bookshelf-top'];
       const bottomFrame = ENVIRONMENT_ATLAS['bookshelf-bottom'];
-      if (topFrame) ctx.drawImage(getCachedSprite(sheet, topFrame, zoom), x, y);
+      if (topFrame) ctx.drawImage(sheet, topFrame.x, topFrame.y, topFrame.w, topFrame.h, x, y, TILE_SIZE, TILE_SIZE);
       if (bottomFrame && heightTiles >= 2) {
-        ctx.drawImage(getCachedSprite(sheet, bottomFrame, zoom), x, y + tileSize);
+        ctx.drawImage(sheet, bottomFrame.x, bottomFrame.y, bottomFrame.w, bottomFrame.h, x, y + TILE_SIZE, TILE_SIZE, TILE_SIZE);
       }
       break;
     }
     case 'table': {
-      // Conference table: tile the segment sprite across the full area
       const frame = ENVIRONMENT_ATLAS['table-segment'];
       if (frame) {
         for (let ty = 0; ty < heightTiles; ty++) {
           for (let tx = 0; tx < widthTiles; tx++) {
-            ctx.drawImage(getCachedSprite(sheet, frame, zoom), x + tx * tileSize, y + ty * tileSize);
+            ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, x + tx * TILE_SIZE, y + ty * TILE_SIZE, TILE_SIZE, TILE_SIZE);
           }
         }
       }
@@ -247,23 +258,21 @@ function renderFurnitureSprite(
     }
     case 'plant': {
       const frame = ENVIRONMENT_ATLAS['plant'];
-      if (frame) ctx.drawImage(getCachedSprite(sheet, frame, zoom), x, y);
+      if (frame) ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, x, y, TILE_SIZE, TILE_SIZE);
       break;
     }
     case 'water-cooler': {
       const frame = ENVIRONMENT_ATLAS['water-cooler'];
-      if (frame) ctx.drawImage(getCachedSprite(sheet, frame, zoom), x, y);
+      if (frame) ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, x, y, TILE_SIZE, TILE_SIZE);
       break;
     }
     case 'artwork': {
       const frame = ENVIRONMENT_ATLAS['artwork'];
-      if (frame) ctx.drawImage(getCachedSprite(sheet, frame, zoom), x, y);
+      if (frame) ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, x, y, TILE_SIZE, TILE_SIZE);
       break;
     }
-    default: {
-      // Unknown type -- draw nothing (fallback handled by caller)
+    default:
       break;
-    }
   }
 }
 
@@ -272,102 +281,61 @@ function renderFurnitureSprite(
 function renderDecorations(
   ctx: CanvasRenderingContext2D,
   sheet: HTMLImageElement,
-  tileSize: number,
-  offsetX: number,
-  offsetY: number,
-  zoom: number,
 ): void {
   for (const deco of DECORATIONS) {
-    // Try DECORATION_ATLAS first (personality items like diana-chart, sasha-whiteboard-tl)
-    const decoFrame = DECORATION_ATLAS[deco.key];
-    if (decoFrame) {
-      drawDeco(ctx, sheet, deco.key, deco.col, deco.row, tileSize, offsetX, offsetY, zoom);
-      continue;
-    }
-    // Fall back to ENVIRONMENT_ATLAS (generic items like plant, monitor, filing-cabinet, post-it)
-    drawEnvDeco(ctx, sheet, deco.key, deco.col, deco.row, tileSize, offsetX, offsetY, zoom);
+    const frame = DECORATION_ATLAS[deco.key] ?? ENVIRONMENT_ATLAS[deco.key];
+    if (!frame) continue;
+    const x = deco.col * TILE_SIZE;
+    const y = deco.row * TILE_SIZE;
+    ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, x, y, TILE_SIZE, TILE_SIZE);
   }
-}
-
-function drawDeco(
-  ctx: CanvasRenderingContext2D,
-  sheet: HTMLImageElement,
-  decoKey: string,
-  col: number,
-  row: number,
-  tileSize: number,
-  offsetX: number,
-  offsetY: number,
-  zoom: number,
-): void {
-  const frame = DECORATION_ATLAS[decoKey];
-  if (!frame) return;
-  const x = Math.floor(col * tileSize + offsetX);
-  const y = Math.floor(row * tileSize + offsetY);
-  ctx.drawImage(getCachedSprite(sheet, frame, zoom), x, y);
-}
-
-function drawEnvDeco(
-  ctx: CanvasRenderingContext2D,
-  sheet: HTMLImageElement,
-  envKey: string,
-  col: number,
-  row: number,
-  tileSize: number,
-  offsetX: number,
-  offsetY: number,
-  zoom: number,
-): void {
-  const frame = ENVIRONMENT_ATLAS[envKey];
-  if (!frame) return;
-  const x = Math.floor(col * tileSize + offsetX);
-  const y = Math.floor(row * tileSize + offsetY);
-  ctx.drawImage(getCachedSprite(sheet, frame, zoom), x, y);
 }
 
 // ── Drop Zone Highlight ─────────────────────────────────────────────────────
 
 /**
  * Draws amber dashed border on the desk area when dragging files over a valid agent room.
- * Draws an invalid-drop tooltip when dragging over war-room, billy, or hallway.
+ * Drop zone is drawn in world transform. Invalid-drop tooltip is drawn at screen coords.
  */
 export function renderDropZoneHighlight(
   ctx: CanvasRenderingContext2D,
-  tileSize: number,
-  offsetX: number,
-  offsetY: number,
+  zoom: number,
+  tx: number,
+  ty: number,
   canvasWidth: number,
   canvasHeight: number,
 ): void {
   if (dragOverRoomId) {
     const room = ROOMS.find(r => r.id === dragOverRoomId);
     if (room) {
-      // Desk area: 2 tiles wide, 1 tile tall, centered on seatTile.col, 1 row above seat
+      // Desk area in world coordinates
       const deskCol = room.seatTile.col;
       const deskRow = room.seatTile.row - 1;
-      const deskW = 2; // tiles
-      const deskH = 1; // tile
+      const deskW = 2;
+      const deskH = 1;
 
-      const x = Math.floor(deskCol * tileSize + offsetX);
-      const y = Math.floor(deskRow * tileSize + offsetY);
-      const w = deskW * tileSize;
-      const h = deskH * tileSize;
+      const x = deskCol * TILE_SIZE;
+      const y = deskRow * TILE_SIZE;
+      const w = deskW * TILE_SIZE;
+      const h = deskH * TILE_SIZE;
 
       // Semi-transparent amber fill
       ctx.fillStyle = 'rgba(251, 191, 36, 0.1)';
       ctx.fillRect(x, y, w, h);
 
-      // Amber dashed border
+      // Amber dashed border (lineWidth is in world units, scale it)
       ctx.strokeStyle = '#fbbf24';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([6, 3]);
+      ctx.lineWidth = 2 / zoom;
+      ctx.setLineDash([6 / zoom, 3 / zoom]);
       ctx.strokeRect(x, y, w, h);
       ctx.setLineDash([]);
     }
   }
 
   if (invalidDropMessage) {
-    // Render tooltip near cursor. Convert CSS coords to canvas-relative.
+    // Tooltip renders at screen coords — switch to identity
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+
     const tooltipX = Math.min(invalidDropX, canvasWidth - 200);
     const tooltipY = Math.max(invalidDropY - 30, 10);
 
@@ -379,17 +347,18 @@ export function renderDropZoneHighlight(
     const tw = metrics.width + padX * 2;
     const th = 16 + padY * 2;
 
-    // Black rounded rectangle
     ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
     ctx.beginPath();
     ctx.roundRect(tooltipX, tooltipY, tw, th, 4);
     ctx.fill();
 
-    // White text
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     ctx.fillText(text, tooltipX + padX, tooltipY + th / 2);
+
+    // Restore world transform
+    ctx.setTransform(zoom, 0, 0, zoom, tx, ty);
   }
 }
 
@@ -406,18 +375,19 @@ export function getDeskRect(room: typeof ROOMS[number]): { col: number; row: num
 }
 
 /**
- * Renders file icons on each agent's desk. Up to 5 icons with "+N" badge for overflow.
+ * Renders file icons on each agent's desk at screen coordinates.
+ * Up to 5 icons with "+N" badge for overflow.
  * PDF icons get a red header bar, DOCX get blue.
  */
 export function renderFileIcons(
   ctx: CanvasRenderingContext2D,
-  tileSize: number,
-  offsetX: number,
-  offsetY: number,
   zoom: number,
+  worldToScreen: (wx: number, wy: number) => { x: number; y: number },
 ): void {
   const { files } = useFileStore.getState();
   hoveredFileId = null; // Reset each frame
+
+  const tileSize = TILE_SIZE * zoom;
 
   for (const room of ROOMS) {
     if (!AGENT_ROOM_IDS.has(room.id)) continue;
@@ -426,8 +396,9 @@ export function renderFileIcons(
     if (agentFiles.length === 0) continue;
 
     const desk = getDeskRect(room);
-    const deskX = Math.floor(desk.col * tileSize + offsetX);
-    const deskY = Math.floor(desk.row * tileSize + offsetY);
+    const deskScreen = worldToScreen(desk.col * TILE_SIZE, desk.row * TILE_SIZE);
+    const deskX = Math.floor(deskScreen.x);
+    const deskY = Math.floor(deskScreen.y);
 
     const iconW = Math.floor(tileSize * 0.35);
     const iconH = Math.floor(tileSize * 0.45);
@@ -480,8 +451,9 @@ export function renderFileIcons(
 
       // Check hover
       if (hoverTileCol >= 0 && hoverTileRow >= 0) {
-        const hoverX = Math.floor(hoverTileCol * tileSize + offsetX);
-        const hoverY = Math.floor(hoverTileRow * tileSize + offsetY);
+        const hoverScreen = worldToScreen(hoverTileCol * TILE_SIZE, hoverTileRow * TILE_SIZE);
+        const hoverX = Math.floor(hoverScreen.x);
+        const hoverY = Math.floor(hoverScreen.y);
         if (
           hoverX >= ix - tileSize / 2 && hoverX <= ix + iconW + tileSize / 2 &&
           hoverY >= iy - tileSize / 2 && hoverY <= iy + iconH + tileSize / 2
@@ -535,22 +507,17 @@ export function renderFileIcons(
 function renderCharacter(
   ctx: CanvasRenderingContext2D,
   ch: Character,
-  tileSize: number,
-  offsetX: number,
-  offsetY: number,
   zoom: number,
   agentStatuses: Record<string, string>,
 ): void {
-  const x = Math.floor(ch.x * zoom + offsetX);
-  const y = Math.floor(ch.y * zoom + offsetY);
+  // ch.x, ch.y are already in world pixels — draw directly in world transform
+  const x = ch.x;
+  const y = ch.y;
 
   // Try sprite-based rendering
   const sheet = getCharacterSheet(ch.id);
   if (sheet) {
-    // Determine which sprite state to show
     let spriteState: 'idle' | 'walk' | 'work' | 'talk' = ch.state;
-
-    // Use 'talk' frames when agent has needs-attention status (conversation ready)
     const status = agentStatuses[ch.id];
     if (status === 'needs-attention' && ch.state === 'idle') {
       spriteState = 'talk';
@@ -560,25 +527,25 @@ function renderCharacter(
     if (frames && frames.length > 0) {
       const frameIdx = Math.min(ch.frame, frames.length - 1);
       const frame = frames[frameIdx]!;
-      const cached = getCachedSprite(sheet, frame, zoom);
-      ctx.drawImage(cached, x, y);
+      // Draw from source sheet at world coords — transform handles zoom
+      ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, x, y, TILE_SIZE, TILE_SIZE);
       return;
     }
   }
 
-  // Fallback: colored rectangle (pre-Phase 8 behavior)
-  const size = Math.floor(TILE_SIZE * zoom * 0.8);
-  const pad = Math.floor(TILE_SIZE * zoom * 0.1);
+  // Fallback: colored rectangle in world coordinates
+  const size = TILE_SIZE * 0.8;
+  const pad = TILE_SIZE * 0.1;
 
   const color = PLACEHOLDER_COLORS[ch.id] ?? '#888888';
   ctx.fillStyle = color;
   ctx.fillRect(x + pad, y + pad, size, size);
 
-  // Direction indicator: small triangle pointing in walk direction
+  // Direction indicator: small triangle
   ctx.fillStyle = '#ffffff';
   const cx = x + pad + size / 2;
   const cy = y + pad + size / 2;
-  const indicatorSize = Math.max(2, zoom * 2);
+  const indicatorSize = Math.max(2 / zoom, 2);
 
   ctx.beginPath();
   switch (ch.direction) {
@@ -613,19 +580,18 @@ function renderStatusOverlays(
   ctx: CanvasRenderingContext2D,
   characters: Character[],
   agentStatuses: Record<string, string>,
-  _tileSize: number,
-  offsetX: number,
-  offsetY: number,
   zoom: number,
+  worldToScreen: (wx: number, wy: number) => { x: number; y: number },
 ): void {
   for (const ch of characters) {
     if (ch.id === 'billy') continue;
     const status = agentStatuses[ch.id];
 
     if (status === 'needs-attention') {
-      // Speech bubble above character head
-      const cx = Math.floor(ch.x * zoom + offsetX + (TILE_SIZE * zoom) / 2);
-      const bubbleY = Math.floor(ch.y * zoom + offsetY - 4 * zoom);
+      // Speech bubble above character head (screen coordinates)
+      const charScreen = worldToScreen(ch.x + TILE_SIZE / 2, ch.y);
+      const cx = Math.floor(charScreen.x);
+      const bubbleY = Math.floor(charScreen.y - 4 * zoom);
       const bw = Math.floor(6 * zoom);
       const bh = Math.floor(5 * zoom);
       const radius = Math.max(1, Math.floor(zoom));
@@ -654,9 +620,10 @@ function renderStatusOverlays(
     }
 
     if (status === 'thinking') {
-      // Amber dots ("...") above character head
-      const cx = Math.floor(ch.x * zoom + offsetX + (TILE_SIZE * zoom) / 2);
-      const dotsY = Math.floor(ch.y * zoom + offsetY - 2 * zoom);
+      // Amber dots ("...") above character head (screen coordinates)
+      const charScreen = worldToScreen(ch.x + TILE_SIZE / 2, ch.y);
+      const cx = Math.floor(charScreen.x);
+      const dotsY = Math.floor(charScreen.y - 2 * zoom);
       const dotR = Math.max(1, Math.floor(zoom * 0.6));
       const spacing = Math.floor(2.5 * zoom);
 
@@ -675,17 +642,19 @@ function renderStatusOverlays(
 function renderRoomLabel(
   ctx: CanvasRenderingContext2D,
   roomId: string,
-  tileSize: number,
-  offsetX: number,
-  offsetY: number,
   zoom: number,
+  worldToScreen: (wx: number, wy: number) => { x: number; y: number },
 ): void {
   const room = ROOMS.find((r) => r.id === roomId);
   if (!room) return;
 
   const r = room.tileRect;
-  const labelX = Math.floor((r.col + r.width / 2) * tileSize + offsetX);
-  const labelY = Math.floor(r.row * tileSize + offsetY - 4 * zoom);
+  const labelScreen = worldToScreen(
+    (r.col + r.width / 2) * TILE_SIZE,
+    r.row * TILE_SIZE,
+  );
+  const labelX = Math.floor(labelScreen.x);
+  const labelY = Math.floor(labelScreen.y - 4 * zoom);
 
   const fontSize = LABEL_FONT_SIZE * zoom;
   ctx.font = `bold ${fontSize}px monospace`;
