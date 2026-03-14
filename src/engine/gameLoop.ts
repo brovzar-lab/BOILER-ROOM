@@ -14,6 +14,8 @@ import { updateAllCharacters } from './characters';
 import { OFFICE_TILE_MAP } from './officeLayout';
 import { renderFrame } from './renderer';
 import { getAudioManager } from './audioManager';
+import { tickZoom, startAnimatedZoom } from './zoomController';
+import { zoomState, cursorScreenX, cursorScreenY } from './input';
 import type { AgentStatus } from '@/types/agent';
 
 /**
@@ -39,6 +41,9 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
   // Auto-fit zoom tracking: true until user manually overrides via ZoomControls
   let isAutoFitZoom = true;
   let firstFrame = true;
+
+  // Track quantized zoom to sync store only on 0.5-step changes
+  let prevQuantizedZoom = 0;
 
   // Audio tracking state
   let footstepTimer = 0;
@@ -69,8 +74,14 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
       // Recalculate auto-fit zoom on resize (only if user hasn't manually overridden)
       if (isAutoFitZoom && rect.width > 0 && rect.height > 0) {
         const fitZoom = computeAutoFitZoom(rect.width, rect.height);
-        state.camera.zoom = fitZoom;
-        useOfficeStore.getState().setZoomLevel(fitZoom);
+        if (firstFrame) {
+          // First resize: set directly (no point animating initial load)
+          state.camera.zoom = fitZoom;
+          useOfficeStore.getState().setZoomLevel(fitZoom);
+        } else {
+          // Subsequent resizes: animate smoothly
+          startAnimatedZoom(zoomState, fitZoom, rect.width / 2, rect.height / 2);
+        }
       }
     }
 
@@ -82,21 +93,13 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
       useOfficeStore.getState().setZoomLevel(fitZoom);
     }
 
-    // Detect manual zoom override: if store zoom differs from camera zoom
-    // and it wasn't set by our auto-fit code, mark as manual override
-    if (state.zoomLevel !== state.camera.zoom) {
-      state.camera.zoom = state.zoomLevel;
-      isAutoFitZoom = false;
-    }
-
     // Expose auto-fit reset via a module-level flag
     if ((globalThis as Record<string, unknown>).__boiler_reset_autofit) {
       (globalThis as Record<string, unknown>).__boiler_reset_autofit = false;
       isAutoFitZoom = true;
       if (prevWidth > 0 && prevHeight > 0) {
         const fitZoom = computeAutoFitZoom(prevWidth, prevHeight);
-        state.camera.zoom = fitZoom;
-        useOfficeStore.getState().setZoomLevel(fitZoom);
+        startAnimatedZoom(zoomState, fitZoom, prevWidth / 2, prevHeight / 2);
       }
     }
 
@@ -106,6 +109,22 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
 
     // Update all characters (movement, animation, room entry detection)
     updateAllCharacters(dt, OFFICE_TILE_MAP);
+
+    // --- Zoom tick: run state machine each frame ---
+    const minZoom = computeAutoFitZoom(canvasWidth, canvasHeight);
+    tickZoom(zoomState, state.camera, dt, canvasWidth, canvasHeight, minZoom);
+
+    // Sync store ONLY when quantized zoom changes (prevents React re-render spam)
+    const quantized = Math.round(state.camera.zoom * 2) / 2;
+    if (quantized !== prevQuantizedZoom) {
+      prevQuantizedZoom = quantized;
+      useOfficeStore.getState().setZoomLevel(state.camera.zoom);
+
+      // If zoom changed from a non-auto-fit source, mark as manual override
+      if (zoomState.phase !== 'idle') {
+        isAutoFitZoom = false;
+      }
+    }
 
     // --- Audio triggers ---
     const audio = getAudioManager();
@@ -141,7 +160,7 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
     }
     prevAgentStatuses = { ...currentStatuses };
 
-    // If BILLY is walking, set camera target to follow BILLY's foot-center position
+    // Camera follow: BILLY follow runs unconditionally (zoom offset applied on top)
     if (billy && state.camera.followTarget === 'billy' && state.camera.zoom >= ZOOM_OVERVIEW_THRESHOLD) {
       // Follow target: center of character's occupied tile (foot-center)
       // Using foot-center keeps the ground plane natural with taller 24x32 sprites
