@@ -6,42 +6,48 @@ interface TokenCounterProps {
 }
 
 /**
- * Token usage display bar.
+ * Token usage progress bar.
  *
- * Color thresholds:
- * - Normal (<50%): muted text
- * - Warning (50-80%): amber
- * - Critical (>80%): red
+ * Hidden by default. Appears as a thin horizontal bar when context usage
+ * exceeds 60%. Color: amber for 60-80%, red for >80%.
+ * Renders as a thin strip above the input area.
  */
 export function TokenCounter({ tokenCount, isSummarizing }: TokenCounterProps) {
   const limit = TOKEN_LIMITS[DEFAULT_MODEL];
   const percentage = (tokenCount / limit) * 100;
 
-  // Don't show if no tokens used yet
-  if (tokenCount === 0 && !isSummarizing) {
+  // Summarizing state: show amber pulse bar
+  if (isSummarizing) {
+    return (
+      <div className="px-4 py-1">
+        <div className="h-1 w-full bg-neutral-800 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-amber-500 animate-pulse rounded-full transition-all duration-500"
+            style={{ width: '100%' }}
+          />
+        </div>
+        <div className="text-[10px] text-amber-400 text-center mt-0.5 animate-pulse">
+          Summarizing context...
+        </div>
+      </div>
+    );
+  }
+
+  // Hidden until context > 60%
+  if (percentage < 60) {
     return null;
   }
 
-  let colorClass: string;
-  if (percentage > 80) {
-    colorClass = 'text-red-400';
-  } else if (percentage > 50) {
-    colorClass = 'text-[--color-lemon-400]';
-  } else {
-    colorClass = 'text-[--color-text-muted]';
-  }
-
-  const formattedCount = tokenCount.toLocaleString();
+  const barColor = percentage > 80 ? 'bg-red-500' : 'bg-amber-500';
 
   return (
-    <div className="flex items-center justify-center gap-2 py-1 text-xs">
-      {isSummarizing ? (
-        <span className="text-[--color-lemon-400] animate-pulse">Summarizing context...</span>
-      ) : (
-        <span className={colorClass}>
-          ~{formattedCount} tokens ({percentage.toFixed(1)}%)
-        </span>
-      )}
+    <div className="px-4 py-1" title={`~${tokenCount.toLocaleString()} tokens (${percentage.toFixed(1)}%)`}>
+      <div className="h-1 w-full bg-neutral-800 rounded-full overflow-hidden">
+        <div
+          className={`h-full ${barColor} rounded-full transition-all duration-500`}
+          style={{ width: `${Math.min(percentage, 100)}%` }}
+        />
+      </div>
     </div>
   );
 }

@@ -12,7 +12,7 @@ import { ErrorBanner } from './ErrorBanner';
 import { OverviewPanel } from './OverviewPanel';
 import { WarRoomPanel } from './WarRoomPanel';
 import { MemoryPanel } from '@/components/memory/MemoryPanel';
-import type { AgentId } from '@/types/agent';
+import type { AgentId, AgentStatus } from '@/types/agent';
 
 /** Valid agent room IDs (excludes 'billy' and 'war-room') */
 const AGENT_ROOM_IDS: AgentId[] = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
@@ -36,11 +36,19 @@ export function ChatPanel() {
   const activeRoomId = useOfficeStore((s) => s.activeRoomId);
   const activeDealId = useDealStore((s) => s.activeDealId);
   const isProcessing = useFileStore((s) => s.isProcessing);
+  const agentStatuses = useOfficeStore((s) => s.agentStatuses);
   const factCount = useMemoryStore((s) =>
     isAgentRoom(activeRoomId) && activeDealId
       ? s.getFactsForAgent(activeRoomId, activeDealId).length
       : 0
   );
+
+  // File count for current agent
+  const files = useFileStore((s) => s.files);
+  const fileCount = isAgentRoom(activeRoomId) && activeDealId
+    ? files.filter((f) => f.agentId === activeRoomId && (!activeDealId || f.dealId === activeDealId)).length
+    : 0;
+
   const [fadeClass, setFadeClass] = useState('opacity-100 transition-opacity duration-200');
   const [isDragOver, setIsDragOver] = useState(false);
   const [showMemory, setShowMemory] = useState(false);
@@ -120,6 +128,8 @@ export function ChatPanel() {
 
   if (isAgentRoom(activeRoomId)) {
     const agent = getAgent(activeRoomId);
+    const agentStatus = agentStatuses[activeRoomId] as AgentStatus | undefined;
+    const isThinking = agentStatus === 'thinking';
 
     return (
       <div
@@ -128,57 +138,47 @@ export function ChatPanel() {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        {/* Agent identity header */}
+        {/* Agent identity header: thin top accent bar + name in signature color */}
         {agent && (
-          <div className="flex items-center gap-3 px-4 py-2 border-b border-[--color-border]">
+          <div className="border-b border-[--color-border]">
+            {/* Thin color accent bar spanning full width */}
             <div
-              className="w-1 h-8 rounded-full"
+              className={`h-0.5 w-full ${isThinking ? 'animate-pulse' : ''}`}
               style={{ backgroundColor: agent.color }}
             />
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold text-[--color-text]">
-                {agent.name}
-              </span>
-              <span className="text-xs text-[--color-text-muted]">
-                {agent.title}
-              </span>
-            </div>
-            <div className="ml-auto flex items-center gap-2">
-              {/* Processing indicator */}
-              {isProcessing && (
-                <span className="text-xs text-amber-400 animate-pulse">
-                  Processing file...
+            <div className="flex items-center gap-3 px-4 py-2">
+              <div className="flex flex-col">
+                <span
+                  className="text-sm font-semibold"
+                  style={{ color: agent.color }}
+                >
+                  {agent.name}
                 </span>
+                <span className="text-xs text-[--color-text-muted]">
+                  {agent.title}
+                </span>
+              </div>
+              {/* Thinking indicator in header */}
+              {isThinking && (
+                <div className="flex items-center gap-1 ml-2">
+                  <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ color: agent.color, animationDelay: '0ms' }} />
+                  <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ color: agent.color, animationDelay: '150ms' }} />
+                  <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ color: agent.color, animationDelay: '300ms' }} />
+                </div>
               )}
-              {/* Attach file button */}
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                title="Attach PDF, DOCX or Excel file"
-                className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded
-                  bg-neutral-700 hover:bg-neutral-600 text-neutral-300 hover:text-neutral-100 transition-colors"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                </svg>
-                Attach
-              </button>
-              {/* Memory button */}
-              <button
-                onClick={() => setShowMemory(true)}
-                className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded
-                  bg-neutral-700 hover:bg-neutral-600 text-neutral-300 hover:text-neutral-100 transition-colors"
-              >
-                Memory
-                {factCount > 0 && (
-                  <span className="bg-neutral-600 text-neutral-200 px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
-                    {factCount}
-                  </span>
-                )}
-              </button>
             </div>
           </div>
         )}
-        <AgentChatPanel key={`${activeRoomId}-${activeDealId}`} agentId={activeRoomId} />
+
+        <AgentChatPanel
+          key={`${activeRoomId}-${activeDealId}`}
+          agentId={activeRoomId}
+          onAttachClick={() => fileInputRef.current?.click()}
+          fileCount={fileCount}
+          onMemoryClick={() => setShowMemory(true)}
+          factCount={factCount}
+          isProcessing={isProcessing}
+        />
 
         {/* Memory panel overlay */}
         {showMemory && (
@@ -213,12 +213,28 @@ export function ChatPanel() {
   );
 }
 
+interface AgentChatPanelProps {
+  agentId: AgentId;
+  onAttachClick?: () => void;
+  fileCount?: number;
+  onMemoryClick?: () => void;
+  factCount?: number;
+  isProcessing?: boolean;
+}
+
 /**
  * Inner chat panel that manages a single agent conversation.
  * Uses key prop on mount to ensure clean useChat initialization per agent.
  * Clears 'needs-attention' status when the user enters the room.
  */
-function AgentChatPanel({ agentId }: { agentId: AgentId }) {
+function AgentChatPanel({
+  agentId,
+  onAttachClick,
+  fileCount,
+  onMemoryClick,
+  factCount,
+  isProcessing,
+}: AgentChatPanelProps) {
   const agent = getAgent(agentId);
   const agentName = agent?.name ?? agentId;
 
@@ -249,7 +265,7 @@ function AgentChatPanel({ agentId }: { agentId: AgentId }) {
         agentName={agentName}
       />
 
-      {/* Token counter bar */}
+      {/* Token counter progress bar (hidden until >60%) */}
       <TokenCounter
         tokenCount={tokenCount}
         isSummarizing={false}
@@ -264,12 +280,17 @@ function AgentChatPanel({ agentId }: { agentId: AgentId }) {
         />
       )}
 
-      {/* Input area */}
+      {/* Input area with Attach/Memory buttons */}
       <ChatInput
         onSend={sendMessage}
         onCancel={cancelStream}
         isStreaming={isStreaming}
         placeholder={`Ask ${agentName} something...`}
+        onAttachClick={onAttachClick}
+        fileCount={fileCount}
+        onMemoryClick={onMemoryClick}
+        factCount={factCount}
+        isProcessing={isProcessing}
       />
     </>
   );
