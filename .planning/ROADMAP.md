@@ -90,7 +90,7 @@ Plans:
   3. When the user stops zooming, the view snaps to nearest half-integer for pixel-crisp rendering
   4. Memory usage stays stable during rapid zoom gestures (no sprite cache explosion)
   5. On initial page load, the office auto-fits to the viewport at an appropriate zoom level
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
 - [ ] 12-01-PLAN.md — Zoom controller state machine + cursor-centered math + wheel handler
 - [ ] 12-02-PLAN.md — Game loop integration + ZoomControls UI redesign + visual verification
@@ -122,5 +122,5 @@ Plans:
 | 9. Compact Layout | 3/3 | Complete   | 2026-03-14 | - |
 | 10. Rendering Pipeline | v1.1 | Complete    | 2026-03-14 | 2026-03-14 |
 | 11. JRPG Sprite Integration | 3/3 | Complete    | 2026-03-14 | - |
-| 12. Smooth Zoom | v1.1 | 0/2 | Not started | - |
+| 12. Smooth Zoom | 1/2 | In Progress|  | - |
 | 13. Polish and UI | v1.1 | 0/? | Not started | - |

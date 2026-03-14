@@ -24,10 +24,10 @@ Requirements for v1.1 Visual Overhaul. Each maps to roadmap phases.
 
 ### Zoom
 
-- [ ] **ZOOM-01**: User can pinch-to-zoom smoothly on trackpad with continuous (non-integer) zoom levels
-- [ ] **ZOOM-02**: Zoom centers on cursor/pinch point (not screen center)
-- [ ] **ZOOM-03**: Zoom snaps to nearest half-integer at rest for pixel clarity
-- [ ] **ZOOM-04**: Sprite cache uses quantized zoom keys to prevent memory bloat
+- [x] **ZOOM-01**: User can pinch-to-zoom smoothly on trackpad with continuous (non-integer) zoom levels
+- [x] **ZOOM-02**: Zoom centers on cursor/pinch point (not screen center)
+- [x] **ZOOM-03**: Zoom snaps to nearest half-integer at rest for pixel clarity
+- [x] **ZOOM-04**: Sprite cache uses quantized zoom keys to prevent memory bloat
 - [ ] **ZOOM-05**: Auto-fit zoom still works as default on initial load
 
 ### Sprites
@@ -93,10 +93,10 @@ Deferred to future release.
 | RNDR-02 | Phase 10 | Complete |
 | RNDR-03 | Phase 10 | Complete |
 | RNDR-04 | Phase 10 | Complete |
-| ZOOM-01 | Phase 12 | Pending |
-| ZOOM-02 | Phase 12 | Pending |
-| ZOOM-03 | Phase 12 | Pending |
-| ZOOM-04 | Phase 12 | Pending |
+| ZOOM-01 | Phase 12 | Complete |
+| ZOOM-02 | Phase 12 | Complete |
+| ZOOM-03 | Phase 12 | Complete |
+| ZOOM-04 | Phase 12 | Complete |
 | ZOOM-05 | Phase 12 | Pending |
 | SPRT-01 | Phase 11 | Complete |
 | SPRT-02 | Phase 11 | Complete |

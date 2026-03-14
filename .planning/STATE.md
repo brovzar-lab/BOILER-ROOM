@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Visual Overhaul
 status: completed
-stopped_at: Phase 12 context gathered
-last_updated: "2026-03-14T16:24:16.917Z"
-last_activity: 2026-03-14 — 24x32 renderer integration with foot-center anchoring, drop shadows, camera follow (11-03)
+stopped_at: Completed 12-01-PLAN.md
+last_updated: "2026-03-14T16:53:48.502Z"
+last_activity: 2026-03-14 — Zoom controller state machine with cursor-centered math and wheel handler (12-01)
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 8
-  completed_plans: 8
-  percent: 100
+  total_plans: 10
+  completed_plans: 9
+  percent: 90
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-14)
 
 **Core value:** Multi-perspective, context-aware AI advisory for complex production deals
-**Current focus:** Phase 11 - JRPG Sprite Integration (v1.1 Visual Overhaul)
+**Current focus:** Phase 12 - Smooth Zoom (v1.1 Visual Overhaul)
 
 ## Current Position
 
-Phase: 11 of 13 (JRPG Sprite Integration)
-Plan: 3 of 3 in current phase
-Status: Phase 11 Complete
-Last activity: 2026-03-14 — 24x32 renderer integration with foot-center anchoring, drop shadows, camera follow (11-03)
+Phase: 12 of 13 (Smooth Zoom)
+Plan: 1 of 2 in current phase
+Status: Plan 12-01 Complete
+Last activity: 2026-03-14 — Zoom controller state machine with cursor-centered math and wheel handler (12-01)
 
-Progress: [██████████] 100% (Phase 11) | 62% (v1.1 overall)
+Progress: [█████████░] 90% (Phase 12) | 70% (v1.1 overall)
 
 ## Performance Metrics
 
@@ -50,6 +50,7 @@ Progress: [██████████] 100% (Phase 11) | 62% (v1.1 overall)
 | 11    | 01   | 11min    | 3     | 61    |
 | 11    | 02   | 5min     | 2     | 10    |
 | 11    | 03   | 3min     | 2     | 5     |
+| 12    | 01   | 4min     | 3     | 6     |
 
 ## Accumulated Context
 
@@ -77,6 +78,9 @@ Recent decisions affecting current work:
 - [11-03]: Camera follows foot-center (ch.x+8, ch.y+8) not visual center for natural ground plane
 - [11-03]: Drop shadow drawn before character sprite so feet overlap shadow edge
 - [11-03]: depthSort baseRow unchanged — foot-based Y-sort already correct for 24x32
+- [12-01]: ZOOM_FACTOR=1.002 per pixel deltaY for natural trackpad/wheel sensitivity
+- [12-01]: computeAutoFitZoom floor lowered from 1.0 to 0.5 for sub-1.0 zoom on large screens
+- [12-01]: toggleZoom uses startAnimatedZoom for smooth Z-key and double-click transitions
 
 ### Pending Todos
 
@@ -90,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T16:24:16.915Z
-Stopped at: Phase 12 context gathered
-Resume file: .planning/phases/12-smooth-zoom/12-CONTEXT.md
+Last session: 2026-03-14T16:53:48.500Z
+Stopped at: Completed 12-01-PLAN.md
+Resume file: None
