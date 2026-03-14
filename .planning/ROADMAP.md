@@ -122,5 +122,5 @@ Plans:
 | 9. Compact Layout | 3/3 | Complete   | 2026-03-14 | - |
 | 10. Rendering Pipeline | v1.1 | Complete    | 2026-03-14 | 2026-03-14 |
 | 11. JRPG Sprite Integration | 3/3 | Complete    | 2026-03-14 | - |
-| 12. Smooth Zoom | 2/2 | Complete   | 2026-03-14 | - |
+| 12. Smooth Zoom | 2/2 | Complete    | 2026-03-14 | - |
 | 13. Polish and UI | v1.1 | 0/? | Not started | - |
