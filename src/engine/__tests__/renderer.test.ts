@@ -71,6 +71,11 @@ function createMockCtx() {
     setLineDash: vi.fn(),
     setTransform: vi.fn(),
     roundRect: vi.fn(),
+    globalCompositeOperation: 'source-over' as GlobalCompositeOperation,
+    globalAlpha: 1,
+    createRadialGradient: vi.fn(() => ({
+      addColorStop: vi.fn(),
+    })),
   } as unknown as CanvasRenderingContext2D;
 }
 
@@ -176,10 +181,12 @@ describe('renderFrame', () => {
     expect(ctx.fillText).toHaveBeenCalled();
   });
 
-  it('does not render room label when activeRoomId is null', () => {
+  it('renders all room labels at zoom >= 1.5 regardless of activeRoomId', () => {
     const camera = createCamera(2);
     renderFrame(ctx, camera, [], null, 800, 600, {});
-    expect(ctx.fillText).not.toHaveBeenCalled();
+    // Labels are now zoom-gated (>= 1.5x), not activeRoomId-gated
+    // At zoom 2, all 7 rooms should have labels rendered via fillText
+    expect(ctx.fillText).toHaveBeenCalled();
   });
 
   it('tile fillRect dimensions are constant across zoom levels (transform handles zoom)', () => {

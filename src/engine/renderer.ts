@@ -7,6 +7,7 @@
  *   Layer 3: 3/4 perspective wall strips + shadows at world transform
  *   Layer 3b: Drop zone highlight at world transform
  *   Layer 4: Y-sorted renderables (furniture + decorations + characters merged) at world transform
+ *   Layer 4.5: Glow effects (additive radial gradients, day/night modulated) at world transform
  *   --- Reset to identity transform ---
  *   Layer 5: Status overlays (speech bubbles, thinking dots) at screen coords
  *   Layer 5b: File icons on agent desks at screen coords
@@ -19,13 +20,15 @@
  *
  * UI overlays reset to identity and use worldToScreen() for positioning.
  */
-import { TileType, TILE_SIZE, CHAR_SPRITE_W, CHAR_SPRITE_H } from './types';
+import { TileType, TILE_SIZE, CHAR_SPRITE_W, CHAR_SPRITE_H, ZOOM_OVERVIEW_THRESHOLD } from './types';
 import type { Camera, Character } from './types';
 import type { FurnitureItem, DecorationItem } from './officeLayout';
 import { OFFICE_TILE_MAP, ROOMS, getRoomAtTile } from './officeLayout';
 import { PLACEHOLDER_COLORS, getCharacterSheet, getEnvironmentSheet } from './spriteSheet';
 import { CHARACTER_FRAMES, ENVIRONMENT_ATLAS, DECORATION_ATLAS } from './spriteAtlas';
 import { buildRenderables } from './depthSort';
+import { renderGlowEffects } from './glowEffects';
+import { computeTimeOfDay, applyFloorTint } from './timeOfDay';
 import { useFileStore } from '@/store/fileStore';
 import { dragOverRoomId, invalidDropMessage, invalidDropX, invalidDropY, hoverTileCol, hoverTileRow } from './input';
 
@@ -51,6 +54,7 @@ export function renderFrame(
   canvasWidth: number,
   canvasHeight: number,
   agentStatuses: Record<string, string>,
+  elapsedTime: number = 0,
 ): void {
   const zoom = camera.zoom;
   const dpr = window.devicePixelRatio || 1;
@@ -119,6 +123,15 @@ export function renderFrame(
     }
   }
 
+  // ── Layer 2b: Floor Tint (day/night ambient) ─────────────────────────
+  const timeOfDay = computeTimeOfDay();
+  applyFloorTint(ctx, timeOfDay, {
+    x: minCol * TILE_SIZE,
+    y: minRow * TILE_SIZE,
+    w: (maxCol - minCol + 1) * TILE_SIZE,
+    h: (maxRow - minRow + 1) * TILE_SIZE,
+  });
+
   // ── Layer 3: 3/4 Wall Strips + Shadows ───────────────────────────────
   renderWalls(ctx, minCol, maxCol, minRow, maxRow);
 
@@ -136,6 +149,9 @@ export function renderFrame(
     r.draw(ctx);
   }
 
+  // ── Layer 4.5: Glow Effects (additive compositing over scene) ────────
+  renderGlowEffects(ctx, timeOfDay, elapsedTime);
+
   // ── Reset to identity for UI overlays ──────────────────────────────────
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
@@ -145,9 +161,11 @@ export function renderFrame(
   // ── Layer 5b: File Icons on Desks ──────────────────────────────────────
   renderFileIcons(ctx, zoom, worldToScreen);
 
-  // ── Layer 6: UI Overlays ───────────────────────────────────────────────
-  if (activeRoomId) {
-    renderRoomLabel(ctx, activeRoomId, zoom, worldToScreen);
+  // ── Layer 6: UI Overlays (room labels for all rooms at zoom >= 1.5x) ──
+  if (zoom >= ZOOM_OVERVIEW_THRESHOLD) {
+    for (const room of ROOMS) {
+      renderRoomLabel(ctx, room.id, zoom, worldToScreen);
+    }
   }
 }
 
@@ -777,8 +795,19 @@ function renderRoomLabel(
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
 
+  // Display name: "Name -- Title" format for agent offices
+  const ROOM_DISPLAY_NAMES: Record<string, string> = {
+    'billy': "BILLY's Office",
+    'patrik': 'Patrik -- CFO',
+    'sandra': 'Sandra -- Producer',
+    'marcos': 'Marcos -- Lawyer',
+    'isaac': 'Isaac -- Development',
+    'wendy': 'Wendy -- Coach',
+    'war-room': 'War Room',
+  };
+
   // Background pill
-  const text = room.name;
+  const text = ROOM_DISPLAY_NAMES[roomId] ?? room.name;
   const metrics = ctx.measureText(text);
   const padX = 4 * zoom;
   const padY = 2 * zoom;

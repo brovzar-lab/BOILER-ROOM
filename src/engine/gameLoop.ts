@@ -45,6 +45,9 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
   // Track quantized zoom to sync store only on 0.5-step changes
   let prevQuantizedZoom = 0;
 
+  // Elapsed time in seconds for glow pulse animation
+  let elapsedSeconds = 0;
+
   // Audio tracking state
   let footstepTimer = 0;
   let prevActiveRoomId: string | null = null;
@@ -56,6 +59,8 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
     // Delta time with cap at 100ms to prevent jumps on tab switch
     const dt = lastTime === 0 ? 0 : Math.min((time - lastTime) / 1000, 0.1);
     lastTime = time;
+
+    elapsedSeconds += dt;
 
     // Read state non-reactively (no re-renders)
     const state = useOfficeStore.getState();
@@ -192,6 +197,7 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
       canvasWidth,
       canvasHeight,
       state.agentStatuses,
+      elapsedSeconds,
     );
 
     rafId = requestAnimationFrame(frame);
