@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Visual Overhaul
 status: in-progress
-stopped_at: Completed 10-01-PLAN.md
-last_updated: "2026-03-14T06:38:35Z"
-last_activity: 2026-03-14 — setTransform rendering pipeline + float zoom infrastructure (10-01)
+stopped_at: Completed 10-02-PLAN.md
+last_updated: "2026-03-14T06:44:05Z"
+last_activity: 2026-03-14 — Y-sorted depth rendering + 3/4 wall strips (10-02)
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 3
-  completed_plans: 1
-  percent: 33
+  completed_plans: 2
+  percent: 67
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 ## Current Position
 
 Phase: 10 of 13 (Rendering Pipeline)
-Plan: 1 of 3 in current phase
-Status: Plan 10-01 Complete
-Last activity: 2026-03-14 — setTransform rendering pipeline + float zoom infrastructure (10-01)
+Plan: 2 of 2 in current phase
+Status: Phase 10 Complete
+Last activity: 2026-03-14 — Y-sorted depth rendering + 3/4 wall strips (10-02)
 
-Progress: [███-------] 33% (Phase 10) | 30% (v1.1 overall)
+Progress: [██████░░░░] 67% (Phase 10) | 40% (v1.1 overall)
 
 ## Performance Metrics
 
@@ -46,6 +46,7 @@ Progress: [███-------] 33% (Phase 10) | 30% (v1.1 overall)
 | 09    | 02   | 3min     | 2     | 4     |
 | 09    | 03   | 12min    | 2     | 1     |
 | 10    | 01   | 6min     | 2     | 8     |
+| 10    | 02   | 3min     | 2     | 3     |
 
 ## Accumulated Context
 
@@ -66,6 +67,9 @@ Recent decisions affecting current work:
 - [10-01]: Draw source sprites at world coords via setTransform (option a) instead of pre-scaled cache
 - [10-01]: ZOOM_OVERVIEW_THRESHOLD = 1.5 separates overview from follow mode
 - [10-01]: Sprite cache quantized to nearest 0.5 zoom increment to bound cache size
+- [10-02]: Walls drawn in separate layer before Y-sort (thin strips with placeholder sprites don't need Y-sort until Phase 11)
+- [10-02]: buildRenderables takes render callbacks to decouple depth sorting from rendering details
+- [10-02]: Decorations included in Y-sort alongside furniture and characters
 
 ### Pending Todos
 
@@ -79,6 +83,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T06:38:35Z
-Stopped at: Completed 10-01-PLAN.md
-Resume file: .planning/phases/10-rendering-pipeline/10-01-SUMMARY.md
+Last session: 2026-03-14T06:44:05Z
+Stopped at: Completed 10-02-PLAN.md
+Resume file: .planning/phases/10-rendering-pipeline/10-02-SUMMARY.md

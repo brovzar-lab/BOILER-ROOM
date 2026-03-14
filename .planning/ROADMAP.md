@@ -28,7 +28,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 ## Phases
 
 - [x] **Phase 9: Compact Layout** - Redesign office grid from 42x34 sprawl to ~28x24 compact grid with validated pathfinding (completed 2026-03-14)
-- [ ] **Phase 10: Rendering Pipeline** - Refactor renderer to ctx.setTransform() zoom, unified Y-sorted depth, and 3/4 wall rendering
+- [x] **Phase 10: Rendering Pipeline** - Refactor renderer to ctx.setTransform() zoom, unified Y-sorted depth, and 3/4 wall rendering (completed 2026-03-14)
 - [ ] **Phase 11: JRPG Sprite Integration** - 24x32 character sprites and 3/4 perspective environment tiles with correct anchoring
 - [ ] **Phase 12: Smooth Zoom** - Trackpad pinch-to-zoom with cursor-centered scaling, snap-to-half-integer, and quantized sprite cache
 - [ ] **Phase 13: Polish and UI** - Ambient glow effects, environment detail, personality decorations, and chat/deal UI refinements
@@ -59,10 +59,10 @@ Plans:
   2. North walls of rooms render as visible cream-colored strips giving 3/4 perspective depth
   3. No tile gaps or seams appear at any zoom level (integer or fractional)
   4. Click-to-walk targeting still works correctly after the setTransform refactor
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
-- [ ] 10-01-PLAN.md — setTransform zoom refactor + float zoom infrastructure + click targeting
-- [ ] 10-02-PLAN.md — Unified Y-sorted depth rendering + 3/4 wall strips
+- [x] 10-01-PLAN.md — setTransform zoom refactor + float zoom infrastructure + click targeting
+- [x] 10-02-PLAN.md — Unified Y-sorted depth rendering + 3/4 wall strips
 
 ### Phase 11: JRPG Sprite Integration
 **Goal**: Characters and environment tiles look like a JRPG game with 3/4 perspective art, expressive faces, and detailed furniture
@@ -113,7 +113,7 @@ Plans:
 | 7. Agent Memory | v1.0 | 4/4 | Complete | 2026-03-13 |
 | 8. Polish | v1.0 | 3/3 | Complete | 2026-03-14 |
 | 9. Compact Layout | 3/3 | Complete   | 2026-03-14 | - |
-| 10. Rendering Pipeline | 1/2 | In Progress|  | - |
+| 10. Rendering Pipeline | v1.1 | 2/2 | Complete | 2026-03-14 |
 | 11. JRPG Sprite Integration | v1.1 | 0/? | Not started | - |
 | 12. Smooth Zoom | v1.1 | 0/? | Not started | - |
 | 13. Polish and UI | v1.1 | 0/? | Not started | - |
