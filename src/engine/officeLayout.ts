@@ -192,7 +192,7 @@ export const ROOMS: Room[] = [
     tileRect: { col: 10, row: 11, width: 12, height: 16 },
     doorTile: { col: 15, row: 11 },
     seatTile: { col: 15, row: 18 },
-    billyStandTile: { col: 15, row: 16 },
+    billyStandTile: { col: 16, row: 16 },
   },
   {
     id: 'diana',
@@ -257,7 +257,14 @@ export const FURNITURE: FurnitureItem[] = [
   { roomId: 'sasha', type: 'artwork', col: 18, row: 3, width: 1, height: 1 },
 
   // War Room (interior cols 11-20, rows 12-25) -- large conference table centered
-  { roomId: 'war-room', type: 'table', col: 14, row: 17, width: 4, height: 3 },
+  { roomId: 'war-room', type: 'table', col: 13, row: 17, width: 6, height: 4 },
+  // Chairs around the conference table
+  { roomId: 'war-room', type: 'chair', col: 16, row: 16, width: 1, height: 1 }, // north/head (BILLY)
+  { roomId: 'war-room', type: 'chair', col: 12, row: 18, width: 1, height: 1 }, // left side, upper (Diana)
+  { roomId: 'war-room', type: 'chair', col: 12, row: 19, width: 1, height: 1 }, // left side, lower (Sasha)
+  { roomId: 'war-room', type: 'chair', col: 19, row: 18, width: 1, height: 1 }, // right side, upper (Marcos)
+  { roomId: 'war-room', type: 'chair', col: 19, row: 19, width: 1, height: 1 }, // right side, lower (Roberto)
+  { roomId: 'war-room', type: 'chair', col: 15, row: 21, width: 1, height: 1 }, // south/foot (Valentina)
 
   // Diana's Office (interior cols 2-6, rows 12-16)
   { roomId: 'diana', type: 'desk', col: 3, row: 13, width: 2, height: 1 },
@@ -291,7 +298,7 @@ export const FURNITURE: FurnitureItem[] = [
 
 /**
  * Conference table seat tiles for BILLY + 5 agents.
- * Positioned adjacent to the 4x3 table at (14,17)-(17,19) within
+ * Positioned at chairs adjacent to the 6x4 table at (13,17)-(18,20) within
  * the War Room interior (cols 11-20, rows 12-25).
  *
  * Arrangement:
@@ -301,12 +308,12 @@ export const FURNITURE: FurnitureItem[] = [
  *   - Valentina at south/foot of table
  */
 export const WAR_ROOM_SEATS: Record<string, TileCoord> = {
-  billy:     { col: 16, row: 16 }, // head of table (north)
-  diana:     { col: 13, row: 17 }, // left side, top
-  sasha:     { col: 13, row: 18 }, // left side, middle
-  marcos:    { col: 18, row: 17 }, // right side, top
-  roberto:   { col: 18, row: 18 }, // right side, middle
-  valentina: { col: 16, row: 20 }, // foot of table (south)
+  billy:     { col: 16, row: 16 }, // head of table (north chair)
+  diana:     { col: 12, row: 18 }, // left side, upper chair
+  sasha:     { col: 12, row: 19 }, // left side, lower chair
+  marcos:    { col: 19, row: 18 }, // right side, upper chair
+  roberto:   { col: 19, row: 19 }, // right side, lower chair
+  valentina: { col: 15, row: 21 }, // foot of table (south chair)
 };
 
 // -- Decoration Items ---------------------------------------------------------
