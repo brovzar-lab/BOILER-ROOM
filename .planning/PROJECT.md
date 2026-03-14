@@ -32,8 +32,27 @@ Multi-perspective, context-aware AI advisory for complex production deals — ty
 - ✓ Responsive layout (1280px to ultrawide) — v1.0
 - ✓ Dark theme with warm amber/gold Lemon Studios branding — v1.0
 
+## Current Milestone: v1.1 Visual Overhaul
+
+**Goal:** Transform the flat top-down office into a rich JRPG 3/4 perspective with Stardew Valley-quality 16-bit pixel art, compact room layout, smooth trackpad zoom, and refined UI matching the War Room mockup.
+
+**Target features:**
+- JRPG 3/4 perspective art (Pokémon FireRed / Zelda style) — floors flat, north walls visible, furniture/characters face south
+- 24x32 character sprites with expressive faces, outfit detail, drop shadows
+- Rich environment tiles: wood grain floors, glowing monitors, desk lamps with ambient halos, detailed bookshelves/plants
+- Compact grid room layout (2 top, War Room center, 4 bottom) — no sprawling hallways
+- Smooth trackpad pinch-to-zoom replacing integer snap levels
+- Chat/UI refinements matching mockup style (deals sidebar left, chat right, clean dark panel)
+- Deal switcher UI improvements (DEAL-05, DEAL-06 carried from v1.0)
+
 ### Active
 
+- [ ] JRPG 3/4 perspective replacing flat top-down rendering
+- [ ] 24x32 character sprites with Stardew Valley quality
+- [ ] Rich 16-bit environment tiles (glow effects, wood grain, area rugs, detailed furniture)
+- [ ] Compact grid room layout matching mockup
+- [ ] Smooth trackpad pinch-to-zoom (free zoom, not integer snap)
+- [ ] Chat UI refinements matching mockup style
 - [ ] Deal switcher UI with per-agent activity summary (DEAL-05, carried from v1.0)
 - [ ] More prominent active deal name display (DEAL-06, carried from v1.0)
 
@@ -85,4 +104,4 @@ Architecture: three-world separation — game engine (Canvas 2D), chat interface
 - **Context window:** Auto-summarize at 80% capacity, memory never summarized
 
 ---
-*Last updated: 2026-03-14 after v1.0 milestone*
+*Last updated: 2026-03-14 after v1.1 milestone start*
