@@ -1,16 +1,23 @@
 /**
  * Office floor plan data: room definitions, tile map array, room metadata.
  *
- * Compact grid layout (32 cols x 30 rows) matching War Room mockup:
+ * Compact grid layout (32 cols x 30 rows):
  *
- *            [BILLY] [Sandra]           <- centered, top row
- *   [Patrik]                [Marcos]    <- upper side offices
+ *            [BILLY] [Patrik]           <- centered, top row (CEO + CFO adjacent)
+ *   [Sandra]                [Marcos]    <- upper side offices (Producer left, Lawyer right)
  *            [ WAR ROOM ]             <- center, same height as one side pair
- *   [Isaac]              [Wendy] <- lower side offices
+ *   [Isaac]               [Wendy]     <- lower side offices (Development left, Coach right)
  *
- *   - Top row: BILLY (center-left), Sandra (center-right) -- centered above War Room
+ * Room assignment rationale (workflow adjacency):
+ *   - Patrik (CFO) top-right: closest to BILLY for frequent financial consultations
+ *   - Sandra (Line Producer) upper-left: production budgets flow to/from CFO and Lawyer
+ *   - Marcos (Lawyer) upper-right: contracts adjacent to CFO and Producer workflows
+ *   - Isaac (Head of Development) lower-left: creative side, separate from finance operations
+ *   - Wendy (Performance Coach) lower-right: private coaching space, separate from operations
+ *
+ *   - Top row: BILLY (center-left), Patrik (center-right) -- centered above War Room
  *   - War Room centered vertically between upper/lower corridors (rows 12-22, 11 tall)
- *   - Patrik & Isaac stacked on left (rows 11-17, rows 20-26)
+ *   - Sandra & Isaac stacked on left (rows 11-17, rows 20-26)
  *   - Marcos & Wendy stacked on right (rows 11-17, rows 20-26)
  *   - Gap/corridor between upper and lower side offices at rows 18-19
  *   - 2-tile wide corridors between sections
@@ -19,20 +26,20 @@
  *
  * Column layout:
  *   Cols 0:      VOID border
- *   Cols 1-7:    Left offices (Patrik, Isaac)
+ *   Cols 1-7:    Left offices (Sandra, Isaac)
  *   Cols 8-9:    Left vertical corridor
  *   Cols 9-15:   BILLY's Office (top row, center-left)
  *   Cols 10-21:  War Room (center, 12 wide x 11 tall)
- *   Cols 17-23:  Sandra's Office (top row, center-right)
+ *   Cols 17-23:  Patrik's Office (top row, center-right)
  *   Cols 22-23:  Right vertical corridor
  *   Cols 24-30:  Right offices (Marcos, Wendy)
  *   Col  31:     VOID border
  *
  * Row layout:
  *   Rows 0-1:    VOID headroom
- *   Rows 2-8:    Top offices (BILLY, Sandra) -- 7 tall, centered
+ *   Rows 2-8:    Top offices (BILLY, Patrik) -- 7 tall, centered
  *   Rows 9-10:   Horizontal corridor
- *   Rows 11-17:  Upper side offices (Patrik left, Marcos right)
+ *   Rows 11-17:  Upper side offices (Sandra left, Marcos right)
  *   Rows 12-22:  War Room (center) -- 11 tall, centered between corridors
  *   Rows 18-19:  Corridor between upper/lower side offices (War Room continues)
  *   Rows 20-26:  Lower side offices (Isaac left, Wendy right)
@@ -40,7 +47,7 @@
  *   Row  29:     VOID border
  *
  * Recreation Area (open-plan, no walls):
- *   Cols 10-21, Rows 23-26 — open break area below War Room south wall
+ *   Cols 10-21, Rows 23-26 -- open break area below War Room south wall
  *   Contains water cooler, ping pong table, and couch
  */
 import { TileType } from './types';
@@ -96,12 +103,12 @@ function buildTileMap(): TileType[][] {
   // BILLY's Office (top, center-left): cols 9-15, rows 2-8
   room(9, 2, 7, 7);
 
-  // Sandra's Office (top, center-right): cols 17-23, rows 2-8
+  // Patrik's Office (top, center-right): cols 17-23, rows 2-8
   room(17, 2, 7, 7);
 
   // Doors (south wall -> upper horizontal corridor)
   map[8]![12] = D;  // BILLY door at south wall center
-  map[8]![20] = D;  // Sandra door at south wall center
+  map[8]![20] = D;  // Patrik door at south wall center
 
   // ============================================================================
   // UPPER HORIZONTAL CORRIDOR (rows 9-10, cols 1-30)
@@ -112,7 +119,7 @@ function buildTileMap(): TileType[][] {
   // SIDE OFFICES + WAR ROOM (rows 11-26)
   // ============================================================================
 
-  // Patrik's Office (upper-left): cols 1-7, rows 11-17
+  // Sandra's Office (upper-left): cols 1-7, rows 11-17
   room(1, 11, 7, 7);
 
   // Marcos's Office (upper-right): cols 24-30, rows 11-17
@@ -127,7 +134,7 @@ function buildTileMap(): TileType[][] {
   // Wendy's Office (lower-right): cols 24-30, rows 20-26
   room(24, 20, 7, 7);
 
-  // Patrik door on east wall -> left vertical corridor
+  // Sandra door on east wall -> left vertical corridor
   map[14]![7] = D;
 
   // Marcos door on west wall -> right vertical corridor
@@ -190,8 +197,8 @@ export const ROOMS: Room[] = [
     billyStandTile: { col: 13, row: 5 },
   },
   {
-    id: 'sandra',
-    name: "Sandra's Office",
+    id: 'patrik',
+    name: "Patrik's Office",
     tileRect: { col: 17, row: 2, width: 7, height: 7 },
     doorTile: { col: 20, row: 8 },
     seatTile: { col: 20, row: 5 },
@@ -206,8 +213,8 @@ export const ROOMS: Room[] = [
     billyStandTile: { col: 16, row: 15 },
   },
   {
-    id: 'patrik',
-    name: "Patrik's Office",
+    id: 'sandra',
+    name: "Sandra's Office",
     tileRect: { col: 1, row: 11, width: 7, height: 7 },
     doorTile: { col: 7, row: 14 },
     seatTile: { col: 4, row: 14 },
@@ -231,7 +238,7 @@ export const ROOMS: Room[] = [
   },
   {
     id: 'wendy',
-    name: "Wendy's Office",
+    name: "Wendy's Coaching Room",
     tileRect: { col: 24, row: 20, width: 7, height: 7 },
     doorTile: { col: 24, row: 23 },
     seatTile: { col: 27, row: 23 },
@@ -255,17 +262,19 @@ export interface FurnitureItem {
 /**
  * Furniture placement data for all rooms and hallway decorations.
  * Each room has at least a desk; hallways have environmental props.
+ *
+ * Standard office layout: desk (2-3 wide) + chair + personality item.
+ * Wendy's Coaching Room: couch + plants + secondary desk (coaching space, not corporate desk).
  */
 export const FURNITURE: FurnitureItem[] = [
-  // BILLY's Office (interior cols 10-14, rows 3-7)
+  // BILLY's Office (interior cols 10-14, rows 3-7) -- CEO corner
   { roomId: 'billy', type: 'desk', col: 11, row: 3, width: 3, height: 1 },
   { roomId: 'billy', type: 'chair', col: 12, row: 4, width: 1, height: 1 },
   { roomId: 'billy', type: 'bookshelf', col: 10, row: 3, width: 1, height: 2, renderHeight: 2 },
 
-  // Sandra's Office (interior cols 18-22, rows 3-7)
-  { roomId: 'sandra', type: 'desk', col: 19, row: 3, width: 2, height: 1 },
-  { roomId: 'sandra', type: 'chair', col: 20, row: 4, width: 1, height: 1 },
-  { roomId: 'sandra', type: 'artwork', col: 18, row: 3, width: 1, height: 1 },
+  // Patrik's Office (interior cols 18-22, rows 3-7) -- CFO, top-right adjacent to BILLY
+  { roomId: 'patrik', type: 'desk', col: 19, row: 3, width: 2, height: 1 },
+  { roomId: 'patrik', type: 'chair', col: 20, row: 4, width: 1, height: 1 },
 
   // War Room (interior cols 11-20, rows 13-21) -- portrait conference table centered
   { roomId: 'war-room', type: 'table', col: 14, row: 14, width: 4, height: 6 },
@@ -277,25 +286,27 @@ export const FURNITURE: FurnitureItem[] = [
   { roomId: 'war-room', type: 'chair', col: 18, row: 17, width: 1, height: 1 }, // right side, lower (Isaac)
   { roomId: 'war-room', type: 'chair', col: 16, row: 20, width: 1, height: 1 }, // south/foot (Wendy)
 
-  // Patrik's Office (interior cols 2-6, rows 12-16)
-  { roomId: 'patrik', type: 'desk', col: 3, row: 13, width: 2, height: 1 },
-  { roomId: 'patrik', type: 'chair', col: 4, row: 14, width: 1, height: 1 },
-  { roomId: 'patrik', type: 'bookshelf', col: 2, row: 12, width: 1, height: 2, renderHeight: 2 },
+  // Sandra's Office (interior cols 2-6, rows 12-16) -- Line Producer, upper-left
+  { roomId: 'sandra', type: 'desk', col: 3, row: 13, width: 2, height: 1 },
+  { roomId: 'sandra', type: 'chair', col: 4, row: 14, width: 1, height: 1 },
 
-  // Marcos's Office (interior cols 25-29, rows 12-16)
+  // Marcos's Office (interior cols 25-29, rows 12-16) -- Lawyer, upper-right
   { roomId: 'marcos', type: 'desk', col: 26, row: 13, width: 2, height: 1 },
   { roomId: 'marcos', type: 'chair', col: 27, row: 14, width: 1, height: 1 },
-  { roomId: 'marcos', type: 'plant', col: 29, row: 12, width: 1, height: 1 },
+  { roomId: 'marcos', type: 'bookshelf', col: 25, row: 12, width: 1, height: 2, renderHeight: 2 },
 
-  // Isaac's Office (interior cols 2-6, rows 21-25)
+  // Isaac's Office (interior cols 2-6, rows 21-25) -- Head of Development, lower-left
   { roomId: 'isaac', type: 'desk', col: 3, row: 22, width: 2, height: 1 },
   { roomId: 'isaac', type: 'chair', col: 4, row: 23, width: 1, height: 1 },
-  { roomId: 'isaac', type: 'bookshelf', col: 2, row: 21, width: 1, height: 2, renderHeight: 2 },
 
-  // Wendy's Office (interior cols 25-29, rows 21-25)
-  { roomId: 'wendy', type: 'desk', col: 26, row: 22, width: 2, height: 1 },
-  { roomId: 'wendy', type: 'chair', col: 27, row: 23, width: 1, height: 1 },
-  { roomId: 'wendy', type: 'plant', col: 29, row: 21, width: 1, height: 1 },
+  // Wendy's Coaching Room (interior cols 25-29, rows 21-25) -- Performance Coach, lower-right
+  // Non-standard layout: coaching space with couch as primary, desk pushed to wall
+  { roomId: 'wendy', type: 'couch', col: 26, row: 22, width: 2, height: 1 },      // comfortable coaching couch (primary)
+  { roomId: 'wendy', type: 'chair', col: 28, row: 23, width: 1, height: 1 },      // coaching chair facing couch
+  { roomId: 'wendy', type: 'desk', col: 29, row: 21, width: 1, height: 1 },       // small secondary desk pushed to wall
+  { roomId: 'wendy', type: 'plant', col: 25, row: 21, width: 1, height: 1 },      // plant 1 (warm feel)
+  { roomId: 'wendy', type: 'plant', col: 25, row: 25, width: 1, height: 1 },      // plant 2
+  { roomId: 'wendy', type: 'plant', col: 29, row: 25, width: 1, height: 1 },      // plant 3
 
   // Hallway decorations
   { roomId: 'hallway', type: 'plant', col: 8, row: 9, width: 1, height: 1 },
@@ -326,12 +337,12 @@ export const FURNITURE: FurnitureItem[] = [
  *   - Wendy at south/foot of table
  */
 export const WAR_ROOM_SEATS: Record<string, TileCoord> = {
-  billy:     { col: 15, row: 13 }, // head of table (north chair)
-  patrik:     { col: 13, row: 15 }, // left side, upper chair
-  sandra:     { col: 13, row: 17 }, // left side, lower chair
-  marcos:    { col: 18, row: 15 }, // right side, upper chair
+  billy:   { col: 15, row: 13 }, // head of table (north chair)
+  patrik:  { col: 13, row: 15 }, // left side, upper chair
+  sandra:  { col: 13, row: 17 }, // left side, lower chair
+  marcos:  { col: 18, row: 15 }, // right side, upper chair
   isaac:   { col: 18, row: 17 }, // right side, lower chair
-  wendy: { col: 16, row: 20 }, // foot of table (south chair)
+  wendy:   { col: 16, row: 20 }, // foot of table (south chair)
 };
 
 // -- Decoration Items ---------------------------------------------------------
@@ -348,34 +359,43 @@ export interface DecorationItem {
 }
 
 /**
- * Centralized decoration data.
- * Previously hardcoded in renderer.ts renderDecorations().
+ * Centralized decoration data -- role-appropriate personality items per office.
+ *
+ * BILLY:  CEO decor (framed award, monitor)
+ * Patrik: Financial charts on wall, calculator on desk, monitor showing numbers
+ * Sandra: Production schedule on wall, clipboard
+ * Marcos: Law books (bookshelf), legal documents on desk
+ * Isaac:  Script stacks, corkboard with project notes
+ * Wendy:  Motivational artwork, extra plants, cozy items
  */
 export const DECORATIONS: DecorationItem[] = [
-  // Patrik: financial chart on wall + monitor on desk
-  { roomId: 'patrik', key: 'patrik-chart', col: 2, row: 12 },
-  { roomId: 'patrik', key: 'patrik-monitor', col: 5, row: 13 },
+  // BILLY: CEO decor -- framed award + monitor on desk
+  { roomId: 'billy', key: 'artwork', col: 10, row: 3 },       // framed award on wall
+  { roomId: 'billy', key: 'monitor', col: 13, row: 3 },       // monitor on desk
+  { roomId: 'billy', key: 'plant', col: 14, row: 3 },         // small desk plant
 
-  // Marcos: law books on shelf
-  { roomId: 'marcos', key: 'marcos-lawbooks', col: 29, row: 12 },
+  // Patrik (CFO): financial charts + monitor showing numbers
+  { roomId: 'patrik', key: 'patrik-chart', col: 22, row: 3 }, // financial chart on wall
+  { roomId: 'patrik', key: 'patrik-monitor', col: 21, row: 3 }, // monitor with numbers on desk
+  { roomId: 'patrik', key: 'filing-cabinet', col: 18, row: 3 }, // filing cabinet (financial records)
 
-  // Sandra: 2x2 whiteboard on wall
-  { roomId: 'sandra', key: 'sandra-whiteboard-tl', col: 18, row: 3 },
-  { roomId: 'sandra', key: 'sandra-whiteboard-tr', col: 19, row: 3 },
-  { roomId: 'sandra', key: 'sandra-whiteboard-bl', col: 18, row: 4 },
-  { roomId: 'sandra', key: 'sandra-whiteboard-br', col: 19, row: 4 },
+  // Sandra (Line Producer): production schedule + clipboard
+  { roomId: 'sandra', key: 'sandra-schedule', col: 2, row: 12 }, // production schedule on wall
+  { roomId: 'sandra', key: 'whiteboard', col: 5, row: 12 },      // scheduling whiteboard
+  { roomId: 'sandra', key: 'post-it', col: 6, row: 13 },         // call sheet pinned up
 
-  // Isaac: filing cabinet
-  { roomId: 'isaac', key: 'filing-cabinet', col: 2, row: 21 },
+  // Marcos (Lawyer): law books + legal documents
+  { roomId: 'marcos', key: 'marcos-lawbooks', col: 29, row: 12 }, // law books on shelf
+  { roomId: 'marcos', key: 'filing-cabinet', col: 29, row: 14 }, // legal document filing
 
-  // Wendy: post-it clusters + extra plant
-  { roomId: 'wendy', key: 'post-it', col: 29, row: 22 },
-  { roomId: 'wendy', key: 'post-it', col: 25, row: 23 },
-  { roomId: 'wendy', key: 'plant', col: 25, row: 25 },
+  // Isaac (Head of Development): script stacks + corkboard
+  { roomId: 'isaac', key: 'isaac-scripts', col: 2, row: 21 },   // script stacks
+  { roomId: 'isaac', key: 'isaac-corkboard', col: 5, row: 21 }, // corkboard with project notes
+  { roomId: 'isaac', key: 'post-it', col: 6, row: 22 },         // development notes
 
-  // Billy: monitor on desk + small plant
-  { roomId: 'billy', key: 'monitor', col: 13, row: 3 },
-  { roomId: 'billy', key: 'plant', col: 14, row: 3 },
+  // Wendy (Performance Coach): motivational artwork + cozy items
+  { roomId: 'wendy', key: 'artwork', col: 27, row: 21 },         // motivational artwork on wall
+  { roomId: 'wendy', key: 'wendy-cushion', col: 28, row: 22 },   // comfort cushion near couch
 ];
 
 // -- Room Lookup --------------------------------------------------------------

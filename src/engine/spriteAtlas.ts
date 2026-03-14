@@ -112,12 +112,13 @@ export const ENVIRONMENT_ATLAS: Record<string, SpriteFrame> = {
  * Personality-specific decoration sprites for agent offices.
  */
 export const DECORATION_ATLAS: Record<string, SpriteFrame> = {
-  // Row 4: Personality items
-  'patrik-chart': makeFrame(0, 4),
-  'marcos-lawbooks': makeFrame(1, 4),
-  'sandra-whiteboard-tl': makeFrame(2, 4),
-  'sandra-whiteboard-tr': makeFrame(3, 4),
-  'sandra-whiteboard-bl': makeFrame(0, 5),
-  'sandra-whiteboard-br': makeFrame(1, 5),
-  'patrik-monitor': makeFrame(2, 5),
+  // Row 4: Agent personality items
+  'patrik-chart': makeFrame(0, 4),        // Patrik (CFO): financial chart on wall
+  'marcos-lawbooks': makeFrame(1, 4),     // Marcos (Lawyer): law books
+  'sandra-schedule': makeFrame(2, 4),     // Sandra (Line Producer): production schedule
+  'isaac-scripts': makeFrame(3, 4),       // Isaac (Development): script stacks
+  // Row 5: More personality items
+  'isaac-corkboard': makeFrame(0, 5),     // Isaac (Development): corkboard with notes
+  'patrik-monitor': makeFrame(1, 5),      // Patrik (CFO): monitor showing numbers
+  'wendy-cushion': makeFrame(2, 5),       // Wendy (Coach): comfort cushion
 };
