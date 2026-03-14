@@ -113,7 +113,7 @@ Plans:
 | 7. Agent Memory | v1.0 | 4/4 | Complete | 2026-03-13 |
 | 8. Polish | v1.0 | 3/3 | Complete | 2026-03-14 |
 | 9. Compact Layout | 3/3 | Complete   | 2026-03-14 | - |
-| 10. Rendering Pipeline | v1.1 | 2/2 | Complete | 2026-03-14 |
+| 10. Rendering Pipeline | v1.1 | Complete    | 2026-03-14 | 2026-03-14 |
 | 11. JRPG Sprite Integration | v1.1 | 0/? | Not started | - |
 | 12. Smooth Zoom | v1.1 | 0/? | Not started | - |
 | 13. Polish and UI | v1.1 | 0/? | Not started | - |
