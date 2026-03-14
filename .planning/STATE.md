@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Visual Overhaul
-status: completed
-stopped_at: Phase 11 context gathered
-last_updated: "2026-03-14T08:02:39.755Z"
-last_activity: 2026-03-14 — Y-sorted depth rendering + 3/4 wall strips (10-02)
+status: in-progress
+stopped_at: Completed 11-01-PLAN.md
+last_updated: "2026-03-14T15:23:19Z"
+last_activity: 2026-03-14 — Agent identity rename + persona prompts + office layout (11-01)
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
-  percent: 67
+  total_plans: 8
+  completed_plans: 6
+  percent: 75
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-14)
 
 **Core value:** Multi-perspective, context-aware AI advisory for complex production deals
-**Current focus:** Phase 10 - Rendering Pipeline (v1.1 Visual Overhaul)
+**Current focus:** Phase 11 - JRPG Sprite Integration (v1.1 Visual Overhaul)
 
 ## Current Position
 
-Phase: 10 of 13 (Rendering Pipeline)
-Plan: 2 of 2 in current phase
-Status: Phase 10 Complete
-Last activity: 2026-03-14 — Y-sorted depth rendering + 3/4 wall strips (10-02)
+Phase: 11 of 13 (JRPG Sprite Integration)
+Plan: 1 of 3 in current phase
+Status: Plan 11-01 Complete
+Last activity: 2026-03-14 — Agent identity rename + persona prompts + office layout (11-01)
 
-Progress: [██████░░░░] 67% (Phase 10) | 40% (v1.1 overall)
+Progress: [███████░░░] 75% (Phase 11) | 46% (v1.1 overall)
 
 ## Performance Metrics
 
@@ -47,6 +47,7 @@ Progress: [██████░░░░] 67% (Phase 10) | 40% (v1.1 overall)
 | 09    | 03   | 12min    | 2     | 1     |
 | 10    | 01   | 6min     | 2     | 8     |
 | 10    | 02   | 3min     | 2     | 3     |
+| 11    | 01   | 11min    | 3     | 61    |
 
 ## Accumulated Context
 
@@ -58,18 +59,16 @@ Recent decisions affecting current work:
 - [v1.1 Roadmap]: Build order — Layout > Renderer > Sprites > Zoom > Polish (dependency chain confirmed by all 4 research files)
 - [v1.1 Roadmap]: Zero new npm dependencies — all v1.1 capabilities achievable with existing Canvas 2D APIs
 - [09-01]: Grid dimensions 31x28 (adjusted from target ~28x24 to fit 4 bottom offices with vertical corridors)
-- [09-01]: Bottom row order Diana > Marcos > Roberto > Valentina (CFO-Counsel-Security-Ops workflow adjacency)
-- [09-01]: WAR_ROOM_SEATS includes billy (6 total seats), centralized in officeLayout.ts
-- [Phase 09]: GATHER_TIMEOUT_MS = 15s to prevent stuck isGathering state
-- [Phase 09]: SPEED_RAMP_TILES reduced from 8 to 4 for compact layout shorter paths
-- [09-03]: First-letter keyboard shortcuts (D,M,S,R,V,W,B) replace number keys for room navigation
+- [09-03]: First-letter keyboard shortcuts replace number keys for room navigation
 - [09-03]: Speed walk at 3.5x normal speed for keyboard nav (not teleport) to preserve spatial awareness
 - [10-01]: Draw source sprites at world coords via setTransform (option a) instead of pre-scaled cache
-- [10-01]: ZOOM_OVERVIEW_THRESHOLD = 1.5 separates overview from follow mode
-- [10-01]: Sprite cache quantized to nearest 0.5 zoom increment to bound cache size
-- [10-02]: Walls drawn in separate layer before Y-sort (thin strips with placeholder sprites don't need Y-sort until Phase 11)
 - [10-02]: buildRenderables takes render callbacks to decouple depth sorting from rendering details
-- [10-02]: Decorations included in Y-sort alongside furniture and characters
+- [11-01]: Agent rename: diana->patrik, sasha->sandra, roberto->isaac, valentina->wendy (marcos stays, title Counsel->Lawyer)
+- [11-01]: Patrik (CFO) top-right adjacent to BILLY for frequent financial consultations
+- [11-01]: Sandra (Producer) upper-left, Marcos (Lawyer) upper-right for budget/contract workflow
+- [11-01]: Wendy's coaching room: couch + 3 plants + secondary desk (non-standard layout)
+- [11-01]: War Room via '6' key (W now goes to Wendy)
+- [11-01]: Signature colors: Patrik=#8B5CF6, Sandra=#10B981, Isaac=#F59E0B, Wendy=#EC4899, Marcos=#3B82F6
 
 ### Pending Todos
 
@@ -83,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T08:02:39.753Z
-Stopped at: Phase 11 context gathered
-Resume file: .planning/phases/11-jrpg-sprite-integration/11-CONTEXT.md
+Last session: 2026-03-14T15:23:19Z
+Stopped at: Completed 11-01-PLAN.md
+Resume file: .planning/phases/11-jrpg-sprite-integration/11-01-SUMMARY.md

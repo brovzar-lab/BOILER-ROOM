@@ -34,13 +34,13 @@ Requirements for v1.1 Visual Overhaul. Each maps to roadmap phases.
 
 - [ ] **SPRT-01**: Characters render as 24x32 JRPG 3/4 sprites with foot-center anchoring on 16x16 grid
 - [ ] **SPRT-02**: Each character has 4 animation states (idle, walk, work, talk) with 4 directional walk sprites
-- [ ] **SPRT-03**: Characters have expressive faces, detailed outfit textures, hair detail, drop shadows
+- [x] **SPRT-03**: Characters have expressive faces, detailed outfit textures, hair detail, drop shadows
 - [ ] **SPRT-04**: Sprite pipeline supports easy asset swapping (drop in new PNGs without code changes)
 
 ### Environment
 
 - [ ] **ENV-01**: Floor tiles render as warm parquet with wood grain in 3/4 perspective
-- [ ] **ENV-02**: Furniture renders with visible front face and depth (desks with drawer panels, bookshelves with spines)
+- [x] **ENV-02**: Furniture renders with visible front face and depth (desks with drawer panels, bookshelves with spines)
 - [ ] **ENV-03**: Monitor screens glow with blue halo radiating onto desk and floor
 - [ ] **ENV-04**: Desk lamps emit warm amber glow circles onto surrounding floor
 - [ ] **ENV-05**: Area rugs visible under desks with woven geometric patterns
@@ -100,10 +100,10 @@ Deferred to future release.
 | ZOOM-05 | Phase 12 | Pending |
 | SPRT-01 | Phase 11 | Pending |
 | SPRT-02 | Phase 11 | Pending |
-| SPRT-03 | Phase 11 | Pending |
+| SPRT-03 | Phase 11 | Complete |
 | SPRT-04 | Phase 11 | Pending |
 | ENV-01 | Phase 11 | Pending |
-| ENV-02 | Phase 11 | Pending |
+| ENV-02 | Phase 11 | Complete |
 | ENV-03 | Phase 13 | Pending |
 | ENV-04 | Phase 13 | Pending |
 | ENV-05 | Phase 13 | Pending |
