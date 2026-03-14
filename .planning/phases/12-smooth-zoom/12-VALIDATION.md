@@ -38,13 +38,13 @@ created: 2026-03-14
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 12-01-01 | 01 | 1 | ZOOM-01 | unit | `npx vitest run src/engine/__tests__/zoomController.test.ts -t "wheel input"` | ❌ W0 | ⬜ pending |
-| 12-01-02 | 01 | 1 | ZOOM-02 | unit | `npx vitest run src/engine/__tests__/zoomController.test.ts -t "cursor centered"` | ❌ W0 | ⬜ pending |
-| 12-01-03 | 01 | 1 | ZOOM-03 | unit | `npx vitest run src/engine/__tests__/zoomController.test.ts -t "snap"` | ❌ W0 | ⬜ pending |
-| 12-02-01 | 02 | 1 | ZOOM-04 | unit | `npx vitest run src/engine/__tests__/spriteSheet.test.ts -t "quantized"` | ❌ W0 | ⬜ pending |
-| 12-02-02 | 02 | 1 | ZOOM-05 | unit | `npx vitest run src/engine/__tests__/gameLoop.test.ts -t "auto-fit"` | Partial | ⬜ pending |
+| 12-01-01 | 01 | 1 | ZOOM-01 | unit | `npx vitest run src/engine/__tests__/zoomController.test.ts -t "wheel input"` | W0 | pending |
+| 12-01-02 | 01 | 1 | ZOOM-02 | unit | `npx vitest run src/engine/__tests__/zoomController.test.ts -t "cursor centered"` | W0 | pending |
+| 12-01-03 | 01 | 1 | ZOOM-03 | unit | `npx vitest run src/engine/__tests__/zoomController.test.ts -t "snap"` | W0 | pending |
+| 12-01-04 | 01 | 1 | ZOOM-04 | unit | `npx vitest run src/engine/__tests__/spriteSheet.test.ts -t "quantized"` | W0 | pending |
+| 12-02-01 | 02 | 2 | ZOOM-05 | unit | `npx vitest run src/engine/__tests__/gameLoop.test.ts -t "auto-fit"` | Partial | pending |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+*Status: pending / green / red / flaky*
 
 ---
 
@@ -52,6 +52,8 @@ created: 2026-03-14
 
 - [ ] `src/engine/__tests__/zoomController.test.ts` — stubs for ZOOM-01, ZOOM-02, ZOOM-03 (wheel input, cursor-centered zoom, snap/settle)
 - [ ] `src/engine/__tests__/spriteSheet.test.ts` — stubs for ZOOM-04 (quantized cache keys)
+
+*Both Wave 0 test files are created by Plan 01 (Tasks 1 and 2).*
 
 *Existing `gameLoop.test.ts` partially covers ZOOM-05 (auto-fit).*
 
