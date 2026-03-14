@@ -427,6 +427,14 @@ describe('updateAllCharacters - War Room entry', () => {
           billyStandTile: { col: 9, row: 15 },
         },
       ],
+      WAR_ROOM_SEATS: {
+        billy:     { col: 20, row: 12 },
+        diana:     { col: 18, row: 13 },
+        marcos:    { col: 22, row: 13 },
+        sasha:     { col: 18, row: 15 },
+        roberto:   { col: 22, row: 15 },
+        valentina: { col: 20, row: 16 },
+      },
       OFFICE_TILE_MAP: tileMap,
       getRoomAtTile: (col: number, row: number) => {
         if (col >= 16 && col < 26 && row >= 11 && row < 21) {

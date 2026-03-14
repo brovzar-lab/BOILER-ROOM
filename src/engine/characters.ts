@@ -17,7 +17,7 @@ import {
 } from './types';
 import type { Character, Direction, TileCoord } from './types';
 import { findPath } from './tileMap';
-import { getRoomAtTile, ROOMS } from './officeLayout';
+import { getRoomAtTile, ROOMS, WAR_ROOM_SEATS } from './officeLayout';
 import { useOfficeStore } from '@/store/officeStore';
 import { getAudioManager } from './audioManager';
 
@@ -33,18 +33,8 @@ const KNOCK_DURATION = 0.5;
 /** All 5 agent IDs */
 const AGENT_IDS = ['diana', 'marcos', 'sasha', 'roberto', 'valentina'] as const;
 
-/**
- * Conference table seat tiles for the 5 agents.
- * Positioned adjacent to the 5x3 table at (18,14)-(22,16) within
- * the War Room interior (cols 17-24, rows 12-19).
- */
-export const WAR_ROOM_SEATS: Record<string, TileCoord> = {
-  diana:     { col: 19, row: 13 },  // top-left of table
-  marcos:    { col: 21, row: 13 },  // top-right of table
-  sasha:     { col: 17, row: 15 },  // left side of table
-  roberto:   { col: 23, row: 15 },  // right side of table
-  valentina: { col: 20, row: 17 },  // bottom-center of table
-};
+// Re-export for downstream consumers that import from characters.ts
+export { WAR_ROOM_SEATS } from './officeLayout';
 
 /** Whether agents are currently walking to the War Room (prevents re-triggering) */
 let isGathering = false;
@@ -262,9 +252,10 @@ export function updateAllCharacters(
       } else if (room.id === 'war-room') {
         // BILLY entered the War Room — skip knock, trigger gathering
         state.setActiveRoom('war-room');
-        gatherAgentsToWarRoom(tileMap);
-        // Reset dispersal flag since we are entering
+        // Reset both flags BEFORE calling gather to ensure re-entry always triggers fresh gathering
+        isGathering = false;
         hasDispersed = false;
+        gatherAgentsToWarRoom(tileMap);
       } else {
         // BILLY entered an agent's room — start knock pause
         knockTimers.set('billy', KNOCK_DURATION);
@@ -294,12 +285,21 @@ export function updateAllCharacters(
  * Returns a Promise that resolves when all agents are seated at their
  * assigned positions (state === 'idle', path empty, matching seat tile).
  */
+/** Maximum time (ms) to wait for agents to reach their War Room seats */
+const GATHER_TIMEOUT_MS = 15_000;
+
 export function gatherAgentsToWarRoom(tileMap: TileType[][]): Promise<void> {
   if (isGathering) return Promise.resolve();
   isGathering = true;
   hasDispersed = false;
 
   return new Promise((resolve) => {
+    // Walk BILLY to his seat at the head of the table
+    const billySeat = WAR_ROOM_SEATS['billy'];
+    if (billySeat) {
+      startWalk('billy', billySeat.col, billySeat.row, tileMap);
+    }
+
     AGENT_IDS.forEach((agentId, index) => {
       const delay = index * (500 + Math.random() * 500);
       setTimeout(() => {
@@ -307,6 +307,8 @@ export function gatherAgentsToWarRoom(tileMap: TileType[][]): Promise<void> {
         startWalk(agentId, seat.col, seat.row, tileMap);
       }, delay);
     });
+
+    const startTime = Date.now();
 
     // Poll for all agents seated at their War Room positions
     const checkInterval = setInterval(() => {
@@ -323,7 +325,7 @@ export function gatherAgentsToWarRoom(tileMap: TileType[][]): Promise<void> {
         );
       });
 
-      if (allSeated) {
+      if (allSeated || Date.now() - startTime >= GATHER_TIMEOUT_MS) {
         clearInterval(checkInterval);
         isGathering = false;
         resolve();
@@ -337,6 +339,8 @@ export function gatherAgentsToWarRoom(tileMap: TileType[][]): Promise<void> {
  * Fire-and-forget -- no Promise needed. Agents walk back in background.
  */
 export function disperseAgentsToOffices(tileMap: TileType[][]): void {
+  // Ensure gathering flag is cleared so re-entry can trigger fresh gathering
+  isGathering = false;
   AGENT_IDS.forEach((agentId, index) => {
     const delay = index * (300 + Math.random() * 400);
     setTimeout(() => {

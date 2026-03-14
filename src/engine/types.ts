@@ -22,8 +22,8 @@ export const WALK_SPEED = 64;
 /** Fast walk speed for long-distance traversals */
 export const WALK_SPEED_FAST = 128;
 
-/** Tile distance threshold before ramping to fast speed */
-export const SPEED_RAMP_TILES = 8;
+/** Tile distance threshold before ramping to fast speed (4 for compact layout) */
+export const SPEED_RAMP_TILES = 4;
 
 /** Seconds per walk animation frame */
 export const WALK_FRAME_DURATION = 0.15;
