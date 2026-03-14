@@ -64,18 +64,18 @@ describe('buildContext Layer 5 memory injection', () => {
     mockFacts = [
       {
         id: 'f1',
-        agentId: 'diana',
+        agentId: 'patrik',
         dealId: 'deal-1',
         category: 'financial',
         content: 'Budget is $2.4M USD',
         confidence: 'high',
-        sourceAgentId: 'diana',
+        sourceAgentId: 'patrik',
         createdAt: 1000,
         updatedAt: 2000,
       },
     ];
 
-    const result = buildContext('diana', messages);
+    const result = buildContext('patrik', messages);
     expect(result.systemPrompt).toContain('## Your Memory');
   });
 
@@ -83,29 +83,29 @@ describe('buildContext Layer 5 memory injection', () => {
     mockFacts = [
       {
         id: 'f1',
-        agentId: 'diana',
+        agentId: 'patrik',
         dealId: 'deal-1',
         category: 'financial',
         content: 'Budget is $2.4M USD',
         confidence: 'high',
-        sourceAgentId: 'diana',
+        sourceAgentId: 'patrik',
         createdAt: 1000,
         updatedAt: 2000,
       },
       {
         id: 'f2',
-        agentId: 'diana',
+        agentId: 'patrik',
         dealId: 'deal-1',
         category: 'decision',
         content: 'Agreed on 3-tranche waterfall',
         confidence: 'high',
-        sourceAgentId: 'diana',
+        sourceAgentId: 'patrik',
         createdAt: 1000,
         updatedAt: 1500,
       },
     ];
 
-    const result = buildContext('diana', messages);
+    const result = buildContext('patrik', messages);
     expect(result.systemPrompt).toContain('- [financial] Budget is $2.4M USD');
     expect(result.systemPrompt).toContain('- [decision] Agreed on 3-tranche waterfall');
   });
@@ -114,29 +114,29 @@ describe('buildContext Layer 5 memory injection', () => {
     mockFacts = [
       {
         id: 'f1',
-        agentId: 'diana',
+        agentId: 'patrik',
         dealId: 'deal-1',
         category: 'financial',
         content: 'Old fact',
         confidence: 'high',
-        sourceAgentId: 'diana',
+        sourceAgentId: 'patrik',
         createdAt: 1000,
         updatedAt: 1000,
       },
       {
         id: 'f2',
-        agentId: 'diana',
+        agentId: 'patrik',
         dealId: 'deal-1',
         category: 'decision',
         content: 'Recent fact',
         confidence: 'high',
-        sourceAgentId: 'diana',
+        sourceAgentId: 'patrik',
         createdAt: 1000,
         updatedAt: 3000,
       },
     ];
 
-    const result = buildContext('diana', messages);
+    const result = buildContext('patrik', messages);
     const recentIdx = result.systemPrompt.indexOf('Recent fact');
     const oldIdx = result.systemPrompt.indexOf('Old fact');
     expect(recentIdx).toBeGreaterThan(-1);
@@ -151,18 +151,18 @@ describe('buildContext Layer 5 memory injection', () => {
     for (let i = 0; i < 25; i++) {
       mockFacts.push({
         id: `f${i}`,
-        agentId: 'diana',
+        agentId: 'patrik',
         dealId: 'deal-1',
         category: 'financial',
         content: `Fact number ${i} ${padding}`,
         confidence: 'high',
-        sourceAgentId: 'diana',
+        sourceAgentId: 'patrik',
         createdAt: 1000,
         updatedAt: 5000 - i, // descending order
       });
     }
 
-    const result = buildContext('diana', messages);
+    const result = buildContext('patrik', messages);
     // Should not contain ALL 25 facts
     const factCount = (result.systemPrompt.match(/- \[financial\] Fact number/g) || []).length;
     expect(factCount).toBeLessThan(25);
@@ -186,22 +186,22 @@ describe('buildContext Layer 5 memory injection', () => {
       },
       {
         id: 'f2',
-        agentId: 'sasha',
+        agentId: 'sandra',
         dealId: 'deal-1',
         category: 'entity',
         content: 'Co-producer is Videocine',
         confidence: 'high',
-        sourceAgentId: 'sasha',
+        sourceAgentId: 'sandra',
         createdAt: 1000,
         updatedAt: 2000,
       },
     ];
 
-    const result = buildContext('diana', messages);
+    const result = buildContext('patrik', messages);
     expect(result.systemPrompt).toContain("## Other Advisors' Notes");
     expect(result.systemPrompt).toContain('### Marcos');
     expect(result.systemPrompt).toContain('- [risk] Currency risk on MXN/USD');
-    expect(result.systemPrompt).toContain('### Sasha');
+    expect(result.systemPrompt).toContain('### Sandra');
     expect(result.systemPrompt).toContain('- [entity] Co-producer is Videocine');
   });
 
@@ -223,7 +223,7 @@ describe('buildContext Layer 5 memory injection', () => {
       });
     }
 
-    const result = buildContext('diana', messages);
+    const result = buildContext('patrik', messages);
     const crossFactCount = (result.systemPrompt.match(/- \[financial\] Cross fact/g) || []).length;
     expect(crossFactCount).toBeLessThan(25);
     expect(crossFactCount).toBeGreaterThan(0);
@@ -232,7 +232,7 @@ describe('buildContext Layer 5 memory injection', () => {
   it('includes no memory block when agent has zero facts', () => {
     mockFacts = [];
 
-    const result = buildContext('diana', messages);
+    const result = buildContext('patrik', messages);
     expect(result.systemPrompt).not.toContain('## Your Memory');
     expect(result.systemPrompt).not.toContain("## Other Advisors' Notes");
   });

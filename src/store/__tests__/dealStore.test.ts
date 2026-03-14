@@ -203,7 +203,7 @@ describe('dealStore CRUD', () => {
 
     // Mock conversations belonging to this deal
     const convs = [
-      { id: 'conv-1', agentId: 'diana', dealId, messages: [] },
+      { id: 'conv-1', agentId: 'patrik', dealId, messages: [] },
       { id: 'conv-2', agentId: 'marcos', dealId, messages: [] },
     ];
     mockPersistence.query.mockResolvedValueOnce(convs);
@@ -248,7 +248,7 @@ describe('migrateConversationsToDeals', () => {
     mockPersistence.getAll
       .mockResolvedValueOnce([]) // deals
       .mockResolvedValueOnce([   // conversations without dealId
-        { id: 'conv-1', agentId: 'diana', messages: [] },
+        { id: 'conv-1', agentId: 'patrik', messages: [] },
         { id: 'conv-2', agentId: 'marcos', messages: [] },
       ]);
 
@@ -270,7 +270,7 @@ describe('migrateConversationsToDeals', () => {
     mockPersistence.getAll
       .mockResolvedValueOnce([{ id: 'deal-1', name: 'Existing' }]) // deals exist
       .mockResolvedValueOnce([
-        { id: 'conv-1', agentId: 'diana', dealId: 'deal-1', messages: [] },
+        { id: 'conv-1', agentId: 'patrik', dealId: 'deal-1', messages: [] },
       ]);
 
     await migrateConversationsToDeals();

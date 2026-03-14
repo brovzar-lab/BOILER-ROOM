@@ -2,11 +2,13 @@ import { useEffect, useRef, useCallback, useMemo } from 'react';
 import type { AgentId } from '@/types/agent';
 import { useChatStore } from '@/store/chatStore';
 import { useDealStore } from '@/store/dealStore';
+import { useFileStore } from '@/store/fileStore';
 import { useOfficeStore } from '@/store/officeStore';
 import { sendStreamingMessage } from '@/services/anthropic/stream';
 import { buildContext } from '@/services/context/builder';
 import { summarizeConversation } from '@/services/context/summarizer';
 import { extractAndStoreMemory } from '@/services/memory/extractMemory';
+import { parseDealAction } from '@/services/actions/parseDealAction';
 import { SUMMARIZE_THRESHOLD, TOKEN_LIMITS, DEFAULT_MODEL } from '@/services/context/tokenCounter';
 
 /**
@@ -15,7 +17,7 @@ import { SUMMARIZE_THRESHOLD, TOKEN_LIMITS, DEFAULT_MODEL } from '@/services/con
  * Returns everything the ChatPanel needs: messages, streaming state,
  * error state, and action handlers (send, cancel, retry, clearError).
  */
-export function useChat(agentId: AgentId = 'diana') {
+export function useChat(agentId: AgentId = 'patrik') {
   const initializedRef = useRef(false);
   const prevKeyRef = useRef<string>('');
 
@@ -52,7 +54,7 @@ export function useChat(agentId: AgentId = 'diana') {
   const error = storeError;
 
   /**
-   * Send a user message and stream Diana's response.
+   * Send a user message and stream Patrik's response.
    */
   const sendMessage = useCallback(
     async (content: string) => {
@@ -115,6 +117,41 @@ export function useChat(agentId: AgentId = 'diana') {
               role: 'assistant',
               content: fullContent,
             });
+
+            // Handle deal creation action if agent emitted the sentinel
+            const dealAction = parseDealAction(fullContent);
+            if (dealAction) {
+              const dealStore = useDealStore.getState();
+              const fileStore = useFileStore.getState();
+              const oldDealId = dealStore.activeDealId;
+
+              // Create the new deal
+              const newDealId = await dealStore.createDeal(dealAction.name, dealAction.description);
+
+              // Migrate the current conversation to the new deal BEFORE switching,
+              // so loadConversations (triggered by switchDeal) finds it and the
+              // chat history is preserved.
+              const { getPersistence } = await import('@/services/persistence/adapter');
+              const persistence = getPersistence();
+              const currentConv = useChatStore.getState().conversations[convId];
+              if (currentConv) {
+                const updatedConv = { ...currentConv, dealId: newDealId, messages: [] };
+                await persistence.set('conversations', convId, updatedConv);
+              }
+
+              // Move current agent's files from old deal to new deal
+              if (oldDealId) {
+                const fileIds = fileStore.files
+                  .filter((f) => f.agentId === agentId && f.dealId === oldDealId)
+                  .map((f) => f.id);
+                if (fileIds.length > 0) {
+                  await fileStore.reassignFilesToDeal(fileIds, newDealId);
+                }
+              }
+
+              // Switch to the new deal — loadConversations will now find the migrated conversation
+              await dealStore.switchDeal(newDealId);
+            }
 
             // Fire-and-forget memory extraction (non-blocking, non-fatal)
             const currentDealId = useDealStore.getState().activeDealId ?? 'default';

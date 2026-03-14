@@ -15,11 +15,11 @@ export const PLACEHOLDER_COLORS: Record<string, string> = {
   door: '#7a7268',
   hallway: '#584f48',
   billy: '#e8a838',
-  diana: '#c084fc',
+  patrik: '#c084fc',
   marcos: '#60a5fa',
-  sasha: '#34d399',
-  roberto: '#f87171',
-  valentina: '#fb923c',
+  sandra: '#34d399',
+  isaac: '#f87171',
+  wendy: '#fb923c',
   'war-room-floor': '#4a5060',
 };
 

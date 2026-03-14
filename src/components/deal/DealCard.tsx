@@ -4,7 +4,7 @@ import { agents } from '@/config/agents';
 import type { AgentId } from '@/types/agent';
 import { DealActions } from './DealActions';
 
-const AGENT_IDS: AgentId[] = ['diana', 'marcos', 'sasha', 'roberto', 'valentina'];
+const AGENT_IDS: AgentId[] = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
 
 /**
  * Formats a timestamp into a relative time string (e.g., "2m ago", "1h ago").

@@ -1,4 +1,4 @@
-export type AgentId = 'diana' | 'marcos' | 'sasha' | 'roberto' | 'valentina';
+export type AgentId = 'patrik' | 'marcos' | 'sandra' | 'isaac' | 'wendy';
 export type AgentStatus = 'idle' | 'thinking' | 'needs-attention';
 
 export interface AgentPersona {

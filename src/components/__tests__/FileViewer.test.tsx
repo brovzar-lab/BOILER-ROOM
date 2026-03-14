@@ -27,7 +27,7 @@ vi.mock('@/store/fileStore', () => {
 // Mock the agent registry
 vi.mock('@/config/agents', () => ({
   getAgent: (id: string) => {
-    if (id === 'diana') return { name: 'Diana', title: 'VP of M&A', color: '#e8b931' };
+    if (id === 'patrik') return { name: 'Patrik', title: 'VP of M&A', color: '#e8b931' };
     return undefined;
   },
 }));
@@ -37,7 +37,7 @@ const TEST_FILE: FileRecord = {
   name: 'deal-memo.pdf',
   size: 245760, // 240 KB
   type: 'pdf',
-  agentId: 'diana',
+  agentId: 'patrik',
   dealId: 'deal-1',
   extractedText: 'This is the extracted text from the PDF document.',
   uploadedAt: new Date('2026-03-10').getTime(),
@@ -61,7 +61,7 @@ describe('FileViewer', () => {
     // File size (245760 bytes = 240.0 KB)
     expect(screen.getByText('240.0 KB')).toBeTruthy();
     // Agent name
-    expect(screen.getByText('Diana')).toBeTruthy();
+    expect(screen.getByText('Patrik')).toBeTruthy();
     // Type badge
     expect(screen.getByText('PDF')).toBeTruthy();
     // Extracted text

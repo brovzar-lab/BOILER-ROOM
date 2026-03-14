@@ -1,3 +1,4 @@
+import { useShallow } from 'zustand/react/shallow';
 import { useMemoryStore } from '@/store/memoryStore';
 import { useDealStore } from '@/store/dealStore';
 import { getAgent } from '@/config/agents';
@@ -71,8 +72,8 @@ function groupByCategory(facts: MemoryFact[]): Map<MemoryCategory, MemoryFact[]>
  */
 export function MemoryPanel({ agentId, onClose }: MemoryPanelProps) {
   const activeDealId = useDealStore((s) => s.activeDealId);
-  const facts = useMemoryStore((s) =>
-    s.facts.filter((f) => f.agentId === agentId && f.dealId === activeDealId)
+  const facts = useMemoryStore(
+    useShallow((s) => s.facts.filter((f) => f.agentId === agentId && f.dealId === activeDealId))
   );
   const isExtracting = useMemoryStore((s) => s.isExtracting);
 

@@ -36,7 +36,7 @@ const BG_COLOR = '#0d0b09';
 const LABEL_FONT_SIZE = 10;
 
 /** Agent room IDs (excludes war-room and billy) */
-const AGENT_ROOM_IDS = new Set<string>(['diana', 'marcos', 'sasha', 'roberto', 'valentina']);
+const AGENT_ROOM_IDS = new Set<string>(['patrik', 'marcos', 'sandra', 'isaac', 'wendy']);
 
 /** Currently hovered file ID -- set during renderFileIcons, read by input.ts */
 export let hoveredFileId: string | null = null;

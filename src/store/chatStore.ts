@@ -4,15 +4,15 @@ import type { Conversation, Message, StreamingState, WarRoomAgentStream } from '
 import { getPersistence } from '@/services/persistence/adapter';
 import { useDealStore } from '@/store/dealStore';
 
-const AGENT_IDS: AgentId[] = ['diana', 'marcos', 'sasha', 'roberto', 'valentina'];
+const AGENT_IDS: AgentId[] = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
 
 function createEmptyWarRoomStreaming(): Record<AgentId, WarRoomAgentStream> {
   return {
-    diana: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' },
+    patrik: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' },
     marcos: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' },
-    sasha: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' },
-    roberto: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' },
-    valentina: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' },
+    sandra: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' },
+    isaac: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' },
+    wendy: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' },
   };
 }
 

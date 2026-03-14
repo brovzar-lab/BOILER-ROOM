@@ -8,7 +8,7 @@ import { getAudioManager } from '@/engine/audioManager';
 import type { AgentId, AgentStatus } from '@/types/agent';
 
 /** Agent IDs that correspond to valid agent rooms. */
-const AGENT_IDS: AgentId[] = ['diana', 'marcos', 'sasha', 'roberto', 'valentina'];
+const AGENT_IDS: AgentId[] = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
 
 function isAgentId(id: string | null): id is AgentId {
   return id !== null && AGENT_IDS.includes(id as AgentId);

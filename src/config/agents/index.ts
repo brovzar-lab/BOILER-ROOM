@@ -1,19 +1,19 @@
-import { dianaPersona } from './diana';
+import { patrikPersona } from './patrik';
 import { marcosPersona } from './marcos';
-import { sashaPersona } from './sasha';
-import { robertoPersona } from './roberto';
-import { valentinaPersona } from './valentina';
+import { sandraPersona } from './sandra';
+import { isaacPersona } from './isaac';
+import { wendyPersona } from './wendy';
 import type { AgentId } from '@/types/agent';
 
-type PersonaConfig = typeof dianaPersona;
+type PersonaConfig = typeof patrikPersona;
 
-// All 5 agents registered as of Phase 3.
+// All 5 agents registered as of Phase 11.
 export const agents: Record<AgentId, PersonaConfig> = {
-  diana: dianaPersona,
+  patrik: patrikPersona,
   marcos: marcosPersona,
-  sasha: sashaPersona,
-  roberto: robertoPersona,
-  valentina: valentinaPersona,
+  sandra: sandraPersona,
+  isaac: isaacPersona,
+  wendy: wendyPersona,
 };
 
 /**

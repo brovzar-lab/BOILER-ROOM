@@ -242,7 +242,7 @@ describe('renderDropZoneHighlight', () => {
   });
 
   it('draws amber dashed border on desk area when dragOverRoomId is set to valid agent', () => {
-    mockDragOverRoomId = 'diana';
+    mockDragOverRoomId = 'patrik';
 
     const zoom = 2;
     renderDropZoneHighlight(ctx, zoom, 0, 0, 800, 600);
@@ -306,7 +306,7 @@ describe('renderFileIcons', () => {
 
   it('renders file icons when files exist for an agent', () => {
     mockFiles = [
-      { id: 'f1', name: 'contract.pdf', size: 1000, type: 'pdf', agentId: 'diana', dealId: 'deal-1', extractedText: 'text', uploadedAt: 1000 },
+      { id: 'f1', name: 'contract.pdf', size: 1000, type: 'pdf', agentId: 'patrik', dealId: 'deal-1', extractedText: 'text', uploadedAt: 1000 },
     ];
 
     const zoom = 2;
@@ -334,7 +334,7 @@ describe('renderFileIcons', () => {
 
   it('PDF icons get red header bar color', () => {
     mockFiles = [
-      { id: 'f1', name: 'contract.pdf', size: 1000, type: 'pdf', agentId: 'diana', dealId: 'deal-1', extractedText: 'text', uploadedAt: 1000 },
+      { id: 'f1', name: 'contract.pdf', size: 1000, type: 'pdf', agentId: 'patrik', dealId: 'deal-1', extractedText: 'text', uploadedAt: 1000 },
     ];
 
     const zoom = 2;
@@ -353,7 +353,7 @@ describe('renderFileIcons', () => {
 
   it('DOCX icons get blue header bar color', () => {
     mockFiles = [
-      { id: 'f1', name: 'report.docx', size: 1000, type: 'docx', agentId: 'diana', dealId: 'deal-1', extractedText: 'text', uploadedAt: 1000 },
+      { id: 'f1', name: 'report.docx', size: 1000, type: 'docx', agentId: 'patrik', dealId: 'deal-1', extractedText: 'text', uploadedAt: 1000 },
     ];
 
     const zoom = 2;
@@ -379,7 +379,7 @@ describe('renderFileIcons', () => {
         name: `doc${i}.pdf`,
         size: 1000,
         type: 'pdf',
-        agentId: 'diana',
+        agentId: 'patrik',
         dealId: 'deal-1',
         extractedText: 'text',
         uploadedAt: i * 1000,
@@ -402,7 +402,7 @@ describe('renderFileIcons', () => {
         name: `doc${i}.pdf`,
         size: 1000,
         type: 'pdf',
-        agentId: 'diana',
+        agentId: 'patrik',
         dealId: 'deal-1',
         extractedText: 'text',
         uploadedAt: i * 1000,

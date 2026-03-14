@@ -5,7 +5,7 @@ import type { AgentId } from '@/types/agent';
 import { DealCard } from './DealCard';
 import { CreateDealForm } from './CreateDealForm';
 
-const AGENT_IDS: AgentId[] = ['diana', 'marcos', 'sasha', 'roberto', 'valentina'];
+const AGENT_IDS: AgentId[] = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
 
 interface DealSidebarProps {
   isOpen: boolean;

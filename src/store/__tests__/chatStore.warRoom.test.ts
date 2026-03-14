@@ -34,10 +34,10 @@ describe('chatStore War Room multi-stream state', () => {
     const store = useChatStore.getState();
     const controller = new AbortController();
 
-    store.startWarRoomStream('diana', controller);
+    store.startWarRoomStream('patrik', controller);
 
     const state = useChatStore.getState();
-    expect(state.warRoomStreaming.diana).toEqual({
+    expect(state.warRoomStreaming.patrik).toEqual({
       isStreaming: true,
       currentContent: '',
       error: null,
@@ -51,12 +51,12 @@ describe('chatStore War Room multi-stream state', () => {
     const controller1 = new AbortController();
     const controller2 = new AbortController();
 
-    store.startWarRoomStream('diana', controller1);
+    store.startWarRoomStream('patrik', controller1);
     store.startWarRoomStream('marcos', controller2);
-    store.updateWarRoomContent('diana', 'hello');
+    store.updateWarRoomContent('patrik', 'hello');
 
     const state = useChatStore.getState();
-    expect(state.warRoomStreaming.diana.currentContent).toBe('hello');
+    expect(state.warRoomStreaming.patrik.currentContent).toBe('hello');
     expect(state.warRoomStreaming.marcos.currentContent).toBe('');
   });
 
@@ -64,26 +64,26 @@ describe('chatStore War Room multi-stream state', () => {
     const store = useChatStore.getState();
     const controller = new AbortController();
 
-    store.startWarRoomStream('diana', controller);
-    store.completeWarRoomStream('diana');
+    store.startWarRoomStream('patrik', controller);
+    store.completeWarRoomStream('patrik');
 
     const state = useChatStore.getState();
-    expect(state.warRoomStreaming.diana.status).toBe('complete');
-    expect(state.warRoomStreaming.diana.isStreaming).toBe(false);
-    expect(state.warRoomStreaming.diana.abortController).toBeNull();
+    expect(state.warRoomStreaming.patrik.status).toBe('complete');
+    expect(state.warRoomStreaming.patrik.isStreaming).toBe(false);
+    expect(state.warRoomStreaming.patrik.abortController).toBeNull();
   });
 
   it('Test 4: failWarRoomStream sets status to error and error message', () => {
     const store = useChatStore.getState();
     const controller = new AbortController();
 
-    store.startWarRoomStream('diana', controller);
-    store.failWarRoomStream('diana', 'Rate limited');
+    store.startWarRoomStream('patrik', controller);
+    store.failWarRoomStream('patrik', 'Rate limited');
 
     const state = useChatStore.getState();
-    expect(state.warRoomStreaming.diana.status).toBe('error');
-    expect(state.warRoomStreaming.diana.error).toBe('Rate limited');
-    expect(state.warRoomStreaming.diana.isStreaming).toBe(false);
+    expect(state.warRoomStreaming.patrik.status).toBe('error');
+    expect(state.warRoomStreaming.patrik.error).toBe('Rate limited');
+    expect(state.warRoomStreaming.patrik.isStreaming).toBe(false);
   });
 
   it('Test 5: cancelAllWarRoomStreams aborts all active controllers and resets', () => {
@@ -96,9 +96,9 @@ describe('chatStore War Room multi-stream state', () => {
     const controller2 = new AbortController();
     const controller3 = new AbortController();
 
-    store.startWarRoomStream('diana', controller1);
+    store.startWarRoomStream('patrik', controller1);
     store.startWarRoomStream('marcos', controller2);
-    store.startWarRoomStream('sasha', controller3);
+    store.startWarRoomStream('sandra', controller3);
 
     // Verify controllers are active before cancel
     expect(controller1.signal.aborted).toBe(false);
@@ -116,7 +116,7 @@ describe('chatStore War Room multi-stream state', () => {
     expect(state.isWarRoomMode).toBe(false);
 
     // All streams should be reset to idle
-    const agents: AgentId[] = ['diana', 'marcos', 'sasha', 'roberto', 'valentina'];
+    const agents: AgentId[] = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
     for (const agentId of agents) {
       expect(state.warRoomStreaming[agentId].status).toBe('idle');
       expect(state.warRoomStreaming[agentId].isStreaming).toBe(false);
@@ -139,15 +139,15 @@ describe('chatStore War Room multi-stream state', () => {
     const controller = new AbortController();
 
     // Start a stream first
-    store.startWarRoomStream('diana', controller);
-    store.updateWarRoomContent('diana', 'old content');
+    store.startWarRoomStream('patrik', controller);
+    store.updateWarRoomContent('patrik', 'old content');
 
     // Activate war room mode - should reset streaming
     store.setWarRoomMode(true, 1);
 
     const state = useChatStore.getState();
-    expect(state.warRoomStreaming.diana.currentContent).toBe('');
-    expect(state.warRoomStreaming.diana.status).toBe('idle');
+    expect(state.warRoomStreaming.patrik.currentContent).toBe('');
+    expect(state.warRoomStreaming.patrik.status).toBe('idle');
   });
 
   it('Test 7: Message type accepts optional source field', () => {
@@ -191,17 +191,17 @@ describe('chatStore War Room multi-stream state', () => {
     const controller1 = new AbortController();
     const controller2 = new AbortController();
 
-    store.startWarRoomStream('diana', controller1);
+    store.startWarRoomStream('patrik', controller1);
     store.startWarRoomStream('marcos', controller2);
-    store.updateWarRoomContent('diana', 'Diana response text');
+    store.updateWarRoomContent('patrik', 'Patrik response text');
     store.updateWarRoomContent('marcos', 'Marcos response text');
-    store.completeWarRoomStream('diana');
+    store.completeWarRoomStream('patrik');
     store.completeWarRoomStream('marcos');
 
     store.saveWarRoomLastResponses();
 
     const state = useChatStore.getState();
-    expect(state.warRoomLastResponses.diana).toBe('Diana response text');
+    expect(state.warRoomLastResponses.patrik).toBe('Patrik response text');
     expect(state.warRoomLastResponses.marcos).toBe('Marcos response text');
   });
 
@@ -209,13 +209,13 @@ describe('chatStore War Room multi-stream state', () => {
     const store = useChatStore.getState();
     const controller = new AbortController();
 
-    store.startWarRoomStream('diana', controller);
-    store.updateWarRoomContent('diana', 'content');
+    store.startWarRoomStream('patrik', controller);
+    store.updateWarRoomContent('patrik', 'content');
 
     store.resetWarRoomStreaming();
 
     const state = useChatStore.getState();
-    const agents: AgentId[] = ['diana', 'marcos', 'sasha', 'roberto', 'valentina'];
+    const agents: AgentId[] = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
     for (const agentId of agents) {
       expect(state.warRoomStreaming[agentId].status).toBe('idle');
       expect(state.warRoomStreaming[agentId].isStreaming).toBe(false);

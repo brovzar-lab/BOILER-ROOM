@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import type { Message } from '@/types/chat';
 import { WarRoomBadge } from './WarRoomBadge';
+import { parseDealAction, stripDealAction } from '@/services/actions/parseDealAction';
 
 interface MessageBubbleProps {
   message: Message;
@@ -14,10 +15,10 @@ interface MessageBubbleProps {
  * Individual message display with markdown rendering.
  *
  * User messages: right-aligned with amber tint.
- * Assistant messages: left-aligned on dark card with "Diana" label.
+ * Assistant messages: left-aligned on dark card with "Patrik" label.
  * Summary messages: collapsed with subtle visual indicator.
  */
-export const MessageBubble = memo(function MessageBubble({ message, agentName = 'Diana' }: MessageBubbleProps) {
+export const MessageBubble = memo(function MessageBubble({ message, agentName = 'Patrik' }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const isSummary = message.isSummary === true;
 
@@ -63,6 +64,10 @@ export const MessageBubble = memo(function MessageBubble({ message, agentName = 
 
   const isWarRoom = message.source === 'war-room';
 
+  // Check for deal creation sentinel in assistant messages
+  const dealAction = !isUser && !isSummary ? parseDealAction(message.content) : null;
+  const visibleContent = dealAction ? stripDealAction(message.content) : message.content;
+
   // Assistant message
   return (
     <div className="flex justify-start mb-4">
@@ -73,9 +78,25 @@ export const MessageBubble = memo(function MessageBubble({ message, agentName = 
         </div>
         <div className="rounded-lg px-4 py-3 bg-[--color-surface-card] border border-[--color-surface-border]">
           <div className="prose prose-invert prose-sm max-w-none">
-            <MarkdownContent content={message.content} />
+            <MarkdownContent content={visibleContent} />
           </div>
         </div>
+
+        {/* Deal Created confirmation card */}
+        {dealAction && (
+          <div className="mt-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 flex items-start gap-3">
+            <span className="text-xl leading-none mt-0.5">📁</span>
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-0.5">Deal Created</div>
+              <div className="text-sm font-bold text-neutral-100 truncate">{dealAction.name}</div>
+              {dealAction.description && (
+                <div className="text-xs text-neutral-400 mt-0.5 leading-snug">{dealAction.description}</div>
+              )}
+              <div className="text-[10px] text-amber-500 mt-1 font-medium">Now active · files moved</div>
+            </div>
+          </div>
+        )}
+
         <div className="text-xs text-[--color-text-muted] mt-1">
           {timestamp}
         </div>

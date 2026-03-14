@@ -68,11 +68,11 @@ export const useOfficeStore = create<OfficeState>((set) => ({
 
   // All 5 agents start idle
   agentStatuses: {
-    diana: 'idle',
+    patrik: 'idle',
     marcos: 'idle',
-    sasha: 'idle',
-    roberto: 'idle',
-    valentina: 'idle',
+    sandra: 'idle',
+    isaac: 'idle',
+    wendy: 'idle',
   },
 
   // Actions
@@ -108,7 +108,7 @@ export const useOfficeStore = create<OfficeState>((set) => ({
       );
 
       // 5 agents at their respective seats
-      const agentIds = ['diana', 'marcos', 'sasha', 'roberto', 'valentina'];
+      const agentIds = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
       for (const agentId of agentIds) {
         const room = ROOMS.find((r) => r.id === agentId);
         if (room) {

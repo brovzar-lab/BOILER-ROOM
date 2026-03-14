@@ -44,7 +44,7 @@ vi.mock('@/store/memoryStore', () => {
 // Mock agents
 vi.mock('@/config/agents', () => ({
   getAgent: (id: string) => {
-    if (id === 'diana') return { name: 'Diana', title: 'VP of M&A', color: '#e8b931' };
+    if (id === 'patrik') return { name: 'Patrik', title: 'VP of M&A', color: '#e8b931' };
     return undefined;
   },
 }));
@@ -54,29 +54,29 @@ const NOW = Date.now();
 const TEST_FACTS: MemoryFact[] = [
   {
     id: 'fact-1',
-    agentId: 'diana',
+    agentId: 'patrik',
     dealId: 'deal-1',
     category: 'financial',
     content: 'Budget is $2.4M USD',
     confidence: 'high',
-    sourceAgentId: 'diana',
+    sourceAgentId: 'patrik',
     createdAt: NOW - 120_000, // 2 min ago
     updatedAt: NOW - 120_000,
   },
   {
     id: 'fact-2',
-    agentId: 'diana',
+    agentId: 'patrik',
     dealId: 'deal-1',
     category: 'financial',
     content: 'EFICINE tax credit is 35%',
     confidence: 'medium',
-    sourceAgentId: 'diana',
+    sourceAgentId: 'patrik',
     createdAt: NOW - 60_000, // 1 min ago
     updatedAt: NOW - 60_000,
   },
   {
     id: 'fact-3',
-    agentId: 'diana',
+    agentId: 'patrik',
     dealId: 'deal-1',
     category: 'date',
     content: 'Principal photography starts June 15',
@@ -87,12 +87,12 @@ const TEST_FACTS: MemoryFact[] = [
   },
   {
     id: 'fact-4',
-    agentId: 'diana',
+    agentId: 'patrik',
     dealId: 'deal-1',
     category: 'decision',
     content: 'Proceed with 3-tranche waterfall',
     confidence: 'high',
-    sourceAgentId: 'diana',
+    sourceAgentId: 'patrik',
     createdAt: NOW - 7200_000, // 2 hr ago
     updatedAt: NOW - 7200_000,
   },
@@ -112,7 +112,7 @@ describe('MemoryPanel', () => {
   });
 
   it('renders facts grouped by category with category headers', () => {
-    render(<MemoryPanel agentId="diana" onClose={vi.fn()} />);
+    render(<MemoryPanel agentId="patrik" onClose={vi.fn()} />);
 
     // Should have category headers for financial, date, decision
     expect(screen.getByText(/financial/i)).toBeTruthy();
@@ -127,7 +127,7 @@ describe('MemoryPanel', () => {
   });
 
   it('shows confidence badges with correct colors (high=green, medium=amber, low=red)', () => {
-    render(<MemoryPanel agentId="diana" onClose={vi.fn()} />);
+    render(<MemoryPanel agentId="patrik" onClose={vi.fn()} />);
 
     // Find all confidence badges
     const highBadges = screen.getAllByText('high');
@@ -146,7 +146,7 @@ describe('MemoryPanel', () => {
   });
 
   it('delete button calls memoryStore.removeFact with fact id', () => {
-    render(<MemoryPanel agentId="diana" onClose={vi.fn()} />);
+    render(<MemoryPanel agentId="patrik" onClose={vi.fn()} />);
 
     // Find delete buttons
     const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
@@ -161,7 +161,7 @@ describe('MemoryPanel', () => {
 
   it('close button calls onClose callback', () => {
     const onClose = vi.fn();
-    render(<MemoryPanel agentId="diana" onClose={onClose} />);
+    render(<MemoryPanel agentId="patrik" onClose={onClose} />);
 
     const closeButton = screen.getByRole('button', { name: /close/i });
     fireEvent.click(closeButton);
@@ -171,7 +171,7 @@ describe('MemoryPanel', () => {
 
   it('shows "No memories yet" message when there are no facts', () => {
     setupFacts([]);
-    render(<MemoryPanel agentId="diana" onClose={vi.fn()} />);
+    render(<MemoryPanel agentId="patrik" onClose={vi.fn()} />);
 
     // Verify empty state includes message with agent name
     expect(screen.getByText(/no memories yet/i)).toBeTruthy();

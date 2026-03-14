@@ -39,7 +39,7 @@ describe('extractAndStoreMemory', () => {
     });
 
     const { extractAndStoreMemory } = await import('@/services/memory/extractMemory');
-    await extractAndStoreMemory('diana', 'What is the budget?', 'The budget is $2M.', 'deal-1');
+    await extractAndStoreMemory('patrik', 'What is the budget?', 'The budget is $2M.', 'deal-1');
 
     expect(mockCreate).toHaveBeenCalledTimes(1);
     const call = mockCreate.mock.calls[0]![0];
@@ -60,16 +60,16 @@ describe('extractAndStoreMemory', () => {
     });
 
     const { extractAndStoreMemory } = await import('@/services/memory/extractMemory');
-    await extractAndStoreMemory('diana', 'Tell me about the deal', 'The budget is $2M.', 'deal-1');
+    await extractAndStoreMemory('patrik', 'Tell me about the deal', 'The budget is $2M.', 'deal-1');
 
     expect(mockAddFacts).toHaveBeenCalledTimes(1);
     const storedFacts: MemoryFact[] = mockAddFacts.mock.calls[0]![0];
     expect(storedFacts).toHaveLength(2);
     expect(storedFacts[0]!.category).toBe('financial');
     expect(storedFacts[0]!.content).toBe('Budget is $2M USD');
-    expect(storedFacts[0]!.agentId).toBe('diana');
+    expect(storedFacts[0]!.agentId).toBe('patrik');
     expect(storedFacts[0]!.dealId).toBe('deal-1');
-    expect(storedFacts[0]!.sourceAgentId).toBe('diana');
+    expect(storedFacts[0]!.sourceAgentId).toBe('patrik');
     expect(storedFacts[0]!.id).toBeDefined();
     expect(storedFacts[0]!.createdAt).toBeGreaterThan(0);
     expect(storedFacts[0]!.updatedAt).toBeGreaterThan(0);
@@ -95,7 +95,7 @@ describe('extractAndStoreMemory', () => {
 
     // Should not throw
     await expect(
-      extractAndStoreMemory('diana', 'Budget?', '$2M', 'deal-1'),
+      extractAndStoreMemory('patrik', 'Budget?', '$2M', 'deal-1'),
     ).resolves.not.toThrow();
 
     // Should still successfully parse the JSON inside the fences
@@ -110,7 +110,7 @@ describe('extractAndStoreMemory', () => {
 
     // Should not throw
     await expect(
-      extractAndStoreMemory('sasha', 'Question', 'Answer', 'deal-1'),
+      extractAndStoreMemory('sandra', 'Question', 'Answer', 'deal-1'),
     ).resolves.not.toThrow();
 
     expect(warnSpy).toHaveBeenCalled();
@@ -122,12 +122,12 @@ describe('extractAndStoreMemory', () => {
   it('deduplicates: updates timestamp for existing fact with same category and overlapping content', async () => {
     const existingFact: MemoryFact = {
       id: 'existing-1',
-      agentId: 'diana',
+      agentId: 'patrik',
       dealId: 'deal-1',
       category: 'financial',
       content: 'Budget is $2M USD with 60/40 split',
       confidence: 'high',
-      sourceAgentId: 'diana',
+      sourceAgentId: 'patrik',
       createdAt: 1000,
       updatedAt: 1000,
     };
@@ -146,7 +146,7 @@ describe('extractAndStoreMemory', () => {
     });
 
     const { extractAndStoreMemory } = await import('@/services/memory/extractMemory');
-    await extractAndStoreMemory('diana', 'Confirm budget', 'Budget is $2M', 'deal-1');
+    await extractAndStoreMemory('patrik', 'Confirm budget', 'Budget is $2M', 'deal-1');
 
     // Should call addFacts with an updated existing fact (not a brand new one)
     // The dedup logic should detect overlap and update the existing fact's timestamp

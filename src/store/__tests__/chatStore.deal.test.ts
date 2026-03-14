@@ -44,7 +44,7 @@ describe('chatStore deal-scoped loading', () => {
     mockActiveDealId = 'deal-1';
 
     const deal1Convs: Conversation[] = [
-      { id: 'conv-1', agentId: 'diana', dealId: 'deal-1', messages: [], totalTokens: 0, createdAt: 1000, updatedAt: 1000 },
+      { id: 'conv-1', agentId: 'patrik', dealId: 'deal-1', messages: [], totalTokens: 0, createdAt: 1000, updatedAt: 1000 },
       { id: 'conv-2', agentId: 'marcos', dealId: 'deal-1', messages: [], totalTokens: 0, createdAt: 1000, updatedAt: 1000 },
     ];
 
@@ -80,15 +80,15 @@ describe('chatStore deal-scoped loading', () => {
     expect(mockPersistence.getAll).not.toHaveBeenCalled();
   });
 
-  it('getOrCreateConversation("diana") with activeDealId="deal-1" -> finds existing conv for diana+deal-1', async () => {
+  it('getOrCreateConversation("patrik") with activeDealId="deal-1" -> finds existing conv for patrik+deal-1', async () => {
     mockActiveDealId = 'deal-1';
 
-    // Pre-populate the store with an existing conversation for diana in deal-1
+    // Pre-populate the store with an existing conversation for patrik in deal-1
     useChatStore.setState({
       conversations: {
-        'conv-diana-d1': {
-          id: 'conv-diana-d1',
-          agentId: 'diana',
+        'conv-patrik-d1': {
+          id: 'conv-patrik-d1',
+          agentId: 'patrik',
           dealId: 'deal-1',
           messages: [],
           totalTokens: 0,
@@ -98,37 +98,37 @@ describe('chatStore deal-scoped loading', () => {
       },
     });
 
-    const convId = await useChatStore.getState().getOrCreateConversation('diana');
+    const convId = await useChatStore.getState().getOrCreateConversation('patrik');
 
-    expect(convId).toBe('conv-diana-d1');
+    expect(convId).toBe('conv-patrik-d1');
     // Should NOT have created a new conversation
     expect(mockPersistence.set).not.toHaveBeenCalledWith('conversations', expect.any(String), expect.anything());
   });
 
-  it('getOrCreateConversation("diana") with activeDealId="deal-1" -> creates new conv with dealId="deal-1" if none exists', async () => {
+  it('getOrCreateConversation("patrik") with activeDealId="deal-1" -> creates new conv with dealId="deal-1" if none exists', async () => {
     mockActiveDealId = 'deal-1';
 
-    const convId = await useChatStore.getState().getOrCreateConversation('diana');
+    const convId = await useChatStore.getState().getOrCreateConversation('patrik');
 
     expect(convId).toBeTruthy();
 
     const state = useChatStore.getState();
     const conv = state.conversations[convId];
     expect(conv).toBeDefined();
-    expect(conv.agentId).toBe('diana');
+    expect(conv.agentId).toBe('patrik');
     expect(conv.dealId).toBe('deal-1');
-    expect(mockPersistence.set).toHaveBeenCalledWith('conversations', convId, expect.objectContaining({ dealId: 'deal-1', agentId: 'diana' }));
+    expect(mockPersistence.set).toHaveBeenCalledWith('conversations', convId, expect.objectContaining({ dealId: 'deal-1', agentId: 'patrik' }));
   });
 
-  it('getOrCreateConversation("diana") with deal-2 active -> does NOT find diana conv from deal-1', async () => {
+  it('getOrCreateConversation("patrik") with deal-2 active -> does NOT find patrik conv from deal-1', async () => {
     mockActiveDealId = 'deal-2';
 
-    // Pre-populate with diana conv in deal-1
+    // Pre-populate with patrik conv in deal-1
     useChatStore.setState({
       conversations: {
-        'conv-diana-d1': {
-          id: 'conv-diana-d1',
-          agentId: 'diana',
+        'conv-patrik-d1': {
+          id: 'conv-patrik-d1',
+          agentId: 'patrik',
           dealId: 'deal-1',
           messages: [],
           totalTokens: 0,
@@ -138,10 +138,10 @@ describe('chatStore deal-scoped loading', () => {
       },
     });
 
-    const convId = await useChatStore.getState().getOrCreateConversation('diana');
+    const convId = await useChatStore.getState().getOrCreateConversation('patrik');
 
     // Should NOT return the deal-1 conversation
-    expect(convId).not.toBe('conv-diana-d1');
+    expect(convId).not.toBe('conv-patrik-d1');
     // Should have created a new conversation with deal-2
     const state = useChatStore.getState();
     const conv = state.conversations[convId];
@@ -151,7 +151,7 @@ describe('chatStore deal-scoped loading', () => {
   it('New conversations created via getOrCreateConversation always have dealId set', async () => {
     mockActiveDealId = 'deal-99';
 
-    const convId = await useChatStore.getState().getOrCreateConversation('sasha');
+    const convId = await useChatStore.getState().getOrCreateConversation('sandra');
 
     const state = useChatStore.getState();
     const conv = state.conversations[convId];

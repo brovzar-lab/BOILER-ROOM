@@ -43,7 +43,6 @@ export function OfficeCanvas() {
       // Scale context so drawing operations use CSS coordinates
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        ctx.scale(dpr, dpr);
         ctx.imageSmoothingEnabled = false;
       }
     }

@@ -1,10 +1,11 @@
 import { extractPdfText } from './extractPdf';
 import { extractDocxText } from './extractDocx';
+import { extractExcelText } from './extractExcel';
 import { getPersistence } from '@/services/persistence/adapter';
 import type { FileRecord } from '@/types/file';
 import type { AgentId } from '@/types/agent';
 
-const ALL_AGENTS: AgentId[] = ['diana', 'marcos', 'sasha', 'roberto', 'valentina'];
+const ALL_AGENTS: AgentId[] = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
 
 export async function processDroppedFile(
   file: File,
@@ -14,7 +15,7 @@ export async function processDroppedFile(
   const arrayBuffer = await file.arrayBuffer();
 
   let extractedText: string;
-  let fileType: 'pdf' | 'docx';
+  let fileType: 'pdf' | 'docx' | 'xlsx';
 
   if (file.name.toLowerCase().endsWith('.pdf')) {
     fileType = 'pdf';
@@ -22,6 +23,12 @@ export async function processDroppedFile(
   } else if (file.name.toLowerCase().endsWith('.docx')) {
     fileType = 'docx';
     extractedText = await extractDocxText(arrayBuffer);
+  } else if (
+    file.name.toLowerCase().endsWith('.xlsx') ||
+    file.name.toLowerCase().endsWith('.xls')
+  ) {
+    fileType = 'xlsx';
+    extractedText = extractExcelText(arrayBuffer);
   } else {
     throw new Error(`Unsupported file type: ${file.name}`);
   }

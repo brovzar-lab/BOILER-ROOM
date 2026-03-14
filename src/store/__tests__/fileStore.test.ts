@@ -29,7 +29,7 @@ describe('fileStore', () => {
       name: 'test.pdf',
       size: 1024,
       type: 'pdf',
-      agentId: 'diana',
+      agentId: 'patrik',
       dealId: 'deal-1',
       extractedText: 'text',
       uploadedAt: 1000,
@@ -55,9 +55,9 @@ describe('fileStore', () => {
       const { useFileStore } = await import('@/store/fileStore');
       const mockFile = new File(['data'], 'test.pdf');
 
-      await useFileStore.getState().addFile(mockFile, 'diana');
+      await useFileStore.getState().addFile(mockFile, 'patrik');
 
-      expect(mockProcessDroppedFile).toHaveBeenCalledWith(mockFile, 'diana', 'deal-1');
+      expect(mockProcessDroppedFile).toHaveBeenCalledWith(mockFile, 'patrik', 'deal-1');
       expect(useFileStore.getState().files).toHaveLength(1);
       expect(useFileStore.getState().files[0]!.name).toBe('test.pdf');
       expect(useFileStore.getState().isProcessing).toBe(false);
@@ -73,9 +73,9 @@ describe('fileStore', () => {
       const { useFileStore } = await import('@/store/fileStore');
       const mockFile = new File(['data'], 'test.pdf');
 
-      await useFileStore.getState().addFile(mockFile, 'diana');
+      await useFileStore.getState().addFile(mockFile, 'patrik');
 
-      expect(mockProcessDroppedFile).toHaveBeenCalledWith(mockFile, 'diana', 'default');
+      expect(mockProcessDroppedFile).toHaveBeenCalledWith(mockFile, 'patrik', 'default');
 
       spy.mockRestore();
     });
@@ -87,7 +87,7 @@ describe('fileStore', () => {
       const mockFile = new File(['data'], 'bad.txt');
 
       // Should not throw
-      await useFileStore.getState().addFile(mockFile, 'diana');
+      await useFileStore.getState().addFile(mockFile, 'patrik');
 
       expect(useFileStore.getState().isProcessing).toBe(false);
       expect(useFileStore.getState().files).toHaveLength(0);
@@ -101,7 +101,7 @@ describe('fileStore', () => {
       // Pre-populate
       useFileStore.setState({
         files: [
-          { id: 'f1', name: 'a.pdf', size: 100, type: 'pdf', agentId: 'diana', dealId: 'deal-1', extractedText: '', uploadedAt: 1 },
+          { id: 'f1', name: 'a.pdf', size: 100, type: 'pdf', agentId: 'patrik', dealId: 'deal-1', extractedText: '', uploadedAt: 1 },
           { id: 'f2', name: 'b.pdf', size: 200, type: 'pdf', agentId: 'marcos', dealId: 'deal-1', extractedText: '', uploadedAt: 2 },
         ],
       });
@@ -117,15 +117,15 @@ describe('fileStore', () => {
   describe('loadFiles', () => {
     it('replaces files array with query results', async () => {
       const loaded: FileRecord[] = [
-        { id: 'l1', name: 'loaded.pdf', size: 500, type: 'pdf', agentId: 'diana', dealId: 'deal-1', extractedText: 'loaded text', uploadedAt: 5 },
+        { id: 'l1', name: 'loaded.pdf', size: 500, type: 'pdf', agentId: 'patrik', dealId: 'deal-1', extractedText: 'loaded text', uploadedAt: 5 },
       ];
       mockGetFilesForAgent.mockResolvedValue(loaded);
 
       const { useFileStore } = await import('@/store/fileStore');
 
-      await useFileStore.getState().loadFiles('diana', 'deal-1');
+      await useFileStore.getState().loadFiles('patrik', 'deal-1');
 
-      expect(mockGetFilesForAgent).toHaveBeenCalledWith('diana', 'deal-1');
+      expect(mockGetFilesForAgent).toHaveBeenCalledWith('patrik', 'deal-1');
       expect(useFileStore.getState().files).toEqual(loaded);
     });
   });
@@ -137,14 +137,14 @@ describe('fileStore', () => {
         name: 'memo.pdf',
         size: 256,
         type: 'pdf',
-        agentId: 'diana',
+        agentId: 'patrik',
         dealId: 'deal-1',
         extractedText: 'shared',
         uploadedAt: 10,
       };
 
       const copies: FileRecord[] = [
-        { ...sourceRecord, id: 'c1', agentId: 'diana' },
+        { ...sourceRecord, id: 'c1', agentId: 'patrik' },
         { ...sourceRecord, id: 'c2', agentId: 'marcos' },
       ];
       mockShareFileWithAllAgents.mockResolvedValue(copies);
@@ -164,15 +164,15 @@ describe('fileStore', () => {
 
       useFileStore.setState({
         files: [
-          { id: 'f1', name: 'a.pdf', size: 100, type: 'pdf', agentId: 'diana', dealId: 'deal-1', extractedText: '', uploadedAt: 1 },
+          { id: 'f1', name: 'a.pdf', size: 100, type: 'pdf', agentId: 'patrik', dealId: 'deal-1', extractedText: '', uploadedAt: 1 },
           { id: 'f2', name: 'b.pdf', size: 200, type: 'pdf', agentId: 'marcos', dealId: 'deal-1', extractedText: '', uploadedAt: 2 },
-          { id: 'f3', name: 'c.docx', size: 300, type: 'docx', agentId: 'diana', dealId: 'deal-1', extractedText: '', uploadedAt: 3 },
+          { id: 'f3', name: 'c.docx', size: 300, type: 'docx', agentId: 'patrik', dealId: 'deal-1', extractedText: '', uploadedAt: 3 },
         ],
       });
 
-      const dianaFiles = useFileStore.getState().getFilesByAgent('diana');
-      expect(dianaFiles).toHaveLength(2);
-      expect(dianaFiles.map(f => f.name)).toEqual(['a.pdf', 'c.docx']);
+      const patrikFiles = useFileStore.getState().getFilesByAgent('patrik');
+      expect(patrikFiles).toHaveLength(2);
+      expect(patrikFiles.map(f => f.name)).toEqual(['a.pdf', 'c.docx']);
     });
   });
 });

@@ -22,6 +22,14 @@ vi.mock('mammoth', () => ({
   },
 }));
 
+// Mock xlsx (SheetJS)
+vi.mock('xlsx', () => ({
+  read: vi.fn(),
+  utils: {
+    sheet_to_json: vi.fn(),
+  },
+}));
+
 // Mock persistence adapter
 const mockPersistence = {
   get: vi.fn(),
@@ -119,14 +127,14 @@ describe('fileService', () => {
       const mockFile = new File(['dummy'], 'report.pdf', { type: 'application/pdf' });
       Object.defineProperty(mockFile, 'size', { value: 1024 });
 
-      const record = await processDroppedFile(mockFile, 'diana', 'deal-1');
+      const record = await processDroppedFile(mockFile, 'patrik', 'deal-1');
 
       expect(record).toMatchObject({
         id: mockUUID,
         name: 'report.pdf',
         size: 1024,
         type: 'pdf',
-        agentId: 'diana',
+        agentId: 'patrik',
         dealId: 'deal-1',
         extractedText: 'PDF content here',
       });
@@ -167,7 +175,7 @@ describe('fileService', () => {
 
       const mockFile = new File(['dummy'], 'image.png', { type: 'image/png' });
 
-      await expect(processDroppedFile(mockFile, 'sasha', 'deal-1'))
+      await expect(processDroppedFile(mockFile, 'sandra', 'deal-1'))
         .rejects.toThrow('Unsupported file type: image.png');
     });
   });
@@ -185,16 +193,16 @@ describe('fileService', () => {
   describe('getFilesForAgent', () => {
     it('queries by agentId and filters by dealId', async () => {
       mockPersistence.query.mockResolvedValue([
-        { id: '1', agentId: 'diana', dealId: 'deal-1', name: 'a.pdf' },
-        { id: '2', agentId: 'diana', dealId: 'deal-2', name: 'b.pdf' },
-        { id: '3', agentId: 'diana', dealId: 'deal-1', name: 'c.docx' },
+        { id: '1', agentId: 'patrik', dealId: 'deal-1', name: 'a.pdf' },
+        { id: '2', agentId: 'patrik', dealId: 'deal-2', name: 'b.pdf' },
+        { id: '3', agentId: 'patrik', dealId: 'deal-1', name: 'c.docx' },
       ]);
 
       const { getFilesForAgent } = await import('@/services/files/fileService');
 
-      const results = await getFilesForAgent('diana', 'deal-1');
+      const results = await getFilesForAgent('patrik', 'deal-1');
 
-      expect(mockPersistence.query).toHaveBeenCalledWith('files', 'agentId', 'diana');
+      expect(mockPersistence.query).toHaveBeenCalledWith('files', 'agentId', 'patrik');
       expect(results).toHaveLength(2);
       expect(results.map((r: FileRecord) => r.name)).toEqual(['a.pdf', 'c.docx']);
     });
@@ -210,7 +218,7 @@ describe('fileService', () => {
         name: 'memo.pdf',
         size: 512,
         type: 'pdf',
-        agentId: 'diana',
+        agentId: 'patrik',
         dealId: 'deal-1',
         extractedText: 'Shared content',
         uploadedAt: 1000,
@@ -223,7 +231,7 @@ describe('fileService', () => {
       expect(copies).toHaveLength(5);
 
       const agentIds = copies.map((c: FileRecord) => c.agentId).sort();
-      expect(agentIds).toEqual(['diana', 'marcos', 'roberto', 'sasha', 'valentina']);
+      expect(agentIds).toEqual(['patrik', 'marcos', 'isaac', 'sandra', 'wendy']);
 
       // Each copy has unique ID and shared text
       for (const copy of copies) {
@@ -236,5 +244,87 @@ describe('fileService', () => {
       // All persisted
       expect(mockPersistence.set).toHaveBeenCalledTimes(5);
     });
+  });
+});
+
+describe('extractExcelText', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('converts a single-sheet workbook to a markdown table', async () => {
+    const xlsx = await import('xlsx');
+    vi.mocked(xlsx.read).mockReturnValue({
+      SheetNames: ['Sheet1'],
+      Sheets: {
+        Sheet1: {},
+      },
+    } as ReturnType<typeof xlsx.read>);
+    vi.mocked(xlsx.utils.sheet_to_json).mockReturnValue([
+      ['Name', 'Amount'],
+      ['Alice', '1000'],
+      ['Bob', '2000'],
+    ]);
+
+    const { extractExcelText } = await import('@/services/files/extractExcel');
+    const result = extractExcelText(new ArrayBuffer(0));
+
+    expect(result).toContain('## Sheet: Sheet1');
+    expect(result).toContain('| Name | Amount |');
+    expect(result).toContain('| Alice | 1000 |');
+    expect(result).toContain('| Bob | 2000 |');
+    // Should have separator row after header
+    expect(result).toContain('| --- | --- |');
+  });
+
+  it('renders multiple sheets as separate labelled sections', async () => {
+    const xlsx = await import('xlsx');
+    vi.mocked(xlsx.read).mockReturnValue({
+      SheetNames: ['Revenue', 'Expenses'],
+      Sheets: { Revenue: {}, Expenses: {} },
+    } as ReturnType<typeof xlsx.read>);
+    vi.mocked(xlsx.utils.sheet_to_json)
+      .mockReturnValueOnce([['Q1', '500000']])
+      .mockReturnValueOnce([['Rent', '12000']]);
+
+    const { extractExcelText } = await import('@/services/files/extractExcel');
+    const result = extractExcelText(new ArrayBuffer(0));
+
+    expect(result).toContain('## Sheet: Revenue');
+    expect(result).toContain('## Sheet: Expenses');
+    expect(result).toContain('| Q1 | 500000 |');
+    expect(result).toContain('| Rent | 12000 |');
+  });
+});
+
+describe('processDroppedFile – Excel', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPersistence.set.mockResolvedValue(undefined);
+    vi.mocked(crypto.randomUUID).mockReturnValue(mockUUID);
+  });
+
+  it('processes an .xlsx file and returns FileRecord with type xlsx', async () => {
+    const xlsx = await import('xlsx');
+    vi.mocked(xlsx.read).mockReturnValue({
+      SheetNames: ['Summary'],
+      Sheets: { Summary: {} },
+    } as ReturnType<typeof xlsx.read>);
+    vi.mocked(xlsx.utils.sheet_to_json).mockReturnValue([
+      ['Deal', 'Value'],
+      ['Azula TV', '5000000'],
+    ]);
+
+    const { processDroppedFile } = await import('@/services/files/fileService');
+    const mockFile = new File(['dummy'], 'financials.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    Object.defineProperty(mockFile, 'size', { value: 4096 });
+
+    const record = await processDroppedFile(mockFile, 'sandra', 'deal-3');
+
+    expect(record.type).toBe('xlsx');
+    expect(record.name).toBe('financials.xlsx');
+    expect(record.agentId).toBe('sandra');
+    expect(record.extractedText).toContain('## Sheet: Summary');
+    expect(mockPersistence.set).toHaveBeenCalledWith('files', mockUUID, record);
   });
 });

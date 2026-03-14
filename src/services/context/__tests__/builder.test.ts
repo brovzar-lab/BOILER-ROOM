@@ -56,14 +56,14 @@ describe('buildContext Layer 4 file injection', () => {
         name: 'contract.pdf',
         size: 1000,
         type: 'pdf',
-        agentId: 'diana',
+        agentId: 'patrik',
         dealId: 'deal-1',
         extractedText: 'This is the contract text.',
         uploadedAt: Date.now(),
       },
     ];
 
-    const result = buildContext('diana', messages);
+    const result = buildContext('patrik', messages);
     expect(result.systemPrompt).toContain('## Uploaded Documents');
     expect(result.systemPrompt).toContain('### contract.pdf');
     expect(result.systemPrompt).toContain('This is the contract text.');
@@ -72,7 +72,7 @@ describe('buildContext Layer 4 file injection', () => {
   it('does NOT include file content when agent has no files (backward compatible)', () => {
     mockFiles = [];
 
-    const result = buildContext('diana', messages);
+    const result = buildContext('patrik', messages);
     expect(result.systemPrompt).not.toContain('Uploaded Documents');
   });
 
@@ -90,7 +90,7 @@ describe('buildContext Layer 4 file injection', () => {
       },
     ];
 
-    const result = buildContext('diana', messages);
+    const result = buildContext('patrik', messages);
     expect(result.systemPrompt).not.toContain('Uploaded Documents');
     expect(result.systemPrompt).not.toContain('Marcos only text.');
   });
@@ -102,14 +102,14 @@ describe('buildContext Layer 4 file injection', () => {
         name: 'contract.pdf',
         size: 1000,
         type: 'pdf',
-        agentId: 'diana',
+        agentId: 'patrik',
         dealId: 'deal-other',
         extractedText: 'Wrong deal text.',
         uploadedAt: Date.now(),
       },
     ];
 
-    const result = buildContext('diana', messages);
+    const result = buildContext('patrik', messages);
     expect(result.systemPrompt).not.toContain('Uploaded Documents');
   });
 
@@ -121,14 +121,14 @@ describe('buildContext Layer 4 file injection', () => {
         name: 'big.pdf',
         size: 50000,
         type: 'pdf',
-        agentId: 'diana',
+        agentId: 'patrik',
         dealId: 'deal-1',
         extractedText: longText,
         uploadedAt: Date.now(),
       },
     ];
 
-    const result = buildContext('diana', messages);
+    const result = buildContext('patrik', messages);
     expect(result.systemPrompt).toContain('### big.pdf');
     // Should have truncation marker
     expect(result.systemPrompt).toContain('[... truncated');
@@ -151,14 +151,14 @@ describe('buildContext Layer 4 file injection', () => {
         name: `doc${i}.pdf`,
         size: 1000,
         type: 'pdf' as const,
-        agentId: 'diana',
+        agentId: 'patrik',
         dealId: 'deal-1',
         extractedText: text,
         uploadedAt: i * 1000,
       });
     }
 
-    const result = buildContext('diana', messages);
+    const result = buildContext('patrik', messages);
     // First 4 files fit (4 * 1750 = 7000 tokens), 5th would push to 8750 > 8000
     expect(result.systemPrompt).toContain('### doc1.pdf');
     expect(result.systemPrompt).toContain('### doc4.pdf');
@@ -173,14 +173,14 @@ describe('buildContext Layer 4 file injection', () => {
         name: 'contract.pdf',
         size: 1000,
         type: 'pdf',
-        agentId: 'diana',
+        agentId: 'patrik',
         dealId: 'deal-1',
         extractedText: 'Contract text here.',
         uploadedAt: Date.now(),
       },
     ];
 
-    const result = buildContext('diana', messages);
+    const result = buildContext('patrik', messages);
     const dealIdx = result.systemPrompt.indexOf('Test Deal');
     const fileIdx = result.systemPrompt.indexOf('## Uploaded Documents');
     expect(dealIdx).toBeGreaterThan(-1);

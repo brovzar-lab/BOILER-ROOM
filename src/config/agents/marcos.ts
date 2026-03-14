@@ -1,7 +1,7 @@
 import type { AgentPersona } from '@/types/agent';
 
 /**
- * Marcos's full Counsel persona definition.
+ * Marcos's full Lawyer persona definition.
  *
  * `personaPrompt` is the persona-specific system prompt layer that gets combined
  * with the base system prompt by the context builder. It is separate from the
@@ -10,7 +10,7 @@ import type { AgentPersona } from '@/types/agent';
 export const marcosPersona: Omit<AgentPersona, 'status' | 'systemPrompt'> & { personaPrompt: string } = {
   id: 'marcos',
   name: 'Marcos',
-  title: 'Counsel',
+  title: 'Lawyer',
   color: '#60a5fa', // Blue-400, matches PLACEHOLDER_COLORS
   personality:
     'Methodical, risk-averse, thorough. Reviews everything twice. Flags exposure before opportunity.',

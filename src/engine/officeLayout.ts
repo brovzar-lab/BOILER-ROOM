@@ -3,15 +3,15 @@
  *
  * Compact grid layout (32 cols x 30 rows) matching War Room mockup:
  *
- *            [BILLY] [Sasha]           <- centered, top row
- *   [Diana]                [Marcos]    <- upper side offices
+ *            [BILLY] [Sandra]           <- centered, top row
+ *   [Patrik]                [Marcos]    <- upper side offices
  *            [ WAR ROOM ]             <- center, same height as one side pair
- *   [Roberto]              [Valentina] <- lower side offices
+ *   [Isaac]              [Wendy] <- lower side offices
  *
- *   - Top row: BILLY (center-left), Sasha (center-right) -- centered above War Room
+ *   - Top row: BILLY (center-left), Sandra (center-right) -- centered above War Room
  *   - War Room centered vertically between upper/lower corridors (rows 12-22, 11 tall)
- *   - Diana & Roberto stacked on left (rows 11-17, rows 20-26)
- *   - Marcos & Valentina stacked on right (rows 11-17, rows 20-26)
+ *   - Patrik & Isaac stacked on left (rows 11-17, rows 20-26)
+ *   - Marcos & Wendy stacked on right (rows 11-17, rows 20-26)
  *   - Gap/corridor between upper and lower side offices at rows 18-19
  *   - 2-tile wide corridors between sections
  *   - VOID headroom above top rooms
@@ -19,23 +19,23 @@
  *
  * Column layout:
  *   Cols 0:      VOID border
- *   Cols 1-7:    Left offices (Diana, Roberto)
+ *   Cols 1-7:    Left offices (Patrik, Isaac)
  *   Cols 8-9:    Left vertical corridor
  *   Cols 9-15:   BILLY's Office (top row, center-left)
  *   Cols 10-21:  War Room (center, 12 wide x 11 tall)
- *   Cols 17-23:  Sasha's Office (top row, center-right)
+ *   Cols 17-23:  Sandra's Office (top row, center-right)
  *   Cols 22-23:  Right vertical corridor
- *   Cols 24-30:  Right offices (Marcos, Valentina)
+ *   Cols 24-30:  Right offices (Marcos, Wendy)
  *   Col  31:     VOID border
  *
  * Row layout:
  *   Rows 0-1:    VOID headroom
- *   Rows 2-8:    Top offices (BILLY, Sasha) -- 7 tall, centered
+ *   Rows 2-8:    Top offices (BILLY, Sandra) -- 7 tall, centered
  *   Rows 9-10:   Horizontal corridor
- *   Rows 11-17:  Upper side offices (Diana left, Marcos right)
+ *   Rows 11-17:  Upper side offices (Patrik left, Marcos right)
  *   Rows 12-22:  War Room (center) -- 11 tall, centered between corridors
  *   Rows 18-19:  Corridor between upper/lower side offices (War Room continues)
- *   Rows 20-26:  Lower side offices (Roberto left, Valentina right)
+ *   Rows 20-26:  Lower side offices (Isaac left, Wendy right)
  *   Rows 27-28:  Horizontal corridor below side offices
  *   Row  29:     VOID border
  *
@@ -96,12 +96,12 @@ function buildTileMap(): TileType[][] {
   // BILLY's Office (top, center-left): cols 9-15, rows 2-8
   room(9, 2, 7, 7);
 
-  // Sasha's Office (top, center-right): cols 17-23, rows 2-8
+  // Sandra's Office (top, center-right): cols 17-23, rows 2-8
   room(17, 2, 7, 7);
 
   // Doors (south wall -> upper horizontal corridor)
   map[8]![12] = D;  // BILLY door at south wall center
-  map[8]![20] = D;  // Sasha door at south wall center
+  map[8]![20] = D;  // Sandra door at south wall center
 
   // ============================================================================
   // UPPER HORIZONTAL CORRIDOR (rows 9-10, cols 1-30)
@@ -112,7 +112,7 @@ function buildTileMap(): TileType[][] {
   // SIDE OFFICES + WAR ROOM (rows 11-26)
   // ============================================================================
 
-  // Diana's Office (upper-left): cols 1-7, rows 11-17
+  // Patrik's Office (upper-left): cols 1-7, rows 11-17
   room(1, 11, 7, 7);
 
   // Marcos's Office (upper-right): cols 24-30, rows 11-17
@@ -121,22 +121,22 @@ function buildTileMap(): TileType[][] {
   // War Room (center): cols 10-21, rows 12-22 (12 wide, 11 tall)
   room(10, 12, 12, 11);
 
-  // Roberto's Office (lower-left): cols 1-7, rows 20-26
+  // Isaac's Office (lower-left): cols 1-7, rows 20-26
   room(1, 20, 7, 7);
 
-  // Valentina's Office (lower-right): cols 24-30, rows 20-26
+  // Wendy's Office (lower-right): cols 24-30, rows 20-26
   room(24, 20, 7, 7);
 
-  // Diana door on east wall -> left vertical corridor
+  // Patrik door on east wall -> left vertical corridor
   map[14]![7] = D;
 
   // Marcos door on west wall -> right vertical corridor
   map[14]![24] = D;
 
-  // Roberto door on east wall -> left vertical corridor
+  // Isaac door on east wall -> left vertical corridor
   map[23]![7] = D;
 
-  // Valentina door on west wall -> right vertical corridor
+  // Wendy door on west wall -> right vertical corridor
   map[23]![24] = D;
 
   // Connecting corridor above War Room north door (row 11, cols 10-21)
@@ -190,8 +190,8 @@ export const ROOMS: Room[] = [
     billyStandTile: { col: 13, row: 5 },
   },
   {
-    id: 'sasha',
-    name: "Sasha's Office",
+    id: 'sandra',
+    name: "Sandra's Office",
     tileRect: { col: 17, row: 2, width: 7, height: 7 },
     doorTile: { col: 20, row: 8 },
     seatTile: { col: 20, row: 5 },
@@ -206,8 +206,8 @@ export const ROOMS: Room[] = [
     billyStandTile: { col: 16, row: 15 },
   },
   {
-    id: 'diana',
-    name: "Diana's Office",
+    id: 'patrik',
+    name: "Patrik's Office",
     tileRect: { col: 1, row: 11, width: 7, height: 7 },
     doorTile: { col: 7, row: 14 },
     seatTile: { col: 4, row: 14 },
@@ -222,16 +222,16 @@ export const ROOMS: Room[] = [
     billyStandTile: { col: 26, row: 14 },
   },
   {
-    id: 'roberto',
-    name: "Roberto's Office",
+    id: 'isaac',
+    name: "Isaac's Office",
     tileRect: { col: 1, row: 20, width: 7, height: 7 },
     doorTile: { col: 7, row: 23 },
     seatTile: { col: 4, row: 23 },
     billyStandTile: { col: 5, row: 23 },
   },
   {
-    id: 'valentina',
-    name: "Valentina's Office",
+    id: 'wendy',
+    name: "Wendy's Office",
     tileRect: { col: 24, row: 20, width: 7, height: 7 },
     doorTile: { col: 24, row: 23 },
     seatTile: { col: 27, row: 23 },
@@ -262,40 +262,40 @@ export const FURNITURE: FurnitureItem[] = [
   { roomId: 'billy', type: 'chair', col: 12, row: 4, width: 1, height: 1 },
   { roomId: 'billy', type: 'bookshelf', col: 10, row: 3, width: 1, height: 2, renderHeight: 2 },
 
-  // Sasha's Office (interior cols 18-22, rows 3-7)
-  { roomId: 'sasha', type: 'desk', col: 19, row: 3, width: 2, height: 1 },
-  { roomId: 'sasha', type: 'chair', col: 20, row: 4, width: 1, height: 1 },
-  { roomId: 'sasha', type: 'artwork', col: 18, row: 3, width: 1, height: 1 },
+  // Sandra's Office (interior cols 18-22, rows 3-7)
+  { roomId: 'sandra', type: 'desk', col: 19, row: 3, width: 2, height: 1 },
+  { roomId: 'sandra', type: 'chair', col: 20, row: 4, width: 1, height: 1 },
+  { roomId: 'sandra', type: 'artwork', col: 18, row: 3, width: 1, height: 1 },
 
   // War Room (interior cols 11-20, rows 13-21) -- portrait conference table centered
   { roomId: 'war-room', type: 'table', col: 14, row: 14, width: 4, height: 6 },
   // Chairs around the portrait conference table (cols 14-17, rows 14-19)
   { roomId: 'war-room', type: 'chair', col: 15, row: 13, width: 1, height: 1 }, // north/head (BILLY)
-  { roomId: 'war-room', type: 'chair', col: 13, row: 15, width: 1, height: 1 }, // left side, upper (Diana)
-  { roomId: 'war-room', type: 'chair', col: 13, row: 17, width: 1, height: 1 }, // left side, lower (Sasha)
+  { roomId: 'war-room', type: 'chair', col: 13, row: 15, width: 1, height: 1 }, // left side, upper (Patrik)
+  { roomId: 'war-room', type: 'chair', col: 13, row: 17, width: 1, height: 1 }, // left side, lower (Sandra)
   { roomId: 'war-room', type: 'chair', col: 18, row: 15, width: 1, height: 1 }, // right side, upper (Marcos)
-  { roomId: 'war-room', type: 'chair', col: 18, row: 17, width: 1, height: 1 }, // right side, lower (Roberto)
-  { roomId: 'war-room', type: 'chair', col: 16, row: 20, width: 1, height: 1 }, // south/foot (Valentina)
+  { roomId: 'war-room', type: 'chair', col: 18, row: 17, width: 1, height: 1 }, // right side, lower (Isaac)
+  { roomId: 'war-room', type: 'chair', col: 16, row: 20, width: 1, height: 1 }, // south/foot (Wendy)
 
-  // Diana's Office (interior cols 2-6, rows 12-16)
-  { roomId: 'diana', type: 'desk', col: 3, row: 13, width: 2, height: 1 },
-  { roomId: 'diana', type: 'chair', col: 4, row: 14, width: 1, height: 1 },
-  { roomId: 'diana', type: 'bookshelf', col: 2, row: 12, width: 1, height: 2, renderHeight: 2 },
+  // Patrik's Office (interior cols 2-6, rows 12-16)
+  { roomId: 'patrik', type: 'desk', col: 3, row: 13, width: 2, height: 1 },
+  { roomId: 'patrik', type: 'chair', col: 4, row: 14, width: 1, height: 1 },
+  { roomId: 'patrik', type: 'bookshelf', col: 2, row: 12, width: 1, height: 2, renderHeight: 2 },
 
   // Marcos's Office (interior cols 25-29, rows 12-16)
   { roomId: 'marcos', type: 'desk', col: 26, row: 13, width: 2, height: 1 },
   { roomId: 'marcos', type: 'chair', col: 27, row: 14, width: 1, height: 1 },
   { roomId: 'marcos', type: 'plant', col: 29, row: 12, width: 1, height: 1 },
 
-  // Roberto's Office (interior cols 2-6, rows 21-25)
-  { roomId: 'roberto', type: 'desk', col: 3, row: 22, width: 2, height: 1 },
-  { roomId: 'roberto', type: 'chair', col: 4, row: 23, width: 1, height: 1 },
-  { roomId: 'roberto', type: 'bookshelf', col: 2, row: 21, width: 1, height: 2, renderHeight: 2 },
+  // Isaac's Office (interior cols 2-6, rows 21-25)
+  { roomId: 'isaac', type: 'desk', col: 3, row: 22, width: 2, height: 1 },
+  { roomId: 'isaac', type: 'chair', col: 4, row: 23, width: 1, height: 1 },
+  { roomId: 'isaac', type: 'bookshelf', col: 2, row: 21, width: 1, height: 2, renderHeight: 2 },
 
-  // Valentina's Office (interior cols 25-29, rows 21-25)
-  { roomId: 'valentina', type: 'desk', col: 26, row: 22, width: 2, height: 1 },
-  { roomId: 'valentina', type: 'chair', col: 27, row: 23, width: 1, height: 1 },
-  { roomId: 'valentina', type: 'plant', col: 29, row: 21, width: 1, height: 1 },
+  // Wendy's Office (interior cols 25-29, rows 21-25)
+  { roomId: 'wendy', type: 'desk', col: 26, row: 22, width: 2, height: 1 },
+  { roomId: 'wendy', type: 'chair', col: 27, row: 23, width: 1, height: 1 },
+  { roomId: 'wendy', type: 'plant', col: 29, row: 21, width: 1, height: 1 },
 
   // Hallway decorations
   { roomId: 'hallway', type: 'plant', col: 8, row: 9, width: 1, height: 1 },
@@ -321,17 +321,17 @@ export const FURNITURE: FurnitureItem[] = [
  *
  * Arrangement:
  *   - BILLY at head/north of table
- *   - Diana & Sasha on left side
- *   - Marcos & Roberto on right side
- *   - Valentina at south/foot of table
+ *   - Patrik & Sandra on left side
+ *   - Marcos & Isaac on right side
+ *   - Wendy at south/foot of table
  */
 export const WAR_ROOM_SEATS: Record<string, TileCoord> = {
   billy:     { col: 15, row: 13 }, // head of table (north chair)
-  diana:     { col: 13, row: 15 }, // left side, upper chair
-  sasha:     { col: 13, row: 17 }, // left side, lower chair
+  patrik:     { col: 13, row: 15 }, // left side, upper chair
+  sandra:     { col: 13, row: 17 }, // left side, lower chair
   marcos:    { col: 18, row: 15 }, // right side, upper chair
-  roberto:   { col: 18, row: 17 }, // right side, lower chair
-  valentina: { col: 16, row: 20 }, // foot of table (south chair)
+  isaac:   { col: 18, row: 17 }, // right side, lower chair
+  wendy: { col: 16, row: 20 }, // foot of table (south chair)
 };
 
 // -- Decoration Items ---------------------------------------------------------
@@ -352,26 +352,26 @@ export interface DecorationItem {
  * Previously hardcoded in renderer.ts renderDecorations().
  */
 export const DECORATIONS: DecorationItem[] = [
-  // Diana: financial chart on wall + monitor on desk
-  { roomId: 'diana', key: 'diana-chart', col: 2, row: 12 },
-  { roomId: 'diana', key: 'diana-monitor', col: 5, row: 13 },
+  // Patrik: financial chart on wall + monitor on desk
+  { roomId: 'patrik', key: 'patrik-chart', col: 2, row: 12 },
+  { roomId: 'patrik', key: 'patrik-monitor', col: 5, row: 13 },
 
   // Marcos: law books on shelf
   { roomId: 'marcos', key: 'marcos-lawbooks', col: 29, row: 12 },
 
-  // Sasha: 2x2 whiteboard on wall
-  { roomId: 'sasha', key: 'sasha-whiteboard-tl', col: 18, row: 3 },
-  { roomId: 'sasha', key: 'sasha-whiteboard-tr', col: 19, row: 3 },
-  { roomId: 'sasha', key: 'sasha-whiteboard-bl', col: 18, row: 4 },
-  { roomId: 'sasha', key: 'sasha-whiteboard-br', col: 19, row: 4 },
+  // Sandra: 2x2 whiteboard on wall
+  { roomId: 'sandra', key: 'sandra-whiteboard-tl', col: 18, row: 3 },
+  { roomId: 'sandra', key: 'sandra-whiteboard-tr', col: 19, row: 3 },
+  { roomId: 'sandra', key: 'sandra-whiteboard-bl', col: 18, row: 4 },
+  { roomId: 'sandra', key: 'sandra-whiteboard-br', col: 19, row: 4 },
 
-  // Roberto: filing cabinet
-  { roomId: 'roberto', key: 'filing-cabinet', col: 2, row: 21 },
+  // Isaac: filing cabinet
+  { roomId: 'isaac', key: 'filing-cabinet', col: 2, row: 21 },
 
-  // Valentina: post-it clusters + extra plant
-  { roomId: 'valentina', key: 'post-it', col: 29, row: 22 },
-  { roomId: 'valentina', key: 'post-it', col: 25, row: 23 },
-  { roomId: 'valentina', key: 'plant', col: 25, row: 25 },
+  // Wendy: post-it clusters + extra plant
+  { roomId: 'wendy', key: 'post-it', col: 29, row: 22 },
+  { roomId: 'wendy', key: 'post-it', col: 25, row: 23 },
+  { roomId: 'wendy', key: 'plant', col: 25, row: 25 },
 
   // Billy: monitor on desk + small plant
   { roomId: 'billy', key: 'monitor', col: 13, row: 3 },

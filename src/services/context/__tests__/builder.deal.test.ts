@@ -41,7 +41,7 @@ describe('buildContext deal injection (Layer 3)', () => {
       { id: 'deal-1', name: 'Oro Verde - Netflix', status: 'active', createdAt: 1000, updatedAt: 1000 },
     ];
 
-    const result = buildContext('diana', messages);
+    const result = buildContext('patrik', messages);
 
     expect(result.systemPrompt).toContain('Oro Verde - Netflix');
     expect(result.systemPrompt).toMatch(/currently advising on.*Oro Verde - Netflix/i);
@@ -53,7 +53,7 @@ describe('buildContext deal injection (Layer 3)', () => {
       { id: 'deal-2', name: 'Lemon Trust I', description: 'Netflix MX limited series, $2.4M budget', status: 'active', createdAt: 1000, updatedAt: 1000 },
     ];
 
-    const result = buildContext('diana', messages);
+    const result = buildContext('patrik', messages);
 
     expect(result.systemPrompt).toContain('Lemon Trust I');
     expect(result.systemPrompt).toContain('Netflix MX limited series, $2.4M budget');
@@ -63,7 +63,7 @@ describe('buildContext deal injection (Layer 3)', () => {
     mockActiveDealId = null;
     mockDeals = [];
 
-    const result = buildContext('diana', messages);
+    const result = buildContext('patrik', messages);
 
     expect(result.systemPrompt).not.toMatch(/currently advising on/i);
     expect(result.systemPrompt).not.toContain('Deal Creation Capability');
@@ -75,11 +75,11 @@ describe('buildContext deal injection (Layer 3)', () => {
       { id: 'deal-1', name: 'Test Deal', status: 'active', createdAt: 1000, updatedAt: 1000 },
     ];
 
-    const result = buildContext('diana', messages);
+    const result = buildContext('patrik', messages);
     const prompt = result.systemPrompt;
 
     // Persona (Layer 2) should appear before deal context (Layer 3)
-    const personaIdx = prompt.indexOf('You are diana, a trusted advisor.');
+    const personaIdx = prompt.indexOf('You are patrik, a trusted advisor.');
     const dealIdx = prompt.indexOf('Test Deal');
     expect(personaIdx).toBeGreaterThan(-1);
     expect(dealIdx).toBeGreaterThan(-1);
@@ -92,12 +92,12 @@ describe('buildContext deal injection (Layer 3)', () => {
       { id: 'deal-1', name: 'Test Deal', status: 'active', createdAt: 1000, updatedAt: 1000 },
     ];
 
-    const result = buildContext('diana', messages);
+    const result = buildContext('patrik', messages);
 
     // Layer 1: Base system prompt
     expect(result.systemPrompt).toContain('Lemon Studios');
     // Layer 2: Persona prompt
-    expect(result.systemPrompt).toContain('You are diana, a trusted advisor.');
+    expect(result.systemPrompt).toContain('You are patrik, a trusted advisor.');
   });
 
   it('crossVisibilityBlock still works alongside deal context', () => {
@@ -107,7 +107,7 @@ describe('buildContext deal injection (Layer 3)', () => {
     ];
 
     const crossBlock = 'Other agents said: Marcos thinks this is great.';
-    const result = buildContext('diana', messages, undefined, crossBlock);
+    const result = buildContext('patrik', messages, undefined, crossBlock);
 
     expect(result.systemPrompt).toContain(crossBlock);
     expect(result.systemPrompt).toContain('Test Deal');

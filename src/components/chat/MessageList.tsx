@@ -37,7 +37,7 @@ export function MessageList({ messages, isStreaming, streamingContent, agentName
           <MessageBubble key={msg.id} message={msg} agentName={agentName} />
         ))}
 
-        {isStreaming && <StreamingIndicator content={streamingContent} />}
+        {isStreaming && <StreamingIndicator content={streamingContent} agentName={agentName} />}
 
         <div ref={bottomRef} />
       </div>

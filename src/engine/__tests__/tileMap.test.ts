@@ -131,11 +131,11 @@ describe('OFFICE_TILE_MAP', () => {
     const ids = ROOMS.map((r) => r.id).sort();
     expect(ids).toEqual([
       'billy',
-      'diana',
+      'patrik',
       'marcos',
-      'roberto',
-      'sasha',
-      'valentina',
+      'isaac',
+      'sandra',
+      'wendy',
       'war-room',
     ]);
   });

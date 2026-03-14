@@ -6,7 +6,7 @@ import { WarRoomMessage } from './WarRoomMessage';
 import { ChatInput } from './ChatInput';
 
 /** Agent display order (consistent with codebase conventions) */
-const AGENT_ORDER: AgentId[] = ['diana', 'marcos', 'sasha', 'roberto', 'valentina'];
+const AGENT_ORDER: AgentId[] = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
 
 /**
  * War Room chat panel with multi-stream display.

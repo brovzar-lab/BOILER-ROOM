@@ -17,7 +17,7 @@ import type { AgentId } from '@/types/agent';
 import { getAudioManager } from '@/engine/audioManager';
 
 const VALID_EXTENSIONS = new Set(['.pdf', '.docx', '.xlsx', '.xls']);
-const AGENT_IDS: AgentId[] = ['diana', 'marcos', 'sasha', 'roberto', 'valentina'];
+const AGENT_IDS: AgentId[] = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
 
 function isAgentRoom(id: string | null): id is AgentId {
   return id !== null && AGENT_IDS.includes(id as AgentId);
@@ -50,7 +50,7 @@ function App() {
   // Resolve which agent to upload to: active room if it's an agent, else first agent
   const resolveUploadAgent = useCallback((): AgentId => {
     const roomId = useOfficeStore.getState().activeRoomId;
-    return isAgentRoom(roomId) ? roomId : 'diana';
+    return isAgentRoom(roomId) ? roomId : 'patrik';
   }, []);
 
   const uploadFiles = useCallback((files: FileList | File[]) => {

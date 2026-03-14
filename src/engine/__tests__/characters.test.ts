@@ -516,13 +516,13 @@ describe('updateAllCharacters - knock and agent reactions', () => {
       tileRow: 14,
       x: 9 * TILE_SIZE,
       y: 14 * TILE_SIZE,
-      path: [{ col: 9, row: 15 }], // billyStandTile for diana
+      path: [{ col: 9, row: 15 }], // billyStandTile for patrik
       speed: WALK_SPEED,
       moveProgress: 0.99,
     });
 
-    const dianaChar = makeCharacter({
-      id: 'diana',
+    const patrikChar = makeCharacter({
+      id: 'patrik',
       state: 'work',
       tileCol: 8,
       tileRow: 15,
@@ -537,7 +537,7 @@ describe('updateAllCharacters - knock and agent reactions', () => {
     vi.doMock('@/store/officeStore', () => ({
       useOfficeStore: {
         getState: () => ({
-          characters: [billyChar, dianaChar],
+          characters: [billyChar, patrikChar],
           activeRoomId: null,
           setActiveRoom,
           setBillyPosition,
@@ -548,8 +548,8 @@ describe('updateAllCharacters - knock and agent reactions', () => {
     vi.doMock('../officeLayout', () => ({
       ROOMS: [
         {
-          id: 'diana',
-          name: "Diana's Office",
+          id: 'patrik',
+          name: "Patrik's Office",
           tileRect: { col: 4, row: 11, width: 10, height: 10 },
           doorTile: { col: 8, row: 11 },
           seatTile: { col: 8, row: 15 },
@@ -560,8 +560,8 @@ describe('updateAllCharacters - knock and agent reactions', () => {
       getRoomAtTile: (col: number, row: number) => {
         if (col >= 4 && col < 14 && row >= 11 && row < 21) {
           return {
-            id: 'diana',
-            name: "Diana's Office",
+            id: 'patrik',
+            name: "Patrik's Office",
             tileRect: { col: 4, row: 11, width: 10, height: 10 },
             doorTile: { col: 8, row: 11 },
             seatTile: { col: 8, row: 15 },
@@ -596,8 +596,8 @@ describe('updateAllCharacters - knock and agent reactions', () => {
       moveProgress: 0.99,
     });
 
-    const dianaChar = makeCharacter({
-      id: 'diana',
+    const patrikChar = makeCharacter({
+      id: 'patrik',
       state: 'work',
       tileCol: 8,
       tileRow: 15,
@@ -612,7 +612,7 @@ describe('updateAllCharacters - knock and agent reactions', () => {
     vi.doMock('@/store/officeStore', () => ({
       useOfficeStore: {
         getState: () => ({
-          characters: [billyChar, dianaChar],
+          characters: [billyChar, patrikChar],
           activeRoomId: null,
           setActiveRoom,
           setBillyPosition,
@@ -623,8 +623,8 @@ describe('updateAllCharacters - knock and agent reactions', () => {
     vi.doMock('../officeLayout', () => ({
       ROOMS: [
         {
-          id: 'diana',
-          name: "Diana's Office",
+          id: 'patrik',
+          name: "Patrik's Office",
           tileRect: { col: 4, row: 11, width: 10, height: 10 },
           doorTile: { col: 8, row: 11 },
           seatTile: { col: 8, row: 15 },
@@ -635,8 +635,8 @@ describe('updateAllCharacters - knock and agent reactions', () => {
       getRoomAtTile: (col: number, row: number) => {
         if (col >= 4 && col < 14 && row >= 11 && row < 21) {
           return {
-            id: 'diana',
-            name: "Diana's Office",
+            id: 'patrik',
+            name: "Patrik's Office",
             tileRect: { col: 4, row: 11, width: 10, height: 10 },
             doorTile: { col: 8, row: 11 },
             seatTile: { col: 8, row: 15 },
@@ -651,8 +651,8 @@ describe('updateAllCharacters - knock and agent reactions', () => {
 
     updateAllCharacters(0.1, tileMap);
 
-    // Diana should now be idle and facing BILLY (BILLY is at col 9, Diana at col 8 -> face right)
-    expect(dianaChar.state).toBe('idle');
-    expect(dianaChar.direction).toBe('right');
+    // Patrik should now be idle and facing BILLY (BILLY is at col 9, Patrik at col 8 -> face right)
+    expect(patrikChar.state).toBe('idle');
+    expect(patrikChar.direction).toBe('right');
   });
 });

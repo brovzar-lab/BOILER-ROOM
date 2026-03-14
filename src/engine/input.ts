@@ -16,19 +16,20 @@ import { WALK_SPEED, ZOOM_OVERVIEW_THRESHOLD } from './types';
 import type { AgentId } from '@/types/agent';
 
 /** Valid agent room IDs (excludes war-room and billy) */
-const AGENT_ROOM_IDS = new Set<string>(['diana', 'marcos', 'sasha', 'roberto', 'valentina']);
+const AGENT_ROOM_IDS = new Set<string>(['patrik', 'marcos', 'sandra', 'isaac', 'wendy']);
 
 /** Valid file extensions for drag-and-drop */
 const VALID_EXTENSIONS = new Set(['.pdf', '.docx']);
 
-/** Maps first-letter keys to room IDs for keyboard navigation */
+/** Maps first-letter keys to room IDs for keyboard navigation.
+ * P=Patrik, M=Marcos, S=Sandra, I=Isaac, W=Wendy, 6=War Room, B=Billy */
 const KEY_TO_ROOM: Record<string, string> = {
-  'd': 'diana',
+  'p': 'patrik',
   'm': 'marcos',
-  's': 'sasha',
-  'r': 'roberto',
-  'v': 'valentina',
-  'w': 'war-room',
+  's': 'sandra',
+  'i': 'isaac',
+  'w': 'wendy',
+  '6': 'war-room',
   'b': 'billy',
 };
 
@@ -144,7 +145,7 @@ export function setupInputHandlers(canvas: HTMLCanvasElement): () => void {
       return;
     }
 
-    // First-letter keyboard shortcuts: D, M, S, R, V, W, B
+    // First-letter keyboard shortcuts: P, M, S, I, W, 6 (War Room), B
     const roomId = KEY_TO_ROOM[e.key.toLowerCase()];
     if (roomId) {
       const state = useOfficeStore.getState();

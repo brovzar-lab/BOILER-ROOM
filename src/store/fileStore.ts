@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { FileRecord } from '@/types/file';
 import type { AgentId } from '@/types/agent';
 import { processDroppedFile, deleteFile, getFilesForAgent, shareFileWithAllAgents } from '@/services/files/fileService';
+import { getPersistence } from '@/services/persistence/adapter';
 import { useDealStore } from '@/store/dealStore';
 
 interface FileState {
@@ -13,6 +14,7 @@ interface FileState {
   loadFiles: (agentId: AgentId, dealId: string) => Promise<void>;
   shareFile: (fileRecord: FileRecord) => Promise<void>;
   getFilesByAgent: (agentId: AgentId) => FileRecord[];
+  reassignFilesToDeal: (fileIds: string[], newDealId: string) => Promise<void>;
 }
 
 export const useFileStore = create<FileState>((set, get) => ({
@@ -56,5 +58,21 @@ export const useFileStore = create<FileState>((set, get) => ({
 
   getFilesByAgent: (agentId: AgentId) => {
     return get().files.filter((f) => f.agentId === agentId);
+  },
+
+  reassignFilesToDeal: async (fileIds: string[], newDealId: string) => {
+    const db = getPersistence();
+    const { files } = get();
+    const updatedFiles = [...files];
+
+    for (const fileId of fileIds) {
+      const idx = updatedFiles.findIndex((f) => f.id === fileId);
+      if (idx === -1) continue;
+      const updated = { ...updatedFiles[idx]!, dealId: newDealId };
+      await db.set('files', fileId, updated);
+      updatedFiles[idx] = updated;
+    }
+
+    set({ files: updatedFiles });
   },
 }));

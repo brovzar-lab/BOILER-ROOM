@@ -5,11 +5,11 @@ import { buildCrossVisibilityBlock } from '../context/warRoomSummary';
 vi.mock('@/config/agents', () => ({
   getAgent: (id: string) => {
     const agents: Record<string, { name: string; title: string }> = {
-      diana: { name: 'Diana', title: 'CFO' },
+      patrik: { name: 'Patrik', title: 'CFO' },
       marcos: { name: 'Marcos', title: 'Legal Counsel' },
-      sasha: { name: 'Sasha', title: 'Head of Deals' },
-      roberto: { name: 'Roberto', title: 'Head of Accounting' },
-      valentina: { name: 'Valentina', title: 'Head of Development' },
+      sandra: { name: 'Sandra', title: 'Head of Deals' },
+      isaac: { name: 'Isaac', title: 'Head of Accounting' },
+      wendy: { name: 'Wendy', title: 'Head of Development' },
     };
     return agents[id] ?? undefined;
   },
@@ -18,29 +18,29 @@ vi.mock('@/config/agents', () => ({
 describe('buildCrossVisibilityBlock', () => {
   it('returns summary string excluding the current agent own response', () => {
     const responses: Record<string, string> = {
-      diana: 'Diana says something about cash flow projections.',
+      patrik: 'Patrik says something about cash flow projections.',
       marcos: 'Marcos has legal opinions about the contract terms.',
-      sasha: 'Sasha discusses deal structure and valuation.',
+      sandra: 'Sandra discusses deal structure and valuation.',
     };
 
-    const result = buildCrossVisibilityBlock('diana', responses);
+    const result = buildCrossVisibilityBlock('patrik', responses);
 
-    // Should NOT contain Diana's response
-    expect(result).not.toContain('Diana says something');
-    // Should contain Marcos and Sasha
+    // Should NOT contain Patrik's response
+    expect(result).not.toContain('Patrik says something');
+    // Should contain Marcos and Sandra
     expect(result).toContain('Marcos');
-    expect(result).toContain('Sasha');
+    expect(result).toContain('Sandra');
     expect(result).toContain('[War Room Context');
   });
 
   it('includes other agents truncated responses (max ~160 chars each)', () => {
     const longResponse = 'A'.repeat(250); // 250 chars, should be truncated
     const responses: Record<string, string> = {
-      diana: 'Short response.',
+      patrik: 'Short response.',
       marcos: longResponse,
     };
 
-    const result = buildCrossVisibilityBlock('diana', responses);
+    const result = buildCrossVisibilityBlock('patrik', responses);
 
     // Marcos's response should be truncated to ~160 chars + ellipsis
     expect(result).toContain('A'.repeat(160));
@@ -50,28 +50,28 @@ describe('buildCrossVisibilityBlock', () => {
   });
 
   it('returns empty string when no responses exist', () => {
-    const result = buildCrossVisibilityBlock('diana', {});
+    const result = buildCrossVisibilityBlock('patrik', {});
 
     expect(result).toBe('');
   });
 
   it('returns empty string when only the current agent has a response', () => {
     const responses: Record<string, string> = {
-      diana: 'Only Diana responded.',
+      patrik: 'Only Patrik responded.',
     };
 
-    const result = buildCrossVisibilityBlock('diana', responses);
+    const result = buildCrossVisibilityBlock('patrik', responses);
 
     expect(result).toBe('');
   });
 
   it('does not add ellipsis for short responses', () => {
     const responses: Record<string, string> = {
-      diana: 'Short.',
+      patrik: 'Short.',
       marcos: 'Also short.',
     };
 
-    const result = buildCrossVisibilityBlock('diana', responses);
+    const result = buildCrossVisibilityBlock('patrik', responses);
 
     expect(result).toContain('Also short.');
     // Should NOT have trailing ellipsis for short text

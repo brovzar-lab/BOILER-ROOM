@@ -63,11 +63,11 @@ export const CHARACTER_FRAMES: Record<CharacterState | 'talk', Record<Direction,
 /** Character IDs that have individual sprite sheets in public/sprites/ */
 export const CHARACTER_SHEET_NAMES: string[] = [
   'billy',
-  'diana',
+  'patrik',
   'marcos',
-  'sasha',
-  'roberto',
-  'valentina',
+  'sandra',
+  'isaac',
+  'wendy',
 ];
 
 // ── Environment Atlas ────────────────────────────────────────────────────────
@@ -113,11 +113,11 @@ export const ENVIRONMENT_ATLAS: Record<string, SpriteFrame> = {
  */
 export const DECORATION_ATLAS: Record<string, SpriteFrame> = {
   // Row 4: Personality items
-  'diana-chart': makeFrame(0, 4),
+  'patrik-chart': makeFrame(0, 4),
   'marcos-lawbooks': makeFrame(1, 4),
-  'sasha-whiteboard-tl': makeFrame(2, 4),
-  'sasha-whiteboard-tr': makeFrame(3, 4),
-  'sasha-whiteboard-bl': makeFrame(0, 5),
-  'sasha-whiteboard-br': makeFrame(1, 5),
-  'diana-monitor': makeFrame(2, 5),
+  'sandra-whiteboard-tl': makeFrame(2, 4),
+  'sandra-whiteboard-tr': makeFrame(3, 4),
+  'sandra-whiteboard-bl': makeFrame(0, 5),
+  'sandra-whiteboard-br': makeFrame(1, 5),
+  'patrik-monitor': makeFrame(2, 5),
 };

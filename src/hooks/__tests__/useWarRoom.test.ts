@@ -9,11 +9,11 @@ const mockStore = {
   warRoomRound: 0,
   warRoomLastResponses: {} as Record<string, string>,
   warRoomStreaming: {
-    diana: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' as const },
+    patrik: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' as const },
     marcos: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' as const },
-    sasha: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' as const },
-    roberto: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' as const },
-    valentina: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' as const },
+    sandra: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' as const },
+    isaac: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' as const },
+    wendy: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' as const },
   },
   isWarRoomMode: true,
   getOrCreateConversation: vi.fn().mockResolvedValue('conv-id'),
@@ -98,7 +98,7 @@ vi.mock('@/store/officeStore', () => ({
   ),
 }));
 
-const AGENT_IDS = ['diana', 'marcos', 'sasha', 'roberto', 'valentina'] as const;
+const AGENT_IDS = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'] as const;
 
 describe('useWarRoom', () => {
   beforeEach(() => {
@@ -156,32 +156,32 @@ describe('useWarRoom', () => {
       await result.current.sendBroadcast('test question');
     });
 
-    // Invoke onToken and onComplete for first captured callback (diana)
-    const dianaStream = streamCallbacks.find((s) => s.agentId === 'diana');
-    expect(dianaStream).toBeDefined();
+    // Invoke onToken and onComplete for first captured callback (patrik)
+    const patrikStream = streamCallbacks.find((s) => s.agentId === 'patrik');
+    expect(patrikStream).toBeDefined();
 
     await act(async () => {
-      dianaStream!.callbacks.onToken('Hello');
-      dianaStream!.callbacks.onToken(' world');
+      patrikStream!.callbacks.onToken('Hello');
+      patrikStream!.callbacks.onToken(' world');
     });
 
     // updateWarRoomContent should be called with accumulated content
-    expect(mockStore.updateWarRoomContent).toHaveBeenCalledWith('diana', 'Hello');
-    expect(mockStore.updateWarRoomContent).toHaveBeenCalledWith('diana', 'Hello world');
+    expect(mockStore.updateWarRoomContent).toHaveBeenCalledWith('patrik', 'Hello');
+    expect(mockStore.updateWarRoomContent).toHaveBeenCalledWith('patrik', 'Hello world');
 
     await act(async () => {
-      dianaStream!.callbacks.onComplete('Hello world', { input_tokens: 50, output_tokens: 10 });
+      patrikStream!.callbacks.onComplete('Hello world', { input_tokens: 50, output_tokens: 10 });
     });
 
     // completeWarRoomStream should be called
-    expect(mockStore.completeWarRoomStream).toHaveBeenCalledWith('diana');
+    expect(mockStore.completeWarRoomStream).toHaveBeenCalledWith('patrik');
 
     // Assistant message added to conversation with source: 'war-room'
     const addMessageCalls = (mockStore.addMessage as Mock).mock.calls;
     const assistantCall = addMessageCalls.find(
       (call: unknown[]) =>
         (call[1] as { role: string }).role === 'assistant' &&
-        (call[0] as string) === 'conv-diana',
+        (call[0] as string) === 'conv-patrik',
     );
     expect(assistantCall).toBeDefined();
     expect(assistantCall![1]).toMatchObject({
@@ -230,11 +230,11 @@ describe('useWarRoom', () => {
   });
 
   it('Test 5 (partial failure): when 1 agent errors, failWarRoomStream is called for that agent while others complete', async () => {
-    // Make diana's stream fail
+    // Make patrik's stream fail
     mockSendStreamingMessage.mockImplementation(
       (agentId: string, _msgs: unknown, callbacks: unknown, signal?: AbortSignal) => {
         streamCallbacks.push({ agentId, callbacks: callbacks as typeof streamCallbacks[0]['callbacks'], signal });
-        if (agentId === 'diana') {
+        if (agentId === 'patrik') {
           return Promise.reject(new Error('Non-retryable error'));
         }
         return Promise.resolve();
@@ -247,12 +247,12 @@ describe('useWarRoom', () => {
       await result.current.sendBroadcast('test question');
     });
 
-    // failWarRoomStream should be called for diana
-    expect(mockStore.failWarRoomStream).toHaveBeenCalledWith('diana', 'Non-retryable error');
+    // failWarRoomStream should be called for patrik
+    expect(mockStore.failWarRoomStream).toHaveBeenCalledWith('patrik', 'Non-retryable error');
 
     // Other agents should still be able to complete
     // (Promise.allSettled means all streams are attempted regardless)
-    const otherStreams = streamCallbacks.filter((s) => s.agentId !== 'diana');
+    const otherStreams = streamCallbacks.filter((s) => s.agentId !== 'patrik');
     expect(otherStreams.length).toBeGreaterThanOrEqual(4);
   });
 
@@ -260,11 +260,11 @@ describe('useWarRoom', () => {
     const error429 = new Error('Rate limited');
     (error429 as Error & { status: number }).status = 429;
 
-    // Make diana's stream throw a 429 error initially
+    // Make patrik's stream throw a 429 error initially
     mockSendStreamingMessage.mockImplementation(
       (agentId: string, _msgs: unknown, callbacks: unknown, signal?: AbortSignal) => {
         streamCallbacks.push({ agentId, callbacks: callbacks as typeof streamCallbacks[0]['callbacks'], signal });
-        if (agentId === 'diana') {
+        if (agentId === 'patrik') {
           return Promise.reject(error429);
         }
         return Promise.resolve();
@@ -277,18 +277,18 @@ describe('useWarRoom', () => {
       await result.current.sendBroadcast('test question');
     });
 
-    // retryWithBackoff should be called for diana's 429 error
+    // retryWithBackoff should be called for patrik's 429 error
     expect(mockRetryWithBackoff).toHaveBeenCalled();
   });
 
   it('Test 7 (cross-visibility): on round > 1, buildCrossVisibilityBlock is called for each agent', async () => {
     mockStore.warRoomRound = 1;
     mockStore.warRoomLastResponses = {
-      diana: 'diana previous',
+      patrik: 'patrik previous',
       marcos: 'marcos previous',
-      sasha: 'sasha previous',
-      roberto: 'roberto previous',
-      valentina: 'valentina previous',
+      sandra: 'sandra previous',
+      isaac: 'isaac previous',
+      wendy: 'wendy previous',
     } as Record<string, string>;
 
     const { result } = renderHook(() => useWarRoom());

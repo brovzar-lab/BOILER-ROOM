@@ -64,7 +64,6 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
       const dpr = window.devicePixelRatio || 1;
       canvas.width = Math.floor(rect.width * dpr);
       canvas.height = Math.floor(rect.height * dpr);
-      ctx.scale(dpr, dpr);
       ctx.imageSmoothingEnabled = false;
 
       // Recalculate auto-fit zoom on resize (only if user hasn't manually overridden)

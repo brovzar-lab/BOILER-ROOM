@@ -28,12 +28,12 @@ vi.mock('@/services/persistence/adapter', () => ({
 
 const makeFact = (overrides: Partial<MemoryFact> = {}): MemoryFact => ({
   id: 'fact-1',
-  agentId: 'diana',
+  agentId: 'patrik',
   dealId: 'deal-1',
   category: 'financial',
   content: 'Budget is $2M',
   confidence: 'high',
-  sourceAgentId: 'diana',
+  sourceAgentId: 'patrik',
   createdAt: 1000,
   updatedAt: 1000,
   ...overrides,
@@ -115,13 +115,13 @@ describe('memoryStore', () => {
       const { useMemoryStore } = await import('@/store/memoryStore');
       useMemoryStore.setState({
         facts: [
-          makeFact({ id: 'f1', agentId: 'diana', dealId: 'deal-1' }),
+          makeFact({ id: 'f1', agentId: 'patrik', dealId: 'deal-1' }),
           makeFact({ id: 'f2', agentId: 'marcos', dealId: 'deal-1' }),
-          makeFact({ id: 'f3', agentId: 'diana', dealId: 'deal-2' }),
+          makeFact({ id: 'f3', agentId: 'patrik', dealId: 'deal-2' }),
         ],
       });
 
-      const result = useMemoryStore.getState().getFactsForAgent('diana', 'deal-1');
+      const result = useMemoryStore.getState().getFactsForAgent('patrik', 'deal-1');
       expect(result).toHaveLength(1);
       expect(result[0]!.id).toBe('f1');
     });
@@ -132,9 +132,9 @@ describe('memoryStore', () => {
       const { useMemoryStore } = await import('@/store/memoryStore');
       useMemoryStore.setState({
         facts: [
-          makeFact({ id: 'f1', agentId: 'diana', dealId: 'deal-1' }),
+          makeFact({ id: 'f1', agentId: 'patrik', dealId: 'deal-1' }),
           makeFact({ id: 'f2', agentId: 'marcos', dealId: 'deal-1' }),
-          makeFact({ id: 'f3', agentId: 'diana', dealId: 'deal-2' }),
+          makeFact({ id: 'f3', agentId: 'patrik', dealId: 'deal-2' }),
         ],
       });
 

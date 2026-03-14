@@ -31,7 +31,7 @@ const WORK_FRAMES = 3;
 const KNOCK_DURATION = 0.5;
 
 /** All 5 agent IDs */
-const AGENT_IDS = ['diana', 'marcos', 'sasha', 'roberto', 'valentina'] as const;
+const AGENT_IDS = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'] as const;
 
 // Re-export for downstream consumers that import from characters.ts
 export { WAR_ROOM_SEATS } from './officeLayout';

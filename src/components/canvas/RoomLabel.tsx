@@ -75,15 +75,15 @@ function getRoomBadge(roomId: string): string {
       return 'B';
     case 'war-room':
       return 'W';
-    case 'diana':
+    case 'patrik':
       return 'D';
     case 'marcos':
       return 'M';
-    case 'sasha':
+    case 'sandra':
       return 'S';
-    case 'roberto':
+    case 'isaac':
       return 'R';
-    case 'valentina':
+    case 'wendy':
       return 'V';
     default:
       return '?';

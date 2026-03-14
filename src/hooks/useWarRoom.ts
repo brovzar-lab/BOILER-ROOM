@@ -8,7 +8,7 @@ import { buildCrossVisibilityBlock } from '@/services/context/warRoomSummary';
 import { useDealStore } from '@/store/dealStore';
 import { extractAndStoreMemory } from '@/services/memory/extractMemory';
 
-const AGENT_IDS: AgentId[] = ['diana', 'marcos', 'sasha', 'roberto', 'valentina'];
+const AGENT_IDS: AgentId[] = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
 
 /**
  * Orchestration hook for War Room parallel multi-agent streaming.

@@ -184,32 +184,32 @@ describe('compact grid invariants', () => {
     ).toBeLessThan(gridMidRow);
   });
 
-  it("Sasha's office is in top center-right region", () => {
-    const sasha = ROOMS.find((r) => r.id === 'sasha')!;
+  it("Sandra's office is in top center-right region", () => {
+    const sandra = ROOMS.find((r) => r.id === 'sandra')!;
     const gridMidCol = OFFICE_TILE_MAP[0]!.length / 2;
-    // Sasha is center-right: starts at or after midpoint but not at far right
+    // Sandra is center-right: starts at or after midpoint but not at far right
     expect(
-      sasha.tileRect.col,
-      "Sasha's office should start at or after center",
+      sandra.tileRect.col,
+      "Sandra's office should start at or after center",
     ).toBeGreaterThanOrEqual(gridMidCol);
     expect(
-      sasha.tileRect.col,
-      "Sasha's office should not be at far right (col < 24)",
+      sandra.tileRect.col,
+      "Sandra's office should not be at far right (col < 24)",
     ).toBeLessThan(24);
     const gridMidRow = OFFICE_TILE_MAP.length / 2;
     expect(
-      sasha.tileRect.row,
-      "Sasha's office should be in top half",
+      sandra.tileRect.row,
+      "Sandra's office should be in top half",
     ).toBeLessThan(gridMidRow);
   });
 
   it('War Room is in center, vertically centered between corridors', () => {
     const warRoom = ROOMS.find((r) => r.id === 'war-room')!;
-    const diana = ROOMS.find((r) => r.id === 'diana')!;
+    const patrik = ROOMS.find((r) => r.id === 'patrik')!;
     const marcos = ROOMS.find((r) => r.id === 'marcos')!;
 
-    // War Room is between Diana (left) and Marcos (right)
-    expect(warRoom.tileRect.col).toBeGreaterThan(diana.tileRect.col + diana.tileRect.width);
+    // War Room is between Patrik (left) and Marcos (right)
+    expect(warRoom.tileRect.col).toBeGreaterThan(patrik.tileRect.col + patrik.tileRect.width);
     expect(warRoom.tileRect.col + warRoom.tileRect.width).toBeLessThan(marcos.tileRect.col);
 
     // War Room is 11 tiles tall (roughly same height as one side office pair)
@@ -220,7 +220,7 @@ describe('compact grid invariants', () => {
 
     // War Room is below top rooms
     const topRooms = ROOMS.filter(
-      (r) => r.id === 'billy' || r.id === 'sasha',
+      (r) => r.id === 'billy' || r.id === 'sandra',
     );
     const topMax = Math.max(
       ...topRooms.map((r) => r.tileRect.row + r.tileRect.height),
@@ -228,20 +228,20 @@ describe('compact grid invariants', () => {
     expect(warRoom.tileRect.row).toBeGreaterThan(topMax - 1);
   });
 
-  it('upper side offices: Diana and Marcos at same row', () => {
-    const diana = ROOMS.find((r) => r.id === 'diana')!;
+  it('upper side offices: Patrik and Marcos at same row', () => {
+    const patrik = ROOMS.find((r) => r.id === 'patrik')!;
     const marcos = ROOMS.find((r) => r.id === 'marcos')!;
-    expect(diana).toBeDefined();
+    expect(patrik).toBeDefined();
     expect(marcos).toBeDefined();
-    expect(diana.tileRect.row).toBe(marcos.tileRect.row);
+    expect(patrik.tileRect.row).toBe(marcos.tileRect.row);
   });
 
-  it('lower side offices: Roberto and Valentina at same row', () => {
-    const roberto = ROOMS.find((r) => r.id === 'roberto')!;
-    const valentina = ROOMS.find((r) => r.id === 'valentina')!;
-    expect(roberto).toBeDefined();
-    expect(valentina).toBeDefined();
-    expect(roberto.tileRect.row).toBe(valentina.tileRect.row);
+  it('lower side offices: Isaac and Wendy at same row', () => {
+    const isaac = ROOMS.find((r) => r.id === 'isaac')!;
+    const wendy = ROOMS.find((r) => r.id === 'wendy')!;
+    expect(isaac).toBeDefined();
+    expect(wendy).toBeDefined();
+    expect(isaac.tileRect.row).toBe(wendy.tileRect.row);
   });
 
   it('corridors are 2 tiles wide', () => {
@@ -276,11 +276,11 @@ describe('WAR_ROOM_SEATS', () => {
     const keys = Object.keys(WAR_ROOM_SEATS);
     expect(keys.length).toBe(6);
     expect(keys).toContain('billy');
-    expect(keys).toContain('diana');
+    expect(keys).toContain('patrik');
     expect(keys).toContain('marcos');
-    expect(keys).toContain('sasha');
-    expect(keys).toContain('roberto');
-    expect(keys).toContain('valentina');
+    expect(keys).toContain('sandra');
+    expect(keys).toContain('isaac');
+    expect(keys).toContain('wendy');
   });
 
   it('all seats are within War Room interior', () => {
@@ -362,11 +362,11 @@ describe('DECORATIONS', () => {
 
   it('has decorations for all expected rooms', () => {
     const roomsWithDecos = new Set(DECORATIONS.map((d) => d.roomId));
-    expect(roomsWithDecos.has('diana')).toBe(true);
+    expect(roomsWithDecos.has('patrik')).toBe(true);
     expect(roomsWithDecos.has('marcos')).toBe(true);
-    expect(roomsWithDecos.has('sasha')).toBe(true);
-    expect(roomsWithDecos.has('roberto')).toBe(true);
-    expect(roomsWithDecos.has('valentina')).toBe(true);
+    expect(roomsWithDecos.has('sandra')).toBe(true);
+    expect(roomsWithDecos.has('isaac')).toBe(true);
+    expect(roomsWithDecos.has('wendy')).toBe(true);
     expect(roomsWithDecos.has('billy')).toBe(true);
   });
 });

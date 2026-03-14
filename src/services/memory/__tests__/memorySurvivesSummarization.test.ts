@@ -61,12 +61,12 @@ describe('Memory survives summarization', () => {
     const memoryFacts: MemoryFact[] = [
       {
         id: 'mem-1',
-        agentId: 'diana',
+        agentId: 'patrik',
         dealId: 'deal-1',
         category: 'financial',
         content: 'Budget is $2.4M USD',
         confidence: 'high',
-        sourceAgentId: 'diana',
+        sourceAgentId: 'patrik',
         createdAt: 1000,
         updatedAt: 2000,
       },
@@ -91,7 +91,7 @@ describe('Memory survives summarization', () => {
     // 2. Create a conversation that exceeds summarization threshold
     const conversation: Conversation = {
       id: 'conv-1',
-      agentId: 'diana',
+      agentId: 'patrik',
       dealId: 'deal-1',
       messages: Array.from({ length: 20 }, (_, i) => ({
         id: `msg-${i}`,
@@ -121,7 +121,7 @@ describe('Memory survives summarization', () => {
 
     expect(fact1).toBeDefined();
     expect(fact1.content).toBe('Budget is $2.4M USD');
-    expect(fact1.agentId).toBe('diana');
+    expect(fact1.agentId).toBe('patrik');
 
     expect(fact2).toBeDefined();
     expect(fact2.content).toBe('Currency risk on MXN/USD');
