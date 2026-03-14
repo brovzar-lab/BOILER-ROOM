@@ -23,7 +23,7 @@
 import { TileType, TILE_SIZE, CHAR_SPRITE_W, CHAR_SPRITE_H, ZOOM_OVERVIEW_THRESHOLD } from './types';
 import type { Camera, Character } from './types';
 import type { FurnitureItem, DecorationItem } from './officeLayout';
-import { OFFICE_TILE_MAP, ROOMS, getRoomAtTile } from './officeLayout';
+import { OFFICE_TILE_MAP, ROOMS, ROOM_RUGS, getRoomAtTile } from './officeLayout';
 import { PLACEHOLDER_COLORS, getCharacterSheet, getEnvironmentSheet } from './spriteSheet';
 import { CHARACTER_FRAMES, ENVIRONMENT_ATLAS, DECORATION_ATLAS } from './spriteAtlas';
 import { buildRenderables } from './depthSort';
@@ -131,6 +131,25 @@ export function renderFrame(
     w: (maxCol - minCol + 1) * TILE_SIZE,
     h: (maxRow - minRow + 1) * TILE_SIZE,
   });
+
+  // ── Layer 2c: Area Rugs (after floor + tint, before walls) ────────────
+  for (const rug of ROOM_RUGS) {
+    const rx = rug.col * TILE_SIZE;
+    const ry = rug.row * TILE_SIZE;
+    const rw = rug.w * TILE_SIZE;
+    const rh = rug.h * TILE_SIZE;
+    // Fill
+    ctx.fillStyle = rug.color;
+    ctx.fillRect(rx, ry, rw, rh);
+    // 1px woven edge border
+    ctx.strokeStyle = rug.borderColor;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(rx + 0.5, ry + 0.5, rw - 1, rh - 1);
+    // Inner border pattern (woven suggestion): dashed border 2px inset
+    ctx.setLineDash([2, 2]);
+    ctx.strokeRect(rx + 2.5, ry + 2.5, rw - 5, rh - 5);
+    ctx.setLineDash([]);
+  }
 
   // ── Layer 3: 3/4 Wall Strips + Shadows ───────────────────────────────
   renderWalls(ctx, minCol, maxCol, minRow, maxRow);
