@@ -1,386 +1,460 @@
-# Domain Pitfalls
+# Domain Pitfalls: v1.1 Visual Overhaul
 
-**Domain:** Multi-agent AI workspace with isometric pixel art Canvas 2D rendering
-**Project:** Lemon Command Center
-**Researched:** 2026-03-12
-**Overall confidence:** MEDIUM-HIGH (training data across well-established domains; web verification unavailable)
+**Domain:** Retrofitting JRPG 3/4 perspective, smooth zoom, compact layout into existing Canvas 2D tile engine
+**Project:** Lemon Command Center v1.1
+**Researched:** 2026-03-13
+**Overall confidence:** HIGH (well-established Canvas 2D and pixel art game development patterns; verified against existing codebase)
+
+**Scope:** This document covers pitfalls specific to the v1.1 milestone changes being applied to the existing engine. See the v1.0 PITFALLS.md in git history for foundational pitfalls (React+Canvas integration, streaming, IndexedDB, etc.) which remain valid.
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause rewrites, severe performance degradation, or data loss.
+Mistakes that cause rewrites, broken rendering, or cascading regressions across the existing system.
 
 ---
 
-### Pitfall 1: Canvas Re-render Storm from React State Changes
+### Pitfall 1: Sprite Cache Explosion from Fractional Zoom Levels
 
-**What goes wrong:** The Canvas game loop (requestAnimationFrame at 60fps) and React's reconciliation cycle fight each other. Every React state update (new chat token, agent status change, deal switch) triggers a re-render. If the Canvas element is inside a React component that re-renders, the Canvas context gets destroyed and recreated, causing flickering, lost state, and dropped frames. Developers commonly put game state in React state (useState/useReducer), which means every sprite movement triggers React reconciliation -- a 16ms budget blown on virtual DOM diffing instead of drawing pixels.
+**What goes wrong:** The existing `getCachedSprite()` in `spriteSheet.ts` creates a pre-scaled `HTMLCanvasElement` keyed by integer zoom level. With smooth pinch-to-zoom, zoom becomes a float (e.g., 1.37, 2.814). Every unique zoom value creates an entirely new cache tier. During a single pinch gesture, the zoom value changes 30-60 times per second, each generating a new set of cached sprites. With ~30 unique sprite frames (environment + characters), a 2-second pinch gesture creates 60 zoom tiers x 30 frames = 1,800 off-screen canvases, consuming hundreds of MB of memory. The browser starts GC thrashing, frame rate collapses, and on mobile Safari the tab gets killed.
 
-**Why it happens:** React's mental model ("UI is a function of state") conflicts with imperative Canvas drawing ("mutate pixels every frame"). Developers try to unify both under React's state model because it feels clean, but Canvas rendering needs to be an escape hatch from React, not governed by it.
+**Why it happens:** The existing cache design (`spriteCache = Map<number, Map<string, HTMLCanvasElement>>`) assumes zoom is one of 2-3 integer values. This is a perfectly correct design for integer zoom but catastrophically wrong for continuous zoom. Developers often "just make zoom a float" without realizing the downstream cache implications.
 
-**Consequences:**
-- Canvas flickers or goes blank on every chat message
-- Frame rate drops from 60fps to 5-15fps during streaming responses
-- BILLY avatar stutters or teleports during pathfinding walks
-- Agent idle animations freeze when React is busy reconciling chat state
-- Memory leaks from repeatedly creating/destroying Canvas contexts
-
-**Prevention:**
-1. **Mount Canvas once, never unmount.** Use a single `<canvas>` element wrapped in a React component that uses `React.memo` with an empty dependency comparison (or `shouldComponentUpdate` returning false). The Canvas component should render exactly once.
-2. **Game state lives outside React.** Use a plain TypeScript class or module for all game state (sprite positions, animation frames, pathfinding queues). Zustand stores are acceptable because they support subscriptions without React re-renders via `subscribe()`.
-3. **Bridge pattern:** React reads game state only when it needs to (e.g., "which room is BILLY in?" to show the correct chat panel). Game loop reads React/Zustand state only when it needs to (e.g., "is agent X currently responding?" to switch sprite animation).
-4. **Use refs, not state, for Canvas.** `useRef` for the canvas element, context, and any mutable game data. Never `useState` for anything the game loop touches.
-
-**Detection (warning signs):**
-- Canvas element has a React key that changes
-- `useState` calls for sprite positions, animation frame indices, or camera offset
-- Canvas component re-renders visible in React DevTools during chat
-- FPS counter drops when UI panels update
-
-**Phase mapping:** Must be correct from Phase 1 (Canvas rendering foundation). Retrofitting this is a rewrite.
-
-**Confidence:** HIGH -- this is a universally documented React+Canvas integration problem.
-
----
-
-### Pitfall 2: Streaming Token Render Bottleneck (Death by a Thousand setState Calls)
-
-**What goes wrong:** When streaming tokens from the Anthropic API via SSE (Server-Sent Events), each token arrives as a separate event -- often 20-50 tokens per second. Calling `setState` on every single token (to append it to the message string) triggers 20-50 React re-renders per second. In the War Room (5 agents streaming simultaneously), that becomes 100-250 re-renders per second. React batching helps in React 18+ but still can not prevent layout thrashing when the DOM is complex (markdown rendering, syntax highlighting, scrolling containers).
-
-**Why it happens:** The naive implementation `setMessages(prev => [...prev, token])` or `setCurrentMessage(prev => prev + token)` is the obvious approach, and it works fine for a single slow stream. It falls apart at scale (War Room with 5 parallel streams) or with rich rendering (markdown-to-HTML on every token).
+**Existing code at risk:**
+- `spriteSheet.ts:getCachedSprite()` -- cache keyed by exact zoom number
+- `spriteSheet.ts:clearSpriteCache()` -- clears all, but is only called on zoom change (which is now continuous)
+- `renderer.ts` -- calls `getCachedSprite()` for every tile and furniture item every frame
 
 **Consequences:**
-- War Room becomes unusable -- UI freezes, scroll jank, tokens appear in bursts
-- Canvas game loop starves (main thread blocked by React reconciliation)
-- Browser tab becomes unresponsive during parallel streaming
-- Markdown re-parsing on every token is O(n^2) over the message length
-- Memory pressure from thousands of intermediate string allocations
+- Memory usage grows unboundedly during zoom gestures (100MB+ in seconds)
+- GC pauses cause visible frame drops (stuttering during pinch)
+- Tab crash on memory-constrained devices
+- If `clearSpriteCache()` is called every frame to prevent buildup, you lose all caching benefit -- sprites are re-created from scratch 60 times per second
 
 **Prevention:**
-1. **Batch tokens before rendering.** Accumulate tokens in a ref or plain variable. Flush to React state on a timer (every 50-100ms) or via `requestAnimationFrame`. This reduces 50 updates/sec to 10-20, which React handles comfortably.
-2. **Append-only rendering.** Do not re-render the entire message on each token. Maintain a "committed" portion (already rendered markdown) and a "pending" tail (raw text, not yet parsed). Only re-parse markdown when a natural boundary is hit (newline, paragraph break, code fence close).
-3. **War Room: stagger initial connections.** Do not fire all 5 API calls in the same tick. Stagger by 100-200ms to avoid simultaneous token floods that create render contention.
-4. **Use CSS `content-visibility: auto`** on chat containers that are off-screen (agents not currently visible).
-5. **Consider a dedicated streaming state store** separate from the message history store, so streaming updates only trigger re-renders in the active chat panel, not the entire app.
-
-**Detection:**
-- React DevTools shows >30 re-renders/sec on chat components
-- Performance profiler shows long tasks (>50ms) during streaming
-- Canvas frame drops correlate with streaming activity
-- Browser "page unresponsive" warnings during War Room sessions
-
-**Phase mapping:** Foundation in Phase 2 (chat integration), critical optimization in the War Room phase.
-
-**Confidence:** HIGH -- well-documented pattern in LLM chat interfaces.
-
----
-
-### Pitfall 3: IndexedDB Transaction Gotchas and Silent Data Loss
-
-**What goes wrong:** IndexedDB has a counter-intuitive transaction model that causes silent failures. Transactions auto-commit when they become inactive (no pending requests), which means any `await` that yields to the microtask queue can cause the transaction to close prematurely. Developers write `const tx = db.transaction(...); await someOtherThing(); tx.objectStore(...)` and the second line silently fails because the transaction already committed. Additionally, IndexedDB operations are async but NOT Promise-based natively -- the IDBRequest API uses events, and mixing it with async/await without a wrapper library leads to race conditions.
-
-**Why it happens:** IndexedDB's API predates modern async/await patterns. Its transaction lifecycle is tied to the event loop in ways that are invisible to developers used to SQL transactions or Promise-based APIs. The "transaction auto-close" behavior is technically documented but consistently surprises people.
-
-**Consequences:**
-- Conversation history silently fails to save (user thinks it saved, returns to find messages missing)
-- Deal context data corrupts when switching deals rapidly (overlapping transactions)
-- Full history stored in IndexedDB but reads return partial data due to index misconfiguration
-- Storage quota exceeded without warning on Safari (default 1GB vs Chrome's more generous limits)
-- Version upgrade migrations fail silently, leaving database in inconsistent state
-
-**Prevention:**
-1. **Use a wrapper library.** `idb` by Jake Archibald (lightweight, well-maintained) or Dexie.js (more features, query builder). These handle the transaction lifecycle correctly and provide proper Promise-based APIs. Given this project's scope, **Dexie.js is recommended** -- it handles schema versioning/migrations cleanly, which matters for a product that will evolve its data model (deal rooms, agent memory, file references).
-2. **Never hold a transaction across an await that does non-IDB work.** If you must do async work mid-transaction, complete all IDB operations first, then do the async work, then open a new transaction.
-3. **Implement write-ahead logging for critical data.** Before a complex multi-store write (e.g., saving a message + updating agent memory + updating deal metadata), write a "pending operation" record first. On app startup, check for incomplete operations and replay them.
-4. **Set explicit storage persistence.** Call `navigator.storage.persist()` on startup. Without this, the browser can evict IndexedDB data under storage pressure -- catastrophic for conversation history.
-5. **Safari-specific: test with storage limits.** Safari has a 1GB limit per origin and aggressive eviction in private browsing mode. Test with large conversation histories.
-6. **Design the abstraction layer from day one.** The project already plans localStorage-to-IndexedDB migration and future Supabase/Firebase. Define a `PersistenceProvider` interface early:
+1. **Quantize zoom for sprite caching.** Round zoom to the nearest 0.5 or nearest integer for cache key purposes. Render sprites at the quantized zoom level and let Canvas `drawImage` handle the remaining fractional scaling. This limits cache tiers to 6-8 levels (zoom 0.5 through 4.0) instead of infinite.
    ```typescript
-   interface PersistenceProvider {
-     getConversation(agentId: string, dealId: string): Promise<Message[]>;
-     appendMessage(agentId: string, dealId: string, msg: Message): Promise<void>;
-     getDealContext(dealId: string): Promise<DealContext>;
-     // ...
+   function getCacheZoom(zoom: number): number {
+     return Math.round(zoom * 2) / 2; // Quantize to 0.5 increments
    }
    ```
-   Implement IndexedDB behind this interface. Never import `idb`/Dexie directly in components.
+2. **LRU eviction.** Replace the `Map<number, ...>` with a cache that evicts least-recently-used zoom tiers. Keep at most 3-4 zoom tiers cached simultaneously.
+3. **Do NOT pre-scale during pinch.** During active pinch gestures, render directly from the source sprite sheet using `ctx.drawImage()` with destination sizing. Only populate the pre-scaled cache when the gesture ends and zoom settles. The browser's `drawImage` scaling with `imageSmoothingEnabled = false` is fast enough for transient states.
+4. **Debounce cache population.** After zoom changes stop (gesture end), wait 100ms, then pre-scale sprites at the final zoom level for optimal rendering quality.
 
 **Detection:**
-- Messages appear in chat but are gone after page reload
-- `DOMException: TransactionInactiveError` in console
-- Inconsistent data between what is shown and what is stored
-- Storage usage grows unboundedly (orphaned records from failed transactions)
+- Memory profiler shows hundreds of `HTMLCanvasElement` objects
+- Frame rate drops specifically during pinch-to-zoom gestures
+- `performance.memory.usedJSHeapSize` grows monotonically during zoom
 
-**Phase mapping:** Must be designed correctly in Phase 1 (persistence layer). Migration path architecture should be in place before any data is stored.
+**Phase mapping:** Must be addressed before smooth zoom is implemented. Change the cache strategy first, then add smooth zoom.
 
-**Confidence:** HIGH -- IndexedDB transaction behavior is extensively documented in MDN and developer post-mortems.
+**Confidence:** HIGH -- direct analysis of existing `spriteSheet.ts` code.
 
 ---
 
-### Pitfall 4: Context Window Mismanagement Causing Incoherent Agent Responses
+### Pitfall 2: `Math.round`/`Math.floor` Everywhere Breaks Fractional Zoom Rendering
 
-**What goes wrong:** Claude's context window (200K tokens for Claude 3.5 Sonnet, 200K for Claude 4) seems enormous, but the system prompt layering described in the project (base + persona + deal context + files + history) fills it faster than expected. A single uploaded PDF can be 50K+ tokens. Two PDFs plus conversation history for an active deal plus the structured memory blob can exceed the window without the developer realizing. When the context is truncated or summarized poorly, agents lose critical deal context and give contradictory advice ("You should structure as an LLC" one day, "As we discussed, the S-Corp structure..." the next).
+**What goes wrong:** The existing renderer uses `Math.floor()` and `Math.round()` on every coordinate calculation to achieve pixel-perfect integer alignment. This is correct for integer zoom (zoom=2 means every source pixel maps to exactly 4 screen pixels). With fractional zoom, aggressive rounding causes visible artifacts: tile gaps (1-pixel seams between adjacent tiles), tile overlaps (tiles drawn 1 pixel too wide), and jittering (sprites oscillate between two pixel positions as zoom changes smoothly).
 
-**Why it happens:** Token counting is not intuitive. Developers estimate based on word count (1 token ~= 0.75 words) but system prompts, JSON formatting, and file content have different token densities. The "80% auto-summarize" threshold in the project spec is good, but the summarization itself can lose critical numerical details (dollar amounts, dates, percentages) that are the entire point of a financial advisory tool.
+**Existing code at risk (every line with `Math.floor`/`Math.round` in the render path):**
+- `renderer.ts:53-61` -- map offset calculation uses `Math.floor` on centering and `Math.round` on camera position
+- `renderer.ts:83-84` -- tile position: `Math.floor(col * tileSize + offsetX)`
+- `renderer.ts:177-178` -- furniture position: `Math.floor(item.col * tileSize + offsetX)`
+- `renderer.ts:559-560` -- character position: `Math.floor(ch.x * zoom + offsetX)`
+- `camera.ts:52-53` -- camera snap: `camera.x = Math.round(camera.x)`
+- `camera.ts:75-76` -- screenToTile: `Math.floor((canvasWidth - mapW) / 2)`
 
 **Consequences:**
-- Agent contradicts previous advice because summarization lost key facts
-- File content silently truncated, agent analyzes partial document
-- Dollar amounts, dates, percentages lost in summarization (catastrophic for finance/legal domain)
-- War Room broadcast consumes 5x context budget (same deal context sent to 5 agents)
-- Slow API responses when context is near-full (more tokens to process)
+- 1-pixel gaps appear between tiles at certain zoom levels (e.g., zoom=1.5 where 16*1.5=24 but floor/ceil of adjacent tiles differ)
+- Characters appear to "vibrate" by 1 pixel as smooth zoom animates through fractional values
+- Tile edges flicker as zoom crosses integer+0.5 boundaries
+- Click-to-tile conversion (`screenToTile`) returns wrong tile at fractional zoom because the rounding in rendering doesn't match the rounding in hit detection
 
 **Prevention:**
-1. **Token counting on write, not read.** Count tokens when messages are added to history, not when constructing the API call. Use Anthropic's `count_tokens` endpoint or `@anthropic-ai/tokenizer` for client-side counting. Maintain a running total per conversation.
-2. **Structured memory as first-class data, not chat summary.** The project spec mentions "auto-extracted key facts, decisions, numbers, action items" -- this is correct. Implement this as a structured JSON document (not prose summary) that is always included in full. Summarize the conversation narrative, but never summarize the structured facts.
+1. **Use `ctx.setTransform()` for zoom instead of manual multiplication.** Apply zoom as a canvas transform. Draw everything at native (unzoomed) coordinates. The canvas transform handles sub-pixel positioning without rounding artifacts.
    ```typescript
-   interface AgentMemory {
-     keyFacts: { fact: string; source: string; date: string }[];
-     decisions: { decision: string; rationale: string; date: string }[];
-     numbers: { label: string; value: string; currency?: string; date: string }[];
-     actionItems: { item: string; status: 'open' | 'done'; date: string }[];
-   }
+   ctx.setTransform(zoom, 0, 0, zoom, offsetX, offsetY);
+   // Now draw at world coordinates -- no manual zoom multiplication needed
+   ctx.drawImage(sprite, col * TILE_SIZE, row * TILE_SIZE);
+   ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset for UI overlays
    ```
-3. **Priority-based context assembly.** When constructing the API message array, allocate token budget in priority order: system prompt (fixed) > structured memory (fixed) > recent messages (sliding window) > file content (summarized if needed) > older history (summarized). Never let file content crowd out conversation history.
-4. **File content: extract and summarize on upload, not on every API call.** When a user uploads a PDF, immediately extract text, create a summary (via Claude), and store both. Include only the summary in context by default; include full text only when the user explicitly asks about the document.
-5. **Cross-agent memory requires careful deduplication.** When facts from one agent inform another (per the spec), ensure the same fact is not represented differently in two agents' memories, leading to contradictions.
+2. **Separate world rendering from UI rendering.** Apply the zoom transform for world content (tiles, furniture, characters). Reset to identity transform for UI overlays (room labels, tooltips, speech bubbles) which should be rendered at screen resolution.
+3. **Keep `screenToTile` in sync.** The inverse transform must match the forward transform exactly. If using `ctx.setTransform`, use the inverse matrix for coordinate conversion:
+   ```typescript
+   const worldX = (screenX - offsetX) / zoom;
+   const worldY = (screenY - offsetY) / zoom;
+   const col = Math.floor(worldX / TILE_SIZE);
+   const row = Math.floor(worldY / TILE_SIZE);
+   ```
+4. **Accept sub-pixel rendering during zoom transitions.** Pixel-perfect alignment only at "resting" zoom levels (integers or specific snap points). During smooth zoom, allow the canvas to do bilinear filtering -- the motion hides the imperfection.
+5. **Keep `imageSmoothingEnabled = false`.** Even with `setTransform` zoom, disable smoothing so pixel art retains its crisp edges. The browser will use nearest-neighbor scaling, which preserves pixel art style at fractional zoom better than bilinear.
 
 **Detection:**
-- Agent says "I don't recall" or contradicts earlier advice
-- API calls taking >30 seconds (bloated context)
-- Token counter exceeding 80% frequently
-- User re-explaining things the agent should already know
+- Visible gaps between tiles (dark lines in the floor)
+- Tiles "shimmer" or flicker during zoom animation
+- Click on a tile highlights the wrong tile
 
-**Phase mapping:** Architecture in Phase 1 (data model for memory), implementation in Phase 2 (chat), critical refinement in Phase 3 (War Room/cross-agent).
+**Phase mapping:** Must be solved as part of the smooth zoom implementation. Cannot be deferred.
 
-**Confidence:** HIGH -- context window management is the most discussed challenge in LLM application development.
+**Confidence:** HIGH -- this is the most common Canvas 2D pixel art scaling bug.
 
 ---
 
-### Pitfall 5: Isometric Coordinate Math Errors (Screen-to-World and Back)
+### Pitfall 3: 24x32 Sprites on 16x16 Grid Breaks Character Positioning and Collision
 
-**What goes wrong:** Isometric projection requires converting between three coordinate systems: world/grid coordinates (tile x,y), isometric screen coordinates (diamond-shaped projection), and actual pixel coordinates (with camera offset and zoom). Developers get the forward transform right (world-to-screen for rendering) but botch the inverse transform (screen-to-world for mouse clicks/pathfinding). The result: BILLY walks to the wrong tile, clicks register on the wrong room, and sprite sorting renders agents behind walls.
+**What goes wrong:** The existing system assumes characters occupy exactly one 16x16 tile. Character position is stored as `tileCol`/`tileRow` with pixel position derived as `ch.x = ch.tileCol * TILE_SIZE`. The renderer draws characters at this exact position. Switching to 24x32 sprites means characters are 1.5 tiles wide and 2 tiles tall. If you just swap the sprite without adjusting the positioning math, characters are anchored at their top-left corner and appear offset from their logical tile position. Their visual bounds extend into adjacent tiles, creating visual overlaps with furniture and walls. The existing Y-sort depth ordering (`sort by a.y - b.y`) breaks because a 2-tile-tall character's visual top starts one tile above its logical position.
 
-**Why it happens:** The isometric transform is:
-```
-screenX = (gridX - gridY) * (tileWidth / 2)
-screenY = (gridX + gridY) * (tileHeight / 2)
-```
-The inverse is:
-```
-gridX = (screenX / (tileWidth/2) + screenY / (tileHeight/2)) / 2
-gridY = (screenY / (tileHeight/2) - screenX / (tileWidth/2)) / 2
-```
-But this only works for the origin-centered case. Add camera pan, zoom (which must be integer-only for pixel art), sprite anchor points, and tile height offsets (tall objects), and the math accumulates floating-point errors that cause off-by-one tile selections.
+**Existing code at risk:**
+- `characters.ts:139` -- `ch.x = ch.tileCol * TILE_SIZE; ch.y = ch.tileRow * TILE_SIZE` (assumes sprite size = tile size)
+- `characters.ts:148-150` -- interpolation between tiles uses TILE_SIZE as the unit
+- `renderer.ts:559-560` -- character draw position: `Math.floor(ch.x * zoom + offsetX)` (top-left anchor)
+- `renderer.ts:109` -- Y-sort: `characters.sort((a, b) => a.y - b.y)` (uses top-left Y)
+- `spriteAtlas.ts:31` -- `makeFrame` uses `T = TILE_SIZE` for frame dimensions
+- `renderer.ts:585` -- fallback character size: `Math.floor(TILE_SIZE * zoom * 0.8)` (16px based)
+- `camera.ts` -- camera follow targets character position (top-left corner)
 
 **Consequences:**
-- Clicking on a room door makes BILLY walk to the adjacent room
-- Pathfinding (BFS) calculates correct grid path but renders it offset
-- Sprites render in wrong depth order (agent appears in front of wall)
-- At certain zoom levels, tiles have gaps or overlaps (sub-pixel rendering)
-- Mouse hover highlights the wrong tile
+- Characters appear offset from their logical grid position (feet don't align with floor tile)
+- Characters overlap walls and furniture because their visual bounds exceed the single-tile assumption
+- Y-sort produces wrong depth ordering (character behind a desk appears in front)
+- Camera follow targets the wrong point (character's head instead of feet)
+- War Room seating looks wrong (agents overlap the conference table)
+- Pathfinding collision works on 1-tile granularity but character visuals extend beyond
 
 **Prevention:**
-1. **Integer-only coordinates.** All positions, camera offsets, and zoom levels must be integers. Use `Math.round()` after every coordinate transform. For zoom, only allow 1x, 2x, 3x, 4x -- never fractional. This is already implied by the "pixel-perfect integer zoom" constraint in the project spec, but it must be enforced everywhere, including intermediate calculations.
-2. **Centralize coordinate transforms.** Create a single `CoordinateSystem` class with `worldToScreen()`, `screenToWorld()`, `screenToCanvas()` (accounts for camera), and `canvasToScreen()` (accounts for DOM position). Every piece of code uses these functions; nobody hand-rolls the math.
-3. **Depth sorting: use grid position, not screen Y.** Sort sprites by `(gridX + gridY)` for correct isometric depth, not by `screenY`. For objects that span multiple tiles, use the "foot" position (bottom-center of the sprite) as the sort key.
-4. **Tile picking: use a color-map approach for complex tiles.** If tiles have irregular shapes (furniture, desks), render an invisible "hit test" canvas where each tile is a unique color. On click, read the pixel color to determine which tile was clicked. This is more reliable than mathematical inverse transforms for irregular shapes.
-5. **Test at every zoom level.** Off-by-one errors often only manifest at specific zoom levels. Automated visual regression tests at each zoom level catch these early.
+1. **Anchor sprites at foot-center, not top-left.** Define a character anchor point at the bottom-center of the sprite (x=12, y=32 for a 24x32 sprite). Draw characters by subtracting the anchor offset:
+   ```typescript
+   const drawX = ch.x * zoom + offsetX - (CHAR_WIDTH / 2) * zoom;
+   const drawY = ch.y * zoom + offsetY - (CHAR_HEIGHT - TILE_SIZE) * zoom;
+   ```
+   This keeps the character's "feet" aligned with their tile position while the upper body extends above.
+2. **Y-sort by foot position, not sprite top.** Sort by `ch.y + TILE_SIZE` (the bottom of the logical tile) or `ch.tileRow` directly. This ensures characters behind desks sort correctly.
+3. **Separate logical size from visual size.** Characters still occupy 1 tile for pathfinding and collision. Their visual sprite simply extends above that tile. Do NOT change the pathfinding grid or walkability checks.
+4. **Update the sprite atlas.** `spriteAtlas.ts` hardcodes `T = TILE_SIZE (16)` for frame dimensions. The new character frames need `{ w: 24, h: 32 }`. Create a separate `CHAR_TILE_W = 24, CHAR_TILE_H = 32` constant. Keep `TILE_SIZE = 16` for the grid.
+5. **Camera follow should target the foot position.** Update `updateCamera` to center on `ch.y + TILE_SIZE/2` (foot midpoint) rather than `ch.y` (head).
+6. **War Room seats: verify visual overlap.** With 24x32 sprites, agents seated around the conference table will visually overlap. Adjust seat tile positions to add spacing, or accept the overlap as the JRPG style (RPG characters commonly overlap tables).
 
 **Detection:**
-- BILLY walks to wrong destination after clicking
-- Visible tile gaps at certain zoom levels
-- Sprite "pops" when crossing tile boundaries (depth sort error)
-- Mouse hover indicator misaligned with cursor
+- Characters appear to "float" above or below their intended position
+- Characters clip into walls or furniture
+- Agents in the War Room overlap each other's sprites
+- Clicking near a character navigates to the wrong room
 
-**Phase mapping:** Must be rock-solid in Phase 1 (Canvas rendering engine). Every subsequent feature depends on correct coordinate math.
+**Phase mapping:** Must be solved together with the sprite art change. Cannot swap sprites without adjusting the positioning system.
 
-**Confidence:** HIGH -- isometric coordinate math pitfalls are extremely well-documented in game development literature.
+**Confidence:** HIGH -- direct analysis of existing coordinate math in `characters.ts` and `renderer.ts`.
 
 ---
 
-### Pitfall 6: API Key Exposure in Client-Side Architecture
+### Pitfall 4: Compact Layout Breaks All Hardcoded Tile Coordinates
 
-**What goes wrong:** The project spec says "client-side with direct Anthropic API calls" and "API key in .env, proxied through Vite dev server." In development, Vite's proxy hides the key. But if the app is ever built for production (even for deployment on a local network or sharing with a colleague), the API key is embedded in the client bundle or exposed in network requests. Anthropic's API keys do not have per-key rate limits or scoping -- a leaked key means unlimited spend.
+**What goes wrong:** The existing codebase has tile coordinates hardcoded in at least 5 files. The 42x34 hub-and-spoke layout with specific room positions (Billy at col 16-25 row 2-8, Diana at col 4-13 row 11-20, etc.) is embedded in `officeLayout.ts` as the tile map, room definitions, and furniture placements. It's also referenced in `characters.ts` (War Room seat coordinates), `renderer.ts` (decoration positions at hardcoded col/row), and likely in tests. Switching to a compact grid layout requires changing ALL of these simultaneously. Missing even one reference causes characters to walk into void, furniture to render outside rooms, or decorations to appear in hallways.
 
-**Why it happens:** `.env` variables prefixed with `VITE_` are inlined into the build at compile time. Developers use `VITE_ANTHROPIC_API_KEY` in development, it works great, then the production build ships with the key literally in the JavaScript bundle as a string constant.
+**Existing hardcoded coordinates (audit):**
+- `officeLayout.ts:162` -- `OFFICE_TILE_MAP` (42x34 grid built procedurally)
+- `officeLayout.ts:166-223` -- `ROOMS` array with 7 rooms, each specifying `tileRect`, `doorTile`, `seatTile`, `billyStandTile`
+- `officeLayout.ts:241-281` -- `FURNITURE` array with 21 items, each at specific `col`/`row`
+- `characters.ts:41-47` -- `WAR_ROOM_SEATS` with 5 hardcoded seat coordinates
+- `renderer.ts:281-304` -- `renderDecorations()` with 11 hardcoded `col`/`row` positions for personality items
+- `camera.ts:15-16` -- `computeAutoFitZoom` uses `OFFICE_TILE_MAP[0].length` (42) and `.length` (34)
 
 **Consequences:**
-- API key visible in browser DevTools Network tab or in built JS files
-- Unauthorized usage if the app is accessible on any network
-- Anthropic bill shock from leaked key abuse
-- No per-user rate limiting possible
+- Characters pathfind to coordinates that are now VOID tiles (crash or infinite loop)
+- Furniture renders outside room boundaries
+- War Room seats overlap or fall inside walls
+- Decorations appear in wrong rooms
+- Auto-fit zoom calculates wrong because map dimensions changed
+- BFS pathfinding finds no path (rooms disconnected in new layout)
+- Tests fail with incorrect tile assertions
 
 **Prevention:**
-1. **Never prefix the API key with `VITE_`.** Keep it as `ANTHROPIC_API_KEY` (no VITE_ prefix) so Vite does not inline it.
-2. **Use Vite's server proxy in development.** Configure `vite.config.ts` to proxy `/api/anthropic` to `https://api.anthropic.com`, injecting the API key server-side in the proxy middleware. The client never sees the key.
-3. **For production: add a minimal API relay.** Even a simple Cloudflare Worker or Vercel Edge Function that forwards requests to Anthropic with the key injected server-side. This also enables rate limiting and usage tracking.
-4. **Add a `.env` validator on startup** that checks: if `NODE_ENV === 'production'` and `VITE_ANTHROPIC_API_KEY` is set, throw an error with a clear message.
+1. **Centralize ALL coordinates in `officeLayout.ts`.** Move War Room seats and decoration positions into the room/furniture data structure. No other file should contain literal tile coordinates. Renderer reads decoration placements from data, not hardcoded positions.
+   ```typescript
+   // Add to Room interface:
+   decorations: { key: string; col: number; row: number }[];
+   // Add to ROOMS data:
+   { id: 'diana', ..., decorations: [{ key: 'diana-chart', col: 5, row: 13 }] }
+   ```
+2. **Define the new layout dimensions first, then derive everything.** Start with the compact grid dimensions (e.g., 20x18). Build the tile map. Place rooms. Derive all coordinates from room definitions. Do not manually specify coordinates that could be computed from room positions.
+3. **Write a layout validation function.** After building the tile map, verify:
+   - Every room's `seatTile` and `billyStandTile` are walkable tiles
+   - Every room's `doorTile` is a DOOR tile
+   - Every furniture item is within its room's bounds
+   - Every War Room seat is within the War Room
+   - BFS can find a path from Billy's office to every other room
+4. **Update tests first.** The existing tests in `__tests__/officeLayout.test.ts` and `__tests__/tileMap.test.ts` define the expected layout. Update them to the new layout before changing the implementation (TDD approach prevents coordinate drift).
+5. **Keep the old layout available during development.** Use a flag or env variable to toggle between old and new layout. This allows A/B comparison and gradual migration.
 
 **Detection:**
-- `VITE_ANTHROPIC_API_KEY` appears in any source file
-- API key visible in browser Network tab requests
-- `grep -r "VITE_ANTHROPIC" dist/` finds matches in built files
+- Characters get "stuck" (pathfinding returns empty path)
+- Furniture visible outside room walls
+- Clicking a room navigates to wrong location
+- Test failures with coordinate assertions
 
-**Phase mapping:** Must be correct from Phase 1 (project setup). Trivial to do right initially, painful to fix after deployment.
+**Phase mapping:** This should be one of the first changes -- the new layout affects every other visual feature.
 
-**Confidence:** HIGH -- this is a well-known Vite/CRA security pitfall.
+**Confidence:** HIGH -- direct audit of all coordinate references in the codebase.
 
 ---
 
-### Pitfall 7: War Room Parallel Streaming Causes Rate Limiting and Race Conditions
+### Pitfall 5: 3/4 Perspective Rendering Order Requires Layer Refactoring
 
-**What goes wrong:** The War Room fires 5 simultaneous API calls to Claude (one per agent). Anthropic's API has rate limits (requests per minute, tokens per minute) that vary by tier. On the free/build tier, 5 simultaneous requests can hit the RPM limit. Even on higher tiers, 5 parallel streaming responses create complex state management: What if agent 3 errors while agents 1, 2, 4, 5 are still streaming? What if the user cancels mid-stream? What if the user sends a follow-up before all agents finish?
+**What goes wrong:** The existing renderer uses a simple layer order: floor -> furniture -> characters (Y-sorted). In pure top-down view, this works because everything is flat -- you never see the "front" of furniture. In 3/4 perspective, objects have visible front faces and height. A character walking behind a desk should be partially occluded by the desk. A character in front of a desk should be drawn on top of it. This requires per-object depth sorting that interleaves furniture and characters, not separate layers for each.
 
-**Why it happens:** The "broadcast to all agents" feature is conceptually simple but operationally complex. Each stream is independent, they can fail independently, and the UI must handle every combination of states across 5 streams.
+**Existing rendering order (from `renderer.ts`):**
+```
+Layer 2: Floor tiles (all)
+Layer 3: Furniture (all)  <-- ALL furniture drawn before ANY character
+Layer 4: Characters (Y-sorted among themselves)
+```
+
+In 3/4 perspective, the correct order is:
+```
+Layer 2: Floor tiles
+Layer 3+4: Furniture AND characters, interleaved by Y-position (foot/base row)
+```
+
+**Why it happens:** The flat top-down perspective makes it look correct to draw all furniture first because furniture has no height -- it's just a pattern on the floor. In 3/4, a desk is visually 2-3 tiles tall, and a character behind it must be drawn first (partially hidden), while a character in front must be drawn after (on top of desk front face).
 
 **Consequences:**
-- HTTP 429 (rate limit) errors kill some agent responses but not others, giving partial War Room results
-- User sees 3 of 5 responses, thinks all agents responded
-- Cancellation aborts some streams but not others (orphaned connections)
-- Follow-up message sent while agents are still streaming creates overlapping conversations
-- Memory: 5 simultaneous streaming states consume significant browser memory
+- Characters always appear in front of all furniture (breaking spatial illusion)
+- OR characters always appear behind all furniture (can't see them at desks)
+- Furniture with visible height (bookshelves, filing cabinets) doesn't occlude characters correctly
+- Wall decorations (charts, whiteboards) layer incorrectly with characters near walls
 
 **Prevention:**
-1. **Implement a request queue with concurrency control.** Use a semaphore pattern (e.g., `p-limit` library or custom implementation) to limit concurrent Anthropic requests to 3-4 max, even in War Room. Queue the remaining requests. The 200ms stagger mentioned in Pitfall 2 helps here too.
-2. **Unified stream lifecycle manager.** Create a `WarRoomSession` class that:
-   - Tracks all 5 stream states (pending, streaming, complete, error)
-   - Handles partial failure gracefully (show error for failed agent, keep others)
-   - Implements cancellation via `AbortController` for ALL streams simultaneously
-   - Blocks new messages until all streams are either complete or cancelled
-3. **Retry with exponential backoff for 429s.** When rate-limited, retry the specific failed agent after the `retry-after` header duration. Show "Agent X is waiting..." in the UI.
-4. **Pre-flight token budget check.** Before firing 5 requests, estimate the total input tokens (system prompt + context for each agent). If the total would exceed the tokens-per-minute limit, warn the user or automatically stagger.
-5. **Implement request deduplication.** If the user double-clicks "send" in War Room, deduplicate the broadcast.
+1. **Merge furniture and characters into a single sorted draw list.** Create a unified array of "drawable" objects, each with a `sortY` value (their foot/base row). Sort this array and draw in order.
+   ```typescript
+   interface Drawable {
+     sortY: number;  // foot/base row for depth sorting
+     draw: (ctx: CanvasRenderingContext2D) => void;
+   }
+   const drawables: Drawable[] = [
+     ...furniture.map(f => ({ sortY: f.row + f.height, draw: () => renderFurniture(f) })),
+     ...characters.map(c => ({ sortY: c.tileRow, draw: () => renderCharacter(c) })),
+   ];
+   drawables.sort((a, b) => a.sortY - b.sortY);
+   drawables.forEach(d => d.draw(ctx));
+   ```
+2. **Separate floor-level furniture from tall furniture.** Area rugs, floor mats, desk surfaces (top-down face) are "floor layer" objects drawn before everything. Desk fronts, chair backs, bookshelf faces are "tall" objects that participate in Y-sort with characters.
+3. **Wall decorations are always behind characters.** Charts, whiteboards, and monitors on north walls are drawn as part of the wall/floor layer, not the Y-sorted layer. They're visually behind everything in the room.
+4. **Accept some visual limitations.** Perfect per-pixel occlusion (e.g., character partially hidden behind a desk edge) requires either sprite-level depth buffers or manual sprite slicing. For this project's scope, simple row-based Y-sorting with furniture is sufficient and matches the JRPG style (Stardew Valley uses the same approach).
 
 **Detection:**
-- Console shows 429 errors during War Room sessions
-- Some agent panels show "Error" while others show responses
-- Agent responses appear to "restart" (stream cancelled and retried without UI indication)
-- Follow-up messages produce incoherent responses (context collision)
+- Characters visually "pop" in front of or behind furniture when they shouldn't
+- Walking behind a desk doesn't partially hide the character
+- Bookshelves don't occlude characters standing behind them
 
-**Phase mapping:** Critical in the War Room phase (Phase 3 or later). Build the request queue infrastructure earlier in Phase 2.
+**Phase mapping:** Must be implemented alongside the 3/4 perspective art. The art is pointless without correct depth sorting.
 
-**Confidence:** HIGH -- API rate limiting and parallel request management are standard distributed systems challenges.
+**Confidence:** HIGH -- standard 2D game development depth sorting pattern.
 
 ---
 
 ## Moderate Pitfalls
 
-Mistakes that cause significant bugs or poor UX but are fixable without rewrites.
+Mistakes that cause significant visual/functional bugs but are fixable without architectural rewrites.
 
 ---
 
-### Pitfall 8: BFS Pathfinding Without Movement Cost Causes Unnatural BILLY Walks
+### Pitfall 6: Smooth Zoom Breaks Click-to-Walk Navigation
 
-**What goes wrong:** Basic BFS finds the shortest path in grid steps but does not account for diagonal movement cost. BILLY walks in "staircase" patterns (alternating horizontal and vertical steps) instead of smooth diagonal paths. Also, BFS on a naive grid does not account for furniture, desks, or other agents as obstacles -- BILLY walks through desks.
+**What goes wrong:** The `screenToTile()` function in `camera.ts` converts mouse click coordinates to tile coordinates using the current zoom level. With integer zoom, this is exact: `tileSize = TILE_SIZE * zoom` always produces an integer, so `Math.floor(position / tileSize)` always gives the correct tile. With fractional zoom, `tileSize` is fractional (e.g., 16 * 1.75 = 28), and accumulated floating-point error across 20+ columns means the last few columns on the right side of the map can be off by one tile.
+
+**Existing code at risk:**
+- `camera.ts:screenToTile()` -- all coordinate math assumes integer-clean division
+- `input.ts:handleClick()` -- relies on screenToTile for room detection
+- `input.ts:handleDragOver()` -- relies on screenToTile for drop zone detection
+- `input.ts:handleDrop()` -- relies on screenToTile for file routing
 
 **Prevention:**
-1. **Use A* instead of BFS** with a proper heuristic (Chebyshev distance for 8-directional movement, Manhattan for 4-directional). A* is barely more complex than BFS and produces significantly better paths.
-2. **Maintain a separate walkability grid** that marks tiles as walkable/blocked. Update it when furniture or agents are placed. Agents sitting at desks should block those tiles.
-3. **Smooth path rendering.** After pathfinding, apply path smoothing (remove intermediate waypoints that are collinear) so BILLY walks in straight lines where possible, not tile-by-tile.
-4. **Path caching.** Pre-compute paths between room entrances since the office layout is static. Only compute dynamic paths within rooms.
+1. **If using `ctx.setTransform()` for rendering (Pitfall 2 prevention), use the inverse transform for hit testing.** This ensures rendering and hit detection use exactly the same math.
+2. **Alternatively, snap zoom to the quantized cache level (Pitfall 1) for hit testing.** Use the same quantized zoom for both rendering offsets and click conversion.
+3. **Add a "tile hover highlight" debug mode** that renders the currently-detected tile under the cursor. This makes misalignment immediately visible during development.
+4. **Test click accuracy at zoom extremes** (minimum zoom showing entire map, maximum zoom on a single room).
 
 **Detection:**
-- BILLY takes visually absurd routes to reach adjacent rooms
-- BILLY walks through furniture or agents
-- Path calculation causes frame drops (grid too large, algorithm too slow)
+- Clicking near room edges navigates to the wrong room
+- File drag-and-drop highlights the wrong agent's desk
+- Tile hover indicator doesn't match cursor position at high zoom
 
-**Phase mapping:** Phase 1 (Canvas engine), refine in Phase 2.
+**Phase mapping:** Solve together with smooth zoom (same phase as Pitfall 2).
 
-**Confidence:** HIGH -- standard game development pathfinding knowledge.
-
----
-
-### Pitfall 9: Zustand Store Proliferation and Subscription Leaks
-
-**What goes wrong:** The project plans multiple Zustand stores (chat, office, deals, files, memory). Without discipline, stores multiply (one per agent, one per deal, one per room) and cross-store subscriptions create implicit coupling. Components subscribe to entire stores instead of selecting specific slices, causing unnecessary re-renders. Zustand subscriptions in `useEffect` that are not cleaned up cause memory leaks.
-
-**Prevention:**
-1. **Define stores upfront** and resist creating new ones. Five stores max: `officeStore` (game state), `chatStore` (messages, streaming state), `dealStore` (active deal, deal metadata), `fileStore` (uploaded files, parsed content), `memoryStore` (agent structured memory).
-2. **Always use selectors.** `useStore(store, state => state.specificField)` instead of `useStore(store)`. Zustand re-renders only when the selected value changes.
-3. **Cross-store communication via actions, not subscriptions.** If switching a deal needs to update chat + memory + office stores, have the deal store's `switchDeal` action explicitly call actions on the other stores, rather than subscribing to deal changes.
-4. **For non-React consumers (game loop), use `store.subscribe()` with cleanup.**
-
-**Detection:**
-- React DevTools shows components re-rendering when unrelated state changes
-- More than 7-8 Zustand stores exist
-- Circular subscription patterns (store A watches store B watches store A)
-
-**Phase mapping:** Phase 1 (state architecture), maintained throughout.
-
-**Confidence:** HIGH -- standard Zustand best practices.
+**Confidence:** HIGH -- follows directly from Pitfall 2 analysis.
 
 ---
 
-### Pitfall 10: PDF/DOCX Parsing Blocking the Main Thread
+### Pitfall 7: Pinch-to-Zoom Gesture Conflicts with Browser Zoom and Scroll
 
-**What goes wrong:** PDF.js parsing is CPU-intensive, especially for large contracts (50+ pages). Running it on the main thread freezes the UI -- Canvas stops animating, chat stops streaming, the app appears crashed. DOCX parsing with mammoth.js is lighter but still blocks for large documents.
+**What goes wrong:** Trackpad pinch-to-zoom is the same gesture the browser uses for page zoom. The canvas `wheel` event with `ctrlKey` (pinch gesture on trackpad) must be intercepted with `preventDefault()` to prevent the browser from zooming the entire page. But `preventDefault()` on wheel events only works if the event listener is registered as non-passive. Modern browsers default wheel listeners to passive for scroll performance. If the listener is passive, `preventDefault()` is silently ignored and the browser zooms the page while the canvas zooms its content -- double zoom.
 
-**Prevention:**
-1. **Run PDF.js in a Web Worker.** PDF.js supports worker mode natively (`pdfjs.GlobalWorkerOptions.workerSrc`). Always use it.
-2. **Stream page extraction.** Parse one page at a time, yielding to the main thread between pages. Show progress ("Extracting page 12 of 47...").
-3. **Set a file size limit.** Warn users for files >10MB, reject files >50MB. Large files should be summarized before context injection.
-4. **Cache parsed content.** Store extracted text in IndexedDB alongside the file metadata. Never re-parse the same file.
+**Additionally:** On macOS Safari, the pinch gesture triggers `gesturestart`/`gesturechange`/`gestureend` events (Safari-specific, not standard). On Chrome/Firefox, it arrives as `wheel` events with `ctrlKey: true`. Supporting both requires dual event handling.
 
-**Detection:**
-- UI freezes when user drops a PDF onto the app
-- Canvas animations stutter during file processing
-- No progress indicator during long extractions
-
-**Phase mapping:** Phase 2 or 3 (file handling feature).
-
-**Confidence:** HIGH -- PDF.js Web Worker usage is in its official documentation.
-
----
-
-### Pitfall 11: Sprite Animation Frame Timing Tied to requestAnimationFrame Rate
-
-**What goes wrong:** If sprite animation frame advancement is done once per `requestAnimationFrame` callback, animations run at different speeds on 60Hz vs 120Hz vs 144Hz monitors. On a 144Hz display, BILLY walks 2.4x faster than on a 60Hz display. Idle animations look frantic on high-refresh-rate monitors.
+**Consequences:**
+- Browser page zooms simultaneously with canvas zoom (double zoom effect)
+- On Safari, pinch gesture doesn't work at all (only wheel events handled)
+- Scroll events consumed by zoom handler prevent page scrolling when canvas is embedded
+- Zoom speed differs wildly between trackpad and mouse wheel
 
 **Prevention:**
-1. **Delta-time based animation.** Pass `deltaTime` (time since last frame) to the update loop. Advance animation frames based on accumulated time, not frame count:
+1. **Register wheel listener as non-passive explicitly:**
    ```typescript
-   update(deltaTime: number) {
-     this.animTimer += deltaTime;
-     if (this.animTimer >= this.frameDuration) {
-       this.animTimer -= this.frameDuration;
-       this.currentFrame = (this.currentFrame + 1) % this.frameCount;
-     }
+   canvas.addEventListener('wheel', handleWheel, { passive: false });
+   ```
+2. **Detect pinch vs. scroll:** Check `e.ctrlKey` on wheel events. If `ctrlKey` is true, it's a pinch gesture -- handle as zoom and call `preventDefault()`. If false, it's a regular scroll -- let it propagate or use for canvas panning.
+3. **Safari gesture events:** Also handle `gesturestart`/`gesturechange` for Safari:
+   ```typescript
+   canvas.addEventListener('gesturechange', (e: any) => {
+     e.preventDefault();
+     const newZoom = currentZoom * e.scale;
+     // Apply zoom...
+   });
+   ```
+4. **Normalize zoom delta:** Mouse wheel `deltaY` values differ between browsers and input devices. Normalize to a consistent zoom factor:
+   ```typescript
+   const delta = -e.deltaY;
+   const factor = e.ctrlKey
+     ? 1 + delta * 0.01   // Pinch: fine-grained
+     : 1 + delta * 0.001; // Scroll wheel: coarser
+   ```
+5. **Zoom around cursor position, not center.** When the user pinches, they expect the point under their fingers to stay fixed. Calculate the zoom focal point from the mouse/touch position, not the canvas center:
+   ```typescript
+   // Before zoom: world point under cursor
+   const worldX = (cursorX - camera.offsetX) / camera.zoom;
+   const worldY = (cursorY - camera.offsetY) / camera.zoom;
+   // Apply new zoom
+   camera.zoom = newZoom;
+   // After zoom: adjust offset so same world point is under cursor
+   camera.offsetX = cursorX - worldX * camera.zoom;
+   camera.offsetY = cursorY - worldY * camera.zoom;
+   ```
+6. **Clamp zoom range.** Set min/max zoom (e.g., 0.5 to 4.0) to prevent unusable extremes.
+
+**Detection:**
+- Browser page zooms when pinching on canvas
+- Pinch zoom doesn't work on Safari
+- Zoom jumps in large increments (delta normalization wrong)
+- Zooming shifts the view unexpectedly (not zooming around cursor)
+
+**Phase mapping:** Core smooth zoom implementation phase.
+
+**Confidence:** HIGH -- well-documented cross-browser pinch-zoom handling pattern.
+
+---
+
+### Pitfall 8: Pixel Art Quality Degrades at Non-Integer Zoom
+
+**What goes wrong:** Pixel art is designed to be displayed at integer multiples (1x, 2x, 3x). At fractional zoom (e.g., 1.7x), each source pixel maps to 1.7 screen pixels. With `imageSmoothingEnabled = false` (nearest-neighbor), some source pixels become 2 screen pixels wide and others become 1 pixel wide, creating uneven pixel sizes. Vertical lines in sprites become alternately thick and thin. Faces become asymmetric. The carefully crafted pixel art looks "wrong" in a way that's hard to articulate but immediately noticeable.
+
+**This is particularly problematic for 24x32 character sprites** where facial features (eyes, mouths) are 1-2 pixels. At 1.5x zoom, one eye is 2px and the other is 1px -- the character looks deformed.
+
+**Consequences:**
+- Pixel art looks "wobbly" at fractional zoom levels
+- Character faces lose symmetry (critical for Stardew Valley-quality sprites)
+- Floor tile patterns develop visible banding
+- The high-quality art investment is undermined by rendering artifacts
+
+**Prevention:**
+1. **Snap to integer zoom at rest.** Allow fractional zoom during pinch gestures (smooth feel) but ease toward the nearest integer (or half-integer) when the gesture ends. The transition can be animated (200ms ease-out).
+   ```typescript
+   function snapZoom(rawZoom: number): number {
+     return Math.round(rawZoom * 2) / 2; // Snap to 0.5 increments
    }
    ```
-2. **Fixed timestep game loop.** Use the "fixed update, variable render" pattern: simulation runs at a fixed rate (e.g., 30 updates/sec), rendering interpolates between simulation states. This is more robust than pure delta-time for pathfinding movement.
-3. **Cap frame rate.** Even if the display is 144Hz, the pixel art style does not benefit from >60fps rendering. Use `requestAnimationFrame` but skip frames when the delta is too small.
+2. **Consider rendering at the next integer zoom and CSS-scaling down.** Render the canvas at `Math.ceil(zoom)` integer zoom, then use CSS transform or canvas sizing to display at the actual fractional zoom. This keeps pixels uniform at the cost of slight softness during transitions.
+3. **Test sprite art at every snap point.** Before committing to zoom snap increments, render all character sprites at each level and verify faces/features look acceptable. Some sprites may need variant versions for specific zoom levels.
+4. **For the zoom overview mode (showing entire office), accept the quality trade-off.** At zoom 0.5-0.75 (overview), individual pixel detail is not visible anyway. Quality only matters at zoom 1.5+.
 
 **Detection:**
-- Animations look too fast on gaming monitors (>60Hz)
-- BILLY's walk speed varies between devices
-- Pathfinding "overshoots" destination tiles on high-refresh displays
+- Asymmetric character faces at certain zoom levels
+- Floor tile patterns have visible "beating" or moire effects
+- Art director/designer flags quality issues at specific zoom levels
 
-**Phase mapping:** Phase 1 (game loop foundation).
+**Phase mapping:** Must be validated with actual sprite art. Design the zoom snap behavior before the art is finalized.
 
-**Confidence:** HIGH -- fundamental game development timing pattern.
+**Confidence:** HIGH -- fundamental pixel art rendering limitation.
 
 ---
 
-### Pitfall 12: Auto-Summarization Quality Destroys Domain-Specific Accuracy
+### Pitfall 9: 3/4 Perspective North Walls Need Tile Map Rethinking
 
-**What goes wrong:** Using Claude to summarize conversation history for context management sounds elegant, but LLM summarization systematically loses the details that matter most in the finance/legal domain: exact dollar amounts get rounded, contract clause numbers get dropped, date-specific deadlines get generalized ("in Q2" instead of "by April 15"), and Mexican legal terms (EFICINE, IMCINE designations, Decreto 2026 articles) get anglicized or omitted.
+**What goes wrong:** In the existing flat top-down view, walls are 1-tile-thick borders around rooms. In 3/4 perspective, the north wall of a room is visible as a vertical surface (you see its "face" because the camera looks down at an angle). This north wall needs to be taller than 1 tile visually (typically 2-3 tiles tall to create the room depth illusion). But the existing tile map has rooms immediately adjacent to hallways above them. There's no space for a tall north wall to render without overlapping the hallway or the room above.
+
+**Existing layout conflict:**
+```
+Row 9-10:  Hallway (FLOOR tiles)
+Row 11:    Wall row (WALL tiles) -- this is the north wall of Diana/War Room/Marcos
+Row 12-19: Room interior (FLOOR tiles)
+```
+The north wall at row 11 is a single tile. In 3/4 perspective, its visual representation needs to extend upward 1-2 tiles into rows 9-10 (the hallway). But the hallway also needs to render there.
+
+**Consequences:**
+- North walls are visually too short (rooms look flat, not like 3D spaces)
+- Tall north wall sprites overlap hallway floor rendering
+- Rooms feel like open pens rather than enclosed offices
+- The 3/4 depth illusion fails -- looks like top-down with angled furniture
 
 **Prevention:**
-1. **Never summarize structured memory.** The `AgentMemory` structured data (key facts, decisions, numbers, action items) is always sent in full. Only narrative conversation history gets summarized.
-2. **Domain-aware summarization prompt.** The summarization system prompt must explicitly instruct: "Preserve exact dollar amounts, dates, percentages, legal entity names, Mexican legal terms (EFICINE, IMCINE, Decreto 2026), contract clause numbers, and action item deadlines verbatim."
-3. **Hierarchical summarization.** Instead of summarizing the entire history at once, summarize in chunks (e.g., per-session) and maintain a chain of summaries. This limits information loss per summarization step.
-4. **User-visible summary.** Show the auto-generated summary to the user in the UI (expandable section) so they can spot when critical details are lost.
+1. **The compact layout redesign is the fix.** The new layout must account for visual wall height. Add 2-3 empty rows above each room's north wall for the wall face to render into. These tiles can be `VOID` (not walkable, not rendered as floor).
+2. **Multi-layer tile rendering.** Render the floor layer (flat tiles only), then render wall faces as sprites that overlap into the rows above. This is the standard JRPG approach:
+   - Floor layer: flat tiles, drawn first
+   - Wall layer: tall sprites anchored at the wall's base row, drawn in Y-sort order with characters
+3. **Design rooms bottom-up.** In 3/4 perspective, room interiors are typically 1-2 rows shorter than they appear because the north wall "eats into" the room visually. Plan room sizes accordingly.
+4. **Study reference games.** Pokemon FireRed rooms have a 2-tile-tall north wall face. Stardew Valley has 1.5-tile-tall walls. Choose a consistent wall height and build the layout grid around it.
 
 **Detection:**
-- Agent gives advice that contradicts established deal parameters
-- Specific numbers or dates missing from agent responses after summarization
-- User re-provides information that was previously discussed
+- Rooms look flat despite 3/4 art style
+- You can see "over" the north wall into the void above
+- Hallway floor tiles visible behind what should be solid walls
 
-**Phase mapping:** Phase 2 (chat + context management), refined throughout.
+**Phase mapping:** Must be designed into the compact layout from the start. Cannot be retrofitted after the layout is finalized.
 
-**Confidence:** MEDIUM -- based on general LLM summarization limitations; specific domain testing needed.
+**Confidence:** HIGH -- fundamental JRPG tilemap design pattern.
+
+---
+
+### Pitfall 10: Camera Follow Math Assumes Square Tiles and Top-Left Anchor
+
+**What goes wrong:** The existing `updateCamera` in `camera.ts` targets BILLY's position (`ch.x`, `ch.y`) for follow mode. This position is the top-left corner of a 16x16 sprite. With 24x32 sprites, the visual center of the character is at `(ch.x + 12, ch.y + 16)`, not `(ch.x, ch.y)`. The camera will track 12 pixels left and 16 pixels above the character's visual center. Additionally, if the compact layout changes the map aspect ratio significantly, the `computeAutoFitZoom` function needs updating.
+
+**Prevention:**
+1. Update camera follow to target the character's visual center:
+   ```typescript
+   camera.targetX = (ch.x + CHAR_WIDTH / 2) * zoom - canvasWidth / 2;
+   camera.targetY = (ch.y + CHAR_HEIGHT - TILE_SIZE / 2) * zoom - canvasHeight / 2;
+   ```
+2. Update `computeAutoFitZoom` to use the new map dimensions.
+3. Add zoom bounds clamping in the camera update (don't zoom past min/max during smooth transitions).
+
+**Detection:**
+- Character appears off-center when camera follows
+- Overview zoom is wrong scale for the new layout
+
+**Phase mapping:** After sprite size change and layout redesign.
+
+**Confidence:** HIGH -- direct from code analysis.
+
+---
+
+### Pitfall 11: Existing Tests Hardcode Layout Assumptions
+
+**What goes wrong:** The test files (`__tests__/officeLayout.test.ts`, `__tests__/tileMap.test.ts`, `__tests__/characters.test.ts`, `__tests__/warRoom.test.ts`, `__tests__/renderer.test.ts`) likely contain assertions based on the 42x34 layout, specific room positions, and 16x16 tile assumptions. Changing the layout, tile sizes, or sprite dimensions will cause mass test failures. Developers sometimes disable tests to "unblock" progress, then forget to re-enable them, losing test coverage for critical pathfinding and rendering logic.
+
+**Prevention:**
+1. **Update tests first (TDD).** Write the new layout tests before changing the code. This forces you to think through the new coordinates and validates the design before implementation.
+2. **Make tests parameterized where possible.** Instead of hardcoding `expect(mapCols).toBe(42)`, test invariants like "all room seatTiles are walkable" and "BFS finds a path between every pair of rooms."
+3. **Never disable tests.** If a test needs to change, change it. If it's temporarily broken during a refactor, mark it with `test.todo()` or `test.skip()` with a comment explaining why and when it will be fixed.
+4. **Add visual regression testing.** Capture reference screenshots at key zoom levels after the redesign. Compare against these references to catch rendering regressions automatically.
+
+**Detection:**
+- Test suite has `.skip` or commented-out tests after the layout change
+- Tests pass but cover the wrong assertions (stale expectations)
+
+**Phase mapping:** Before any code changes. Update test expectations as the first step.
+
+**Confidence:** HIGH -- standard software engineering practice.
 
 ---
 
@@ -390,65 +464,66 @@ Issues that cause friction but are straightforward to fix.
 
 ---
 
-### Pitfall 13: Canvas DPI Scaling Makes Pixel Art Blurry
+### Pitfall 12: Drop Shadow and Glow Effects Interact Poorly with Zoom
 
-**What goes wrong:** On HiDPI/Retina displays, the Canvas renders at CSS pixel resolution, not device pixel resolution. Pixel art looks blurry because the browser upscales with bilinear filtering. Developers fix the DPI issue but forget to disable image smoothing, causing sprites to look smudged.
+**What goes wrong:** The v1.1 spec calls for "drop shadows" on characters and "ambient halos" on desk lamps. These effects are typically implemented with `ctx.shadowBlur`, `ctx.globalAlpha`, or custom gradient radials. At integer zoom, these look fine. At fractional zoom, shadow blur radius needs to scale with zoom but `shadowBlur` values are in screen pixels (not world pixels). A shadow that looks good at zoom 2 looks too large at zoom 1 and invisible at zoom 3.
 
 **Prevention:**
-1. Set canvas dimensions to `width * devicePixelRatio` and `height * devicePixelRatio`, then scale down with CSS.
-2. Disable image smoothing: `ctx.imageSmoothingEnabled = false` (set this after every context state reset, as `save()`/`restore()` can reset it).
-3. Use `image-rendering: pixelated` CSS on the canvas element as a fallback.
-4. For integer zoom: multiply sprite coordinates by zoom level BEFORE drawing, do not use `ctx.scale()`.
+1. Scale shadow/glow parameters with zoom: `ctx.shadowBlur = baseShadowBlur * zoom`.
+2. For ambient halos, use radial gradients with zoom-scaled radii.
+3. If using `ctx.setTransform()` for zoom (Pitfall 2), note that `shadowBlur` is NOT affected by the transform -- it's always in output pixels. You must manually scale it.
 
 **Detection:**
-- Pixel art looks blurry on MacBook Retina displays
-- Sprites have visible anti-aliasing halos
-- Pixels are not crisp 1:1 squares at 1x zoom
+- Shadows look enormous at low zoom
+- Shadows invisible at high zoom
+- Glow effects flicker at fractional zoom
 
-**Phase mapping:** Phase 1 (Canvas setup, literally the first 20 lines of Canvas code).
+**Phase mapping:** When implementing glow/shadow effects on the new art.
 
-**Confidence:** HIGH -- standard Canvas pixel art requirement.
+**Confidence:** HIGH -- documented Canvas 2D shadow behavior.
 
 ---
 
-### Pitfall 14: Deal Switching Race Condition
+### Pitfall 13: Status Overlays (Speech Bubbles, Thinking Dots) Position Wrong with New Sprites
 
-**What goes wrong:** When switching deals, multiple async operations happen: load conversation histories from IndexedDB, load deal metadata, load file references, update agent memory context. If the user switches deals rapidly (click Deal A, then Deal B before Deal A finishes loading), stale data from Deal A's load can overwrite Deal B's state.
+**What goes wrong:** The `renderStatusOverlays` function in `renderer.ts` positions speech bubbles relative to character position using hardcoded offsets like `ch.y * zoom + offsetY - 4 * zoom`. These offsets assume a 16x16 character sprite. With 24x32 sprites, the bubbles will appear inside the character's head instead of above it, and thinking dots will be at the character's waist.
+
+**Existing code at risk:**
+- `renderer.ts:642-643` -- bubble position: `ch.y * zoom + offsetY - 4 * zoom` (4 pixels above 16px sprite top)
+- `renderer.ts:673` -- dots position: `ch.y * zoom + offsetY - 2 * zoom`
 
 **Prevention:**
-1. **Cancellation token pattern.** Each deal switch gets a unique ID. All async operations check `if (currentDealSwitchId !== myId) return;` before writing results to state.
-2. **Loading state that blocks interaction.** Show a brief loading state during deal switch that prevents further switches.
-3. **Atomic deal context.** Load all deal data in a single IndexedDB transaction, then update all stores in a single synchronous batch.
+1. Define overlay offsets relative to character sprite dimensions, not hardcoded pixel values:
+   ```typescript
+   const bubbleY = (ch.y - CHAR_HEIGHT + TILE_SIZE) * zoom + offsetY - 4 * zoom;
+   ```
+2. Better: store overlay anchor points in the character or sprite configuration. Different characters might need slightly different bubble positions based on their specific sprite art.
 
 **Detection:**
-- Chat history shows messages from the wrong deal
-- Agent memory references deals the user did not select
-- UI shows Deal B's name but Deal A's data
+- Speech bubbles appear inside character sprites
+- Thinking dots at wrong height
 
-**Phase mapping:** Phase 3 (deal rooms feature).
+**Phase mapping:** After sprite size change.
 
-**Confidence:** HIGH -- standard async race condition pattern.
+**Confidence:** HIGH -- trivial code fix once the sprite size constants are updated.
 
 ---
 
-### Pitfall 15: Cross-Agent Memory Creating Circular Reasoning
+### Pitfall 14: File Icons on Desks Assume 16px Desk Geometry
 
-**What goes wrong:** The spec says "facts from one agent inform another's responses." If Diana (CFO) extracts a fact ("Budget is $2M") and this is shared with Marcos (Counsel), Marcos might reference it in advice. If Marcos's response is then summarized and a fact extracted ("Legal advice based on $2M budget"), this gets shared back to Diana. Over multiple rounds, agents reinforce each other's assumptions without fresh grounding, creating a closed epistemic loop. If the original $2M figure was wrong or changed, the echo propagates.
+**What goes wrong:** The `renderFileIcons` function calculates icon placement relative to desk position using `tileSize * 0.35` for icon width and hardcoded scatter offsets. With 3/4 perspective, desks have visible front faces and a different visual footprint. File icons need to appear "on top of" the desk surface, which is visually the upper portion of the desk tile in 3/4 view, not the full tile area.
 
 **Prevention:**
-1. **Source attribution on every shared fact.** Tag each cross-agent fact with its origin: `{ fact: "Budget is $2M", source: "Diana", sourceMessage: "msg-123", date: "..." }`. When displaying to another agent, include attribution.
-2. **Facts have versions.** If the user corrects Diana ("Actually it's $2.5M"), the update propagates to all agents who received the old fact.
-3. **One-way sharing with explicit acknowledgment.** Facts flow from source agent to others, but derived conclusions do not flow back as "facts." Only user-confirmed information becomes cross-agent facts.
-4. **Staleness warnings.** If a shared fact is older than N days or N conversation turns, flag it as potentially stale.
+1. Define a "desk surface rect" for each desk in the furniture data (the visual area where items can be placed).
+2. Adjust file icon rendering to place icons within this surface rect, accounting for 3/4 perspective foreshortening.
 
 **Detection:**
-- Multiple agents cite the same fact with slight variations
-- Agent advice does not change even after user corrects a key assumption
-- Agents reference facts that were never directly discussed with them, without clear attribution
+- File icons appear to float in front of the desk instead of sitting on it
+- Icons overlap the desk's front face
 
-**Phase mapping:** Phase 4 or later (cross-agent memory feature). This is an advanced feature that should not be rushed.
+**Phase mapping:** After furniture art is finalized.
 
-**Confidence:** MEDIUM -- architectural risk specific to this multi-agent design; limited prior art.
+**Confidence:** MEDIUM -- depends on specific desk sprite design.
 
 ---
 
@@ -456,35 +531,39 @@ Issues that cause friction but are straightforward to fix.
 
 | Phase Topic | Likely Pitfall | Mitigation | Severity |
 |-------------|---------------|------------|----------|
-| Canvas 2D engine setup | Canvas re-render storm (P1), DPI scaling (P13), coordinate math (P5) | Mount once pattern, integer-only math, pixelated rendering | CRITICAL |
-| Game loop + animations | Frame timing (P11), pathfinding quality (P8) | Delta-time/fixed timestep, A* over BFS | MODERATE |
-| State architecture | Zustand proliferation (P9), Canvas-React bridge | Pre-define stores, ref-based bridge | MODERATE |
-| Persistence layer | IndexedDB transactions (P3), silent data loss | Use Dexie.js, persistence abstraction | CRITICAL |
-| Chat + streaming | Token render bottleneck (P2), context management (P4) | Batch tokens, priority-based context assembly | CRITICAL |
-| API integration | Key exposure (P6), rate limiting (P7) | Server proxy, request queue | CRITICAL |
-| File handling | Main thread blocking (P10) | Web Worker for PDF.js | MODERATE |
-| War Room | Parallel streaming (P7), render contention (P2) | Concurrency limiter, staggered requests | CRITICAL |
-| Deal rooms | Switching race condition (P14), context corruption | Cancellation tokens, atomic loads | MODERATE |
-| Cross-agent memory | Circular reasoning (P15), summarization quality (P12) | Source attribution, structured memory | MODERATE |
+| Compact layout redesign | All hardcoded coordinates break (P4), north wall space (P9) | Centralize coordinates, add validation function, TDD | CRITICAL |
+| Smooth zoom implementation | Sprite cache explosion (P1), rounding artifacts (P2), click-to-walk breaks (P6) | Quantize cache zoom, use ctx.setTransform, sync hit testing | CRITICAL |
+| 24x32 sprite integration | Character positioning breaks (P3), overlay positions wrong (P13) | Foot-center anchoring, relative overlay offsets | CRITICAL |
+| 3/4 perspective rendering | Depth sorting wrong (P5), north walls (P9) | Merge furniture+character Y-sort, multi-layer tiles | CRITICAL |
+| Pinch-to-zoom input | Browser zoom conflict (P7), zoom-around-cursor math | Non-passive wheel listener, Safari gesture events | MODERATE |
+| Pixel art quality | Non-integer zoom artifacts (P8), shadow scaling (P12) | Snap-to-integer at rest, scale effects with zoom | MODERATE |
+| Camera system | Follow anchor wrong (P10), auto-fit zoom wrong | Target foot-center, update map dimensions | MODERATE |
+| Test updates | Stale tests (P11) | Update tests before code, invariant-based assertions | MODERATE |
+| Desk/file UI | File icon placement (P14) | Define desk surface rects | MINOR |
+
+---
+
+## Recommended Phase Order Based on Pitfall Dependencies
+
+The pitfalls reveal a clear dependency chain for the implementation order:
+
+1. **Layout first** (P4, P9) -- Everything depends on room positions. Compact layout with wall height planning must be finalized before any rendering work.
+2. **Rendering pipeline second** (P2, P5) -- Switch to `ctx.setTransform()` zoom and unified Y-sort draw list. This is the foundation for both smooth zoom and 3/4 perspective.
+3. **Sprite integration third** (P3, P13, P14) -- With the rendering pipeline correct, swap in 24x32 sprites with foot-center anchoring.
+4. **Smooth zoom fourth** (P1, P6, P7, P8) -- Add pinch-to-zoom input, cache quantization, and zoom snapping. This depends on the rendering pipeline being transform-based.
+5. **Camera and polish last** (P10, P12) -- Update camera follow, add shadows/glows, final quality pass.
+
+Doing these out of order (e.g., adding smooth zoom before fixing the rendering pipeline) compounds the pitfalls and makes debugging much harder.
 
 ---
 
 ## Sources and Confidence Notes
 
-All findings in this document are based on training data across the following well-established domains:
-- React+Canvas integration patterns (React documentation, game development community)
-- IndexedDB API behavior (MDN Web Docs, Jake Archibald's writings on IDB)
-- Isometric game development (game programming textbooks and community resources)
-- LLM streaming interface patterns (Anthropic documentation, Vercel AI SDK patterns)
-- Anthropic API rate limiting (Anthropic API documentation)
-- Vite environment variable security (Vite official documentation)
-- Canvas pixel art rendering (HTML5 Canvas specification, game dev community)
-- Zustand state management (Zustand documentation)
+All findings are based on:
+- **Direct analysis of existing codebase** (`camera.ts`, `renderer.ts`, `spriteSheet.ts`, `characters.ts`, `officeLayout.ts`, `input.ts`, `spriteAtlas.ts`, `types.ts`) -- HIGH confidence
+- **Canvas 2D rendering patterns** (established game development practices for tile-based engines) -- HIGH confidence
+- **JRPG tilemap conventions** (Pokemon, Stardew Valley, Zelda-style rendering approaches) -- HIGH confidence
+- **Browser pinch-to-zoom event handling** (MDN documentation, cross-browser compatibility patterns) -- HIGH confidence
+- **Pixel art rendering at fractional scales** (well-documented in pixel art game development community) -- HIGH confidence
 
-**Note:** Web search verification was unavailable during this research session. Findings are based on training data which covers these topics extensively. All confidence ratings reflect this -- marked HIGH where the domain knowledge is well-established and stable, MEDIUM where project-specific validation is recommended.
-
-Specific areas that should be validated with current documentation during implementation:
-- Anthropic API rate limits for the specific pricing tier being used (these change)
-- Dexie.js current version and API compatibility with the project's target browsers
-- PDF.js Web Worker configuration for the current version
-- React 19 specific behavior around Canvas refs and concurrent mode
+No web verification was performed for this session. All critical pitfalls are validated against the actual codebase structure and would apply regardless of framework version or library updates.

@@ -1,389 +1,385 @@
-# Technology Stack
+# Stack Research: v1.1 Visual Overhaul
 
-**Project:** Lemon Command Center
-**Researched:** 2026-03-12
-**Overall confidence:** MEDIUM (web verification tools unavailable; versions based on training data through early 2025 plus known release trajectories -- verify exact latest versions with `npm info <package> version` before installing)
+**Domain:** JRPG 3/4 perspective rendering, smooth zoom, pixel art sprite pipeline
+**Researched:** 2026-03-13
+**Confidence:** HIGH (Canvas 2D APIs are stable; techniques are well-established game dev patterns; all integration points verified against existing codebase)
 
-## Recommended Stack
+## Context
 
-### Core Framework
+This research covers ONLY the new capabilities needed for v1.1. The existing stack (React 19, TypeScript, Vite 6, Tailwind CSS v4, Zustand 5, Canvas 2D, node-canvas) is validated and unchanged.
 
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| React | ^19.0.0 | UI framework | Specified in project constraints. React 19 shipped stable Dec 2024. Use it for concurrent rendering, `use()` hook, and Actions API. Do NOT use React Server Components -- this is a client-side SPA with no server. | HIGH |
-| TypeScript | ^5.7.0 | Type safety | Latest 5.x line. Satisfies decorators, `satisfies` operator, const type parameters. Pin to 5.x -- TypeScript rarely has breaking patch releases but major versions can break. | MEDIUM |
-| Vite | ^6.0.0 | Build toolchain | Vite 6 released Dec 2024 with Environment API. Fast HMR, native ESM dev server. Use `@vitejs/plugin-react` (SWC-based) not `plugin-react-swc` separately -- they merged. | MEDIUM |
-| Tailwind CSS | ^4.0.0 | Styling | Tailwind v4 released Jan 2025 with Oxide engine, zero-config content detection, CSS-first configuration (no more `tailwind.config.js`). If v4 proves too bleeding-edge, fall back to v3.4.x which is battle-tested. | MEDIUM |
+## Recommended Stack Additions
 
-### State Management
+### Zero New Runtime Dependencies
 
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| Zustand | ^5.0.0 (or ^4.5.x if v5 not yet released) | Global state | Specified in constraints. Lightweight, no boilerplate, excellent for multiple independent stores (chat, office, deals, files, memory). Check `npm info zustand version` -- v5 may have shipped by now; v4.5.x is stable fallback. | MEDIUM |
+The v1.1 visual overhaul requires **no new npm packages**. Every capability is achievable with existing Canvas 2D APIs and code-level changes to the engine. This is intentional -- the existing stack handles everything needed.
 
-**Zustand store architecture (5 stores):**
+### What Changes (Code-Level, Not Package-Level)
 
+| Change | Affected Files | Why Needed |
+|--------|---------------|------------|
+| Float zoom support | `engine/types.ts`, `engine/camera.ts`, `engine/spriteSheet.ts`, `store/officeStore.ts` | Smooth pinch-to-zoom needs continuous 0.5-5.0 range instead of integer snap |
+| Wheel event handler | `engine/input.ts` | Trackpad pinch fires as `wheel` + `ctrlKey=true` on macOS |
+| 3/4 perspective tile geometry | `engine/types.ts`, `engine/renderer.ts`, `engine/spriteAtlas.ts` | Taller tiles (16x24 env, 24x32 chars) for north wall visibility |
+| Compact grid layout | `engine/officeLayout.ts` | Replace 42x34 sprawling layout with tight ~28x24 grid |
+| Sprite sheet regeneration | `scripts/generateSprites.ts` | New frame sizes and 3/4 perspective art |
+| Glow/lighting effects | `engine/renderer.ts` | Canvas 2D `shadowBlur` and composite operations for ambient light |
+
+### Dev Tooling Addition
+
+| Tool | Purpose | Why Recommended | Cost |
+|------|---------|-----------------|------|
+| Aseprite 1.3.x | Pixel art sprite creation and sprite sheet export | Industry standard for pixel art. Native sprite sheet export with JSON atlas data. Indexed color mode enforces palette discipline. Onion skinning for walk cycle animation. | $20 one-time or build from source (MIT-licensed) |
+
+Aseprite is the only recommended addition, and it is a desktop app for the artist, not an npm dependency. The existing `node-canvas` in devDependencies continues to serve as the programmatic fallback for generating placeholder sprites.
+
+## Detailed Implementation: Smooth Pinch-to-Zoom
+
+### Current State
+
+The zoom system is integer-only. Key enforcement points found in the codebase:
+
+1. **`engine/types.ts` line 91**: Camera.zoom typed as `number` but documented as "Integer zoom level"
+2. **`store/officeStore.ts` line 88-89**: `setZoomLevel` calls `Math.round(level)` on both `zoomLevel` and `camera.zoom`
+3. **`engine/spriteSheet.ts` line 100**: Sprite cache keyed by `zoom` (integer) -- works because only values 1 and 2 exist
+4. **`engine/camera.ts` line 20**: `computeAutoFitZoom` returns `Math.floor(...)` (integer)
+5. **`engine/input.ts` line 295-299**: `toggleZoom()` snaps between 1 and 2
+6. **`engine/gameLoop.ts` line 146**: Camera follow activates at `zoom >= 2`
+7. **`engine/renderer.ts` line 49**: `imageSmoothingEnabled = false` every frame
+
+### Required Changes
+
+**1. Remove Math.round enforcement in officeStore:**
 ```typescript
-// src/store/chatStore.ts    -- conversations per agent per deal, streaming state
-// src/store/officeStore.ts  -- room focus, character positions, BILLY location
-// src/store/dealStore.ts    -- deal entities, active deal ID
-// src/store/fileStore.ts    -- uploaded files metadata, per-deal/per-agent
-// src/store/memoryStore.ts  -- extracted facts per agent per deal
+// Before (line 88-89):
+zoomLevel: Math.round(level),
+camera: { ...state.camera, zoom: Math.round(level) },
+
+// After:
+zoomLevel: Math.max(0.5, Math.min(5.0, level)),
+camera: { ...state.camera, zoom: Math.max(0.5, Math.min(5.0, level)) },
 ```
 
-Use Zustand's `persist` middleware for localStorage/IndexedDB integration. Use `subscribeWithSelector` for fine-grained reactivity in the game loop (subscribe to office state changes without re-rendering React).
+**2. Quantized sprite cache in spriteSheet.ts:**
 
-### LLM Integration
-
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| @anthropic-ai/sdk | ^0.39.0+ | Anthropic API client | Official TypeScript SDK. Supports streaming via `client.messages.stream()` which returns an async iterable of `MessageStreamEvent`. Handles retry logic, rate limiting, and proper SSE parsing. Do NOT hand-roll fetch-based streaming. | MEDIUM |
-
-**Critical implementation notes:**
-
-1. **Streaming:** Use `client.messages.stream()` not `client.messages.create({ stream: true })`. The `.stream()` method returns a higher-level `Stream` object with `.on('text')`, `.on('message')` event handlers and proper cleanup.
-
-2. **Client-side API key:** The project spec says direct client-side API calls. For dev, proxy through Vite's dev server to avoid CORS and key exposure:
-   ```typescript
-   // vite.config.ts
-   export default defineConfig({
-     server: {
-       proxy: {
-         '/api/anthropic': {
-           target: 'https://api.anthropic.com',
-           changeOrigin: true,
-           rewrite: (path) => path.replace(/^\/api\/anthropic/, ''),
-           headers: {
-             'x-api-key': process.env.ANTHROPIC_API_KEY,
-             'anthropic-version': '2023-06-01',
-           },
-         },
-       },
-     },
-   });
-   ```
-   This keeps the API key server-side during development. For "production" (local use), same approach with a minimal Express/Hono proxy, or accept client-side key for single-user tool.
-
-3. **Token counting:** The Anthropic SDK includes `client.messages.countTokens()` (beta endpoint) for exact server-side counting. For local estimation before API calls, use `@anthropic-ai/tokenizer` if available, or fall back to a heuristic of ~4 characters per token (rough but sufficient for 80% threshold triggers).
-
-4. **Rate limiting with War Room:** 5 parallel API calls. Anthropic's rate limits vary by plan. Use `Promise.allSettled()` not `Promise.all()` so one failure does not kill all streams. Add a small stagger (100ms between initiations) to be polite to the API.
-
-### Canvas 2D Rendering Engine
-
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| HTML5 Canvas 2D API | (browser native) | Isometric office rendering | Specified in constraints. No library needed -- raw Canvas 2D is the right call for pixel art with integer zoom. Libraries like PixiJS or Phaser add unnecessary weight and fight your pixel-perfect rendering. | HIGH |
-| requestAnimationFrame | (browser native) | Game loop | Standard 60fps game loop. No library needed. | HIGH |
-
-**Do NOT use:**
-- **PixiJS** -- WebGL renderer, overkill for 2D pixel art, fights integer-zoom pixel-perfect rendering, large bundle (~500KB)
-- **Phaser** -- Full game engine (~1MB), way too heavy for an office visualization with pathfinding
-- **Three.js** -- 3D engine, wrong tool entirely
-- **react-canvas** or **react-konva** -- React wrappers around Canvas add reconciliation overhead that conflicts with a 60fps game loop. Keep Canvas rendering outside React's render cycle.
-
-**Architecture pattern (from pixel-agents reference):**
+The current cache keys by exact zoom. With float zoom, the cache would explode (infinite unique keys). Solution: quantize to nearest 0.25 for cache lookup while rendering at exact zoom.
 
 ```typescript
-// The Canvas element is mounted by React (OfficeCanvas.tsx)
-// But the game loop runs OUTSIDE React's render cycle
-// Communication: Zustand store <-> Game Engine (subscribe pattern)
+// In getCachedSprite(), change zoom parameter usage:
+const cacheZoom = Math.round(zoom * 4) / 4; // Quantize: 1.0, 1.25, 1.5, 1.75, 2.0...
+// Use cacheZoom for cache key and pre-scaled canvas dimensions
+// Max 19 cache entries per sprite (0.5 to 5.0 in 0.25 steps) -- bounded
+```
 
-class GameLoop {
-  private lastTime = 0;
-  private running = false;
+Pre-scale sprites to the quantized zoom with `imageSmoothingEnabled = false` in the offscreen cache canvas. This maintains crisp pixel art at any zoom because the actual drawing is always from a pre-scaled, nearest-neighbor-filtered canvas at 1:1.
 
-  start() {
-    this.running = true;
-    requestAnimationFrame(this.tick.bind(this));
-  }
+**3. Add wheel event handler in input.ts:**
 
-  private tick(time: number) {
-    if (!this.running) return;
-    const dt = (time - this.lastTime) / 1000;
-    this.lastTime = time;
-    this.update(dt);  // physics, pathfinding, state machines
-    this.render();     // draw to canvas
-    requestAnimationFrame(this.tick.bind(this));
+```typescript
+function handleWheel(e: WheelEvent): void {
+  if (e.ctrlKey || e.metaKey) {
+    e.preventDefault(); // Prevent browser zoom
+    const state = useOfficeStore.getState();
+    const delta = -e.deltaY * 0.01; // Invert: scroll-up = zoom-in
+    const newZoom = Math.max(0.5, Math.min(5.0, state.camera.zoom + delta));
+    state.setZoomLevel(newZoom);
   }
 }
+// CRITICAL: { passive: false } required for preventDefault() on wheel events
+canvas.addEventListener('wheel', handleWheel, { passive: false });
 ```
 
-**BFS Pathfinding:** Implement from scratch -- it is ~30 lines of code for grid-based BFS. No library needed. The office grid is small (maybe 40x30 tiles). A* is unnecessary at this scale.
+**Why `ctrlKey`:** On macOS, trackpad pinch-to-zoom fires as `wheel` events with `ctrlKey === true` and `deltaY` as the zoom delta. This is consistent across Chrome, Safari, and Firefox on macOS. No touch event handling needed since this is a desktop-only app.
 
-**Isometric math:**
+**4. Update camera follow threshold in gameLoop.ts:**
+
 ```typescript
-// Cartesian to isometric projection
-function toIso(x: number, y: number): { screenX: number; screenY: number } {
-  return {
-    screenX: (x - y) * (TILE_WIDTH / 2),
-    screenY: (x + y) * (TILE_HEIGHT / 2),
-  };
+// Before (line 146):
+if (billy && state.camera.followTarget === 'billy' && state.camera.zoom >= 2) {
+// After:
+if (billy && state.camera.followTarget === 'billy' && state.camera.zoom >= 1.2) {
+```
+
+**5. Remove integer snap from computeAutoFitZoom in camera.ts:**
+
+```typescript
+// Before:
+return Math.max(1, Math.floor(Math.min(...)));
+// After:
+return Math.max(0.5, Math.min(...)); // Exact fit, not snapped to integer
+```
+
+**6. Smooth zoom animation:**
+
+The existing `updateCamera` lerp (`camera.x += (target - camera.x) * 0.1`) provides smooth movement. Apply the same lerp to zoom transitions:
+
+```typescript
+// In updateCamera or gameLoop:
+camera.zoom += (targetZoom - camera.zoom) * 0.15;
+```
+
+This makes zoom changes feel smooth rather than instant.
+
+### Performance Note
+
+The sprite cache with 0.25 quantization means at most ~19 zoom levels cached per sprite. With ~50 unique sprite frames across all sheets, that is ~950 cached canvases max (~4MB RAM at 32x48 average). Well within budget.
+
+## Detailed Implementation: JRPG 3/4 Perspective
+
+### What "3/4 Perspective" Means
+
+In games like Pokemon FireRed, Zelda: A Link to the Past, and Stardew Valley, the world is drawn as if viewed from slightly above and to the south. Key characteristics:
+
+- **Floors render flat** (top-down, same as current)
+- **North walls are visible** as a front face (you see the wall's surface, not just its top edge)
+- **Characters face south** toward the camera, showing their face
+- **Furniture has visible front faces** (you see the front of desks, bookshelves)
+- **Y-sorting provides depth** (things further south draw on top)
+
+This is NOT isometric. The grid remains rectangular (no diamond projection). The only change from pure top-down is that tiles are taller to show north-facing surfaces.
+
+### Tile Geometry Changes
+
+| Element | Current | New | Notes |
+|---------|---------|-----|-------|
+| Grid cell (pathfinding) | 16x16 | 16x16 | Grid logic unchanged |
+| Environment tile (rendered) | 16x16 | 16x24 | Extra 8px is north wall face |
+| Character frame | 16x16 | 24x32 | Room for face detail, hair, outfit |
+| `TILE_SIZE` constant | 16 | 16 | Keep for grid math |
+| New `TILE_RENDER_H` | N/A | 24 | Tile draw height for environment |
+| New `CHAR_W` / `CHAR_H` | N/A | 24 / 32 | Character sprite dimensions |
+
+### Rendering Adjustments
+
+**Floor tiles:** Each 16x24 tile image contains:
+- Top 8px: north wall face (brick/wood texture, or transparent for interior tiles)
+- Bottom 16px: floor surface (wood planks, carpet)
+
+Draw at `(col * TILE_SIZE * zoom, row * TILE_SIZE * zoom - 8 * zoom)` -- the tile extends 8px above its grid row to show the wall face. This means tiles naturally overlap the row above, which is correct for the 3/4 look.
+
+**Characters:** Currently drawn at character pixel position `(ch.x, ch.y)`. With 24x32 sprites on a 16x16 grid, center horizontally: `drawX = ch.x * zoom + offsetX - 4 * zoom` (offset by half the width difference). The taller sprite extends upward from the grid position.
+
+**Y-sort unification:** Currently, only characters are Y-sorted (renderer.ts line 109). For proper 3/4 depth, furniture and characters must be sorted together. Create a unified "drawable" list:
+
+```typescript
+interface Drawable {
+  y: number;        // Grid Y position (for sort)
+  zIndex?: number;  // Tiebreaker
+  draw: (ctx: CanvasRenderingContext2D) => void;
+}
+// Merge characters + furniture into one array, sort by y, draw in order
+```
+
+**Drop shadows:** Draw a dark semi-transparent ellipse beneath each character for grounding:
+
+```typescript
+ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+ctx.beginPath();
+ctx.ellipse(charCenterX, charFootY, 5 * zoom, 2 * zoom, 0, 0, Math.PI * 2);
+ctx.fill();
+```
+
+### Sprite Sheet Layout Changes
+
+**Character sheets (each character):**
+
+| | Current | New |
+|---|---------|-----|
+| Frame size | 16x16 | 24x32 |
+| Layout | 10 cols x 4 rows | 10 cols x 4 rows (same structure) |
+| Sheet dimensions | 160x64 | 240x128 |
+| Cols | 0:idle, 1-4:walk, 5-7:work, 8-9:talk | Same mapping |
+| Rows | 0:down, 1:left, 2:right, 3:up | Same mapping |
+
+The `SpriteFrame` interface (`engine/types.ts`) already supports arbitrary `w` and `h`, so no type changes needed. Only the atlas coordinate constants in `spriteAtlas.ts` change.
+
+**Environment sheet:**
+
+| | Current | New |
+|---|---------|-----|
+| Frame size | 16x16 | 16x24 |
+| Layout | 16 cols x 8 rows | 16 cols x 8 rows |
+| Sheet dimensions | 256x128 | 256x192 |
+
+### What Stays The Same
+
+- `TileType` enum (VOID, FLOOR, WALL, DOOR) -- unchanged
+- `TileCoord` interface -- unchanged
+- BFS pathfinding -- operates on grid, unaware of render height
+- `screenToTile` -- needs adjustment for tile render height offset but same structure
+- Room click detection -- uses grid coordinates, not render coordinates
+- Camera follow logic -- follows grid position, not render position
+
+## Detailed Implementation: Compact Grid Layout
+
+### Current Layout Problems
+
+The current `officeLayout.ts` creates a 42x34 tile map (1428 tiles). Rooms are spread across 3 tiers with 2-tile-wide corridors between them. There is significant VOID space. Walking between rooms takes many steps.
+
+### Target Layout
+
+From PROJECT.md: "2 top, War Room center, 4 bottom." Rooms share walls. Minimal hallway. Estimated ~28x24 tile map.
+
+```
+  [Diana  6x6] [Marcos  6x6]
+  [     War Room    10x6    ]
+  [Sasha][Valen][Rober][Billy]
+   6x6    6x6    6x6    6x6
+```
+
+All rooms are ~6x6 interior (8x8 including walls). Rooms share walls (adjacent rooms use a single wall tile between them, not two). Doors open to a 1-tile connector row between tiers instead of long hallways.
+
+### Layout Math
+
+```
+Cols: 4 rooms across at 7 tiles each (6 interior + 1 shared wall) = 28 cols
+Rows:
+  Top tier:    1 wall + 6 interior + 1 shared wall = 8
+  War Room:    6 interior + 1 shared wall = 7
+  Bottom tier: 6 interior + 1 wall = 7
+  Connectors:  2 rows (1 between each tier)
+  Total: ~24 rows
+```
+
+Map shrinks from 42x34 (1428 tiles) to ~28x24 (672 tiles) -- 53% reduction. BILLY's walking distances drop proportionally, making navigation feel snappy.
+
+### BFS Impact
+
+Shorter paths between all rooms. Maximum path length drops from ~40 tiles to ~20. BFS completes faster (smaller grid). Character speed constants may need reduction to avoid BILLY zipping across the tiny map.
+
+## Detailed Implementation: Glow & Lighting Effects
+
+Canvas 2D provides three mechanisms, all native:
+
+**1. `shadowBlur` for soft halos (desk lamps, ambient glow):**
+```typescript
+ctx.shadowColor = 'rgba(255, 200, 100, 0.4)';
+ctx.shadowBlur = 16 * zoom;
+ctx.shadowOffsetX = 0;
+ctx.shadowOffsetY = 0;
+// Draw the light-emitting sprite
+ctx.drawImage(lampSprite, x, y);
+// MUST reset
+ctx.shadowBlur = 0;
+```
+Performance cost: moderate. `shadowBlur` triggers Gaussian blur per draw call. Use sparingly -- only on ~5-10 light-emitting objects (desk lamps, monitors). Not every frame needs recalculation; cache the glow on an offscreen canvas if FPS drops.
+
+**2. `globalCompositeOperation = 'lighter'` for additive blending (monitor screen glow):**
+```typescript
+ctx.globalCompositeOperation = 'lighter';
+ctx.fillStyle = 'rgba(50, 200, 100, 0.15)';
+ctx.fillRect(monitorX - 8, monitorY - 4, 32, 24); // Soft green glow area
+ctx.globalCompositeOperation = 'source-over'; // Reset
+```
+Low performance cost. Good for subtle colored light spillage.
+
+**3. Radial gradients for area lighting:**
+```typescript
+const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * zoom);
+gradient.addColorStop(0, 'rgba(255, 200, 100, 0.2)');
+gradient.addColorStop(1, 'rgba(255, 200, 100, 0)');
+ctx.fillStyle = gradient;
+ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
+```
+Medium performance cost. Best for large area effects like overhead lighting.
+
+**Recommendation:** Use `globalCompositeOperation = 'lighter'` for most effects (cheap). Reserve `shadowBlur` for the 2-3 most prominent light sources. Draw all lighting in a separate pass after characters for correct layering.
+
+## Pixel Art Sprite Pipeline
+
+### Recommended Workflow
+
+```
+1. Create art in Aseprite at native resolution
+   - Characters: 24x32 per frame, 10 frames x 4 directions
+   - Environment: 16x24 per tile
+   - Use indexed color mode with a shared 32-64 color palette
+
+2. Export from Aseprite: File > Export Sprite Sheet
+   - Output: PNG sprite sheet + JSON atlas
+   - Layout: rows by animation state, same as current atlas convention
+
+3. Place exported PNGs in public/sprites/ (replacing generated ones)
+
+4. Either:
+   a. Import Aseprite JSON atlas and convert to SpriteFrame records at build time
+   b. Or update spriteAtlas.ts constants manually (7 sheets, simple coordinates)
+
+5. Fallback: scripts/generateSprites.ts updated for 24x32 / 16x24 dimensions
+   - Used when hand-drawn art isn't ready
+   - Same node-canvas approach, just bigger frames with more detail
+```
+
+### Why Aseprite Over Alternatives
+
+| Criterion | Aseprite | Piskel (free/web) | Photoshop | GIMP |
+|-----------|----------|-------------------|-----------|------|
+| Indexed color palette | Yes (enforces consistency) | No | No | Partial |
+| Sprite sheet export with JSON | Native, one-click | Basic PNG grid only | Manual | No |
+| Onion skinning for animation | Yes | Basic | Clunky | No |
+| Tile/tilemap mode | Yes | No | No | No |
+| Pixel-level workflow | Purpose-built | Good | Overkill | Awkward |
+| Community pixel art resources | Extensive | Moderate | Few | Few |
+
+### Aseprite JSON Format Integration
+
+Aseprite exports JSON like:
+```json
+{
+  "frames": {
+    "billy-idle-down-0.aseprite": {
+      "frame": { "x": 0, "y": 0, "w": 24, "h": 32 }
+    }
+  }
 }
 ```
 
-**Integer zoom:** Pixel art MUST use integer zoom levels (1x, 2x, 3x, 4x) to avoid sub-pixel blurring. Set `canvas.style.imageRendering = 'pixelated'` and `ctx.imageSmoothingEnabled = false`.
+A small build-time script (or Vite plugin) can convert this to the existing `Record<string, SpriteFrame>` format. Alternatively, since there are only 7 sprite sheets with predictable layouts, hardcoding the atlas coordinates in `spriteAtlas.ts` (as done today) remains viable and simpler.
 
-### Client-Side Persistence
+### Palette Recommendation
 
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| idb | ^8.0.0 | IndexedDB wrapper | Thin promise-based wrapper around IndexedDB. ~1.2KB gzipped. Use for conversation history, files, agent memory. Do NOT use raw IndexedDB -- the callback API is painful and error-prone. Do NOT use Dexie.js (~16KB) -- heavier than needed for simple key-value + indexed stores. | MEDIUM |
-| localStorage | (browser native) | Quick settings | User preferences, active deal ID, API key storage (single-user tool). Not for conversation data (5MB limit). | HIGH |
+For Stardew Valley / Pokemon FireRed quality, use a curated 32-color palette:
+- 4-5 skin tones (warm, for the Mexican character designs)
+- 6-8 environment colors (wood browns, stone grays, carpet tones)
+- 5-6 per-agent accent colors (purple Diana, blue Marcos, green Sasha, red Roberto, orange Valentina, gold Billy)
+- 3-4 lighting colors (warm lamp glow, cool monitor light, shadow)
+- 2 UI colors (white highlights, near-black outlines)
 
-**Migration-ready abstraction:**
+Indexed color mode in Aseprite enforces this palette across all sprites, ensuring visual consistency.
 
-```typescript
-// src/services/persistence.ts
-interface PersistenceAdapter {
-  getConversation(agentId: string, dealId: string): Promise<Conversation>;
-  saveMessage(agentId: string, dealId: string, msg: Message): Promise<void>;
-  getMemory(agentId: string, dealId: string): Promise<MemoryEntry[]>;
-  saveMemory(agentId: string, dealId: string, entry: MemoryEntry): Promise<void>;
-  // ... etc
-}
+## What NOT to Add
 
-// Start with: IndexedDBAdapter implements PersistenceAdapter
-// Later swap to: SupabaseAdapter implements PersistenceAdapter
-```
+| Avoid | Why | Use Instead |
+|-------|-----|-------------|
+| WebGL / PixiJS / Three.js | Massive overkill. 3/4 perspective is standard 2D tile rendering with taller tiles and Y-sorting. Would require rewriting the entire ~500 LOC renderer. | Canvas 2D (existing) |
+| Phaser / Kaboom.js | Game framework lock-in. Current custom engine is lean and fits perfectly. Frameworks add 200KB+ for features not needed. | Custom engine (existing) |
+| hammerjs / use-gesture | Trackpad pinch fires as native `wheel` events. No touch events needed (desktop app). A gesture library adds complexity for a 15-line handler. | Native `wheel` event |
+| GSAP / anime.js | Zoom animation is a single lerp in the existing camera system. One line of code. | Existing `updateCamera` lerp |
+| Tiled map editor | The tile map is ~50 lines of code for 7 rooms. A visual editor adds workflow complexity without proportional value at this scale. | Hand-coded `officeLayout.ts` |
+| Spine / DragonBones | Skeletal animation for smooth character motion. Pixel art at 24x32 looks best with hand-crafted frame animation, not interpolated bones. The 3/4 perspective style specifically demands frame-by-frame art. | Frame-based sprite sheets |
+| sharp / imagemagick | Image processing for sprites. node-canvas already handles PNG generation. | node-canvas (existing) |
+| react-zoom-pan-pinch | React wrapper for zoom/pan. The Canvas is rendered outside React's cycle. A React zoom library would fight the game loop. | Native wheel event + camera system |
 
-### File Parsing
+## Version Compatibility
 
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| pdfjs-dist | ^4.0.0+ | PDF text extraction | Specified in constraints. Official Mozilla PDF.js distribution. Use the worker for off-main-thread parsing. Bundle the worker separately via Vite. | MEDIUM |
-| mammoth | ^1.8.0 | DOCX to text/HTML | Specified in constraints. Lightweight, focused on text extraction. Do NOT use docx.js (that is for CREATING docx files, not reading them). | MEDIUM |
-
-**PDF.js Vite integration notes:**
-```typescript
-// PDF.js worker must be configured for Vite bundling
-import * as pdfjsLib from 'pdfjs-dist';
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.mjs',
-  import.meta.url
-).toString();
-```
-
-### UI & Styling
-
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| Tailwind CSS | ^4.0.0 | Utility CSS | For all HTML UI (chat panels, deal switcher, overlays). NOT for Canvas content. | MEDIUM |
-| clsx | ^2.1.0 | Conditional class names | Tiny (239B), no dependencies, cleaner than template literals for conditional Tailwind classes. | HIGH |
-
-**Do NOT use:**
-- **styled-components / emotion** -- Runtime CSS-in-JS is dead weight alongside Tailwind. Pick one paradigm.
-- **Radix UI / shadcn/ui** -- Tempting but this app has very few standard UI patterns (mostly chat bubbles and overlays). The Canvas is the primary UI. Roll the few components you need rather than pulling in a component library with accessibility patterns you do not need for a single-user tool.
-- **Framer Motion** -- Do NOT use for Canvas animations. Framer Motion is for DOM elements. Canvas animations are handled by the game loop. Acceptable ONLY for React UI panels (chat slide-in/out) but CSS transitions suffice.
-
-### Development Tooling
-
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| ESLint | ^9.0.0 | Linting | ESLint 9 uses flat config. Use `@eslint/js` + `typescript-eslint` + `eslint-plugin-react-hooks`. | MEDIUM |
-| Prettier | ^3.4.0 | Formatting | Auto-format on save. Tailwind plugin (`prettier-plugin-tailwindcss`) for class sorting. | HIGH |
-| Vitest | ^2.0.0+ | Unit testing | Vite-native testing. Same config as the app. Use for testing services (persistence, context builder, summarizer, memory extractor) and stores. Do NOT unit test Canvas rendering -- use visual inspection. | MEDIUM |
-
-### Markdown Rendering (for chat messages)
-
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| react-markdown | ^9.0.0 | Render agent responses | Claude responses contain markdown (headers, lists, bold, code blocks). Use react-markdown with remark-gfm for tables. Lightweight, React-native. | MEDIUM |
-| remark-gfm | ^4.0.0 | GitHub-flavored markdown | Tables, strikethrough, task lists in Claude responses. | MEDIUM |
-| rehype-highlight | ^7.0.0 | Code syntax highlighting | If agents include code snippets in responses (financial formulas, contract clauses). Lightweight alternative to full Prism/Shiki. | LOW |
-
-## Alternatives Considered
-
-| Category | Recommended | Alternative | Why Not |
-|----------|-------------|-------------|---------|
-| State Management | Zustand | Redux Toolkit | Too much boilerplate for 5 simple stores. Zustand's subscribe-outside-React pattern is critical for the game loop. |
-| State Management | Zustand | Jotai | Atom-based model is wrong shape for this app. We have 5 domain stores, not many small atoms. |
-| Canvas Library | Raw Canvas 2D | PixiJS | WebGL-based, large bundle, fights pixel-perfect integer zoom, overkill for 2D tile rendering. |
-| Canvas Library | Raw Canvas 2D | Phaser | Full game engine (~1MB), adds scene management and physics we do not need. |
-| IndexedDB | idb | Dexie.js | Dexie is ~16KB vs idb's ~1.2KB. Dexie's query DSL is nice but unnecessary -- we query by composite key (agentId + dealId). |
-| IndexedDB | idb | localForage | localForage is a shim for older browsers. IndexedDB support is universal in 2026. |
-| Build Tool | Vite | Next.js | We do NOT need SSR, routing, or API routes. This is a pure SPA. Next.js adds server complexity that contradicts the project's "no backend" constraint. |
-| Build Tool | Vite | Turbopack / Rspack | Not mature enough ecosystem. Vite has the best plugin ecosystem for this stack. |
-| Styling | Tailwind CSS | CSS Modules | Tailwind is faster to build with, better for rapid prototyping, and the project spec requires it. |
-| Chat Rendering | react-markdown | @mdx-js/react | MDX is for authoring, not rendering API responses. react-markdown is the right tool. |
-| API Client | @anthropic-ai/sdk | Raw fetch + SSE | The SDK handles streaming edge cases (reconnection, event parsing, type safety) that you will get wrong with raw fetch. |
-| Token Counting | SDK countTokens / heuristic | tiktoken | tiktoken is for OpenAI models. Anthropic uses a different tokenizer. Use their SDK's built-in counting. |
-
-## Version Verification Commands
-
-**Run these before `npm init` to get exact current versions:**
-
-```bash
-# Core framework
-npm info react version
-npm info react-dom version
-npm info typescript version
-npm info vite version
-npm info tailwindcss version
-
-# State & persistence
-npm info zustand version
-npm info idb version
-
-# Anthropic
-npm info @anthropic-ai/sdk version
-
-# File parsing
-npm info pdfjs-dist version
-npm info mammoth version
-
-# Chat rendering
-npm info react-markdown version
-npm info remark-gfm version
-
-# Dev tooling
-npm info vitest version
-npm info eslint version
-npm info prettier version
-```
-
-**IMPORTANT:** My version recommendations are based on training data through early 2025. Several of these packages may have released newer major versions. The `npm info` commands above are the source of truth.
-
-## Installation
-
-```bash
-# Initialize project
-npm create vite@latest lemon-command-center -- --template react-ts
-cd lemon-command-center
-
-# Core dependencies
-npm install react@^19.0.0 react-dom@^19.0.0
-npm install zustand
-npm install @anthropic-ai/sdk
-npm install idb
-npm install pdfjs-dist
-npm install mammoth
-npm install react-markdown remark-gfm
-npm install clsx
-
-# Tailwind CSS v4 (new install method -- CSS-first, no config file)
-npm install tailwindcss @tailwindcss/vite
-
-# Dev dependencies
-npm install -D typescript @types/react @types/react-dom
-npm install -D vite @vitejs/plugin-react
-npm install -D vitest @testing-library/react @testing-library/jest-dom jsdom
-npm install -D eslint @eslint/js typescript-eslint eslint-plugin-react-hooks
-npm install -D prettier prettier-plugin-tailwindcss
-```
-
-**Tailwind v4 setup** (no tailwind.config.ts needed):
-```css
-/* src/index.css */
-@import "tailwindcss";
-
-/* Custom theme tokens */
-@theme {
-  --color-lemon-gold: #d4a017;
-  --color-lemon-amber: #b8860b;
-  --color-office-dark: #1a1a2e;
-  --color-office-panel: #16213e;
-}
-```
-
-**Vite config:**
-```typescript
-// vite.config.ts
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
-
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  server: {
-    proxy: {
-      '/api/messages': {
-        target: 'https://api.anthropic.com/v1',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-      },
-    },
-  },
-  define: {
-    // Expose env vars prefixed with VITE_ to client
-    // API key stays server-side via proxy
-  },
-});
-```
-
-## Bundle Size Budget
-
-| Category | Target | Notes |
-|----------|--------|-------|
-| React + ReactDOM | ~45KB gzipped | Core framework |
-| Zustand | ~2KB gzipped | Minimal state library |
-| @anthropic-ai/sdk | ~15-25KB gzipped | Verify -- may be larger with streaming deps |
-| idb | ~1.2KB gzipped | Tiny IndexedDB wrapper |
-| pdfjs-dist | ~300-400KB gzipped | Large -- lazy-load on first file upload, use dynamic import |
-| mammoth | ~30KB gzipped | Lazy-load alongside pdfjs-dist |
-| react-markdown + remark-gfm | ~15KB gzipped | Acceptable for chat rendering |
-| Tailwind CSS | ~10-15KB gzipped | Only used utilities extracted at build time |
-| **Total initial bundle** | **~90-110KB gzipped** | Without PDF.js (lazy-loaded) |
-| **Total with lazy-loaded** | **~450KB gzipped** | After first file upload triggers PDF.js load |
-
-**Lazy-loading strategy:**
-```typescript
-// src/services/fileParser.ts
-export async function parsePDF(file: File): Promise<string> {
-  const pdfjsLib = await import('pdfjs-dist');
-  // ... parse
-}
-
-export async function parseDOCX(file: File): Promise<string> {
-  const mammoth = await import('mammoth');
-  // ... parse
-}
-```
-
-## Architecture-Relevant Stack Decisions
-
-### React-Canvas Bridge Pattern
-
-React owns the DOM (chat panels, overlays, deal switcher). Canvas owns the office rendering. They communicate through Zustand:
-
-```
-React Component ──writes──> Zustand Store <──reads── Game Engine
-                                │
-React Component <──reads─── Zustand Store ──writes──> Game Engine
-```
-
-- React components use `useStore()` hooks (trigger re-renders)
-- Game engine uses `store.subscribe()` (no React re-renders, just reads state)
-- Game engine writes to store via `store.getState().setCharacterPosition(...)` (triggers React updates only for subscribed components)
-
-### No Router Needed
-
-This is a single-view application. The "navigation" is BILLY walking between rooms, not URL-based routing. Do NOT install react-router. The office floor IS the navigation.
-
-### No CSS Animation Library for Canvas
-
-All character animations (walk cycles, idle loops, status changes) are sprite-based and handled by the game loop's `CharacterStateMachine`. CSS/JS animation libraries (Framer Motion, react-spring, GSAP) are irrelevant for Canvas content.
-
-For React UI panels (chat slide-in, deal switcher transitions): use CSS transitions (`transition-transform`, `transition-opacity`). If you find yourself wanting more, `framer-motion` is the escape hatch, but you should not need it for the few panel animations in this app.
-
-### Anthropic SDK Version Sensitivity
-
-The `@anthropic-ai/sdk` package updates frequently as Anthropic adds features (tool use, extended thinking, prompt caching). Pin to a specific minor version in package.json (e.g., `"0.39.2"` not `"^0.39.0"`) and update deliberately. Breaking changes in the streaming API can silently break the chat.
+| Technology | Compatibility Notes |
+|------------|-------------------|
+| `wheel` event | All modern browsers. `ctrlKey` for trackpad pinch consistent on macOS Chrome/Safari/Firefox. |
+| `{ passive: false }` | Required for `preventDefault()` on wheel. Chrome warns without explicit setting. |
+| `shadowBlur` | All modern browsers. Performance varies -- faster in Chrome than Safari. |
+| `globalCompositeOperation: 'lighter'` | All modern browsers. Hardware-accelerated in all major engines. |
+| `ctx.ellipse()` | All modern browsers (Chrome 31+, Safari 9+, Firefox 48+). |
+| `createRadialGradient` | Universal Canvas 2D support. |
+| Canvas `roundRect()` | Already used in production (renderer.ts). Chrome 99+, Safari 15.4+, Firefox 112+. |
 
 ## Sources
 
-- Project specification: `LEMON-COMMAND-CENTER-PROMPT.md` (primary source for stack decisions)
-- Project constraints: `.planning/PROJECT.md` (validated constraints section)
-- pixel-agents reference: `https://github.com/pablodelucca/pixel-agents` (Canvas 2D rendering patterns)
-- React 19 release: Training data (Dec 2024 stable release) -- MEDIUM confidence on exact version
-- Vite 6 release: Training data (Dec 2024 release) -- MEDIUM confidence on exact version
-- Tailwind v4 release: Training data (Jan 2025 release) -- MEDIUM confidence on exact version
-- Zustand API: Training data (v4.5.x stable, v5 possible) -- MEDIUM confidence
-- @anthropic-ai/sdk: Training data (rapid iteration, version may be higher) -- LOW confidence on version number
-- idb: Training data (v8.x line) -- MEDIUM confidence
-- pdfjs-dist: Training data (v4.x line) -- MEDIUM confidence
-
-**NOTE:** All version numbers should be verified with `npm info <package> version` before installation. The WebSearch and WebFetch tools were unavailable during this research session, so versions could not be cross-checked against npmjs.com. My training data is current through early 2025, which means packages that release frequently (Anthropic SDK, Vite, ESLint) may have newer versions available in March 2026.
+- **Existing codebase** (HIGH confidence): Full analysis of `engine/renderer.ts` (727 lines), `engine/camera.ts` (109 lines), `engine/spriteSheet.ts` (138 lines), `engine/spriteAtlas.ts` (123 lines), `engine/input.ts` (337 lines), `engine/gameLoop.ts` (179 lines), `engine/types.ts` (110 lines), `engine/officeLayout.ts` (303 lines), `scripts/generateSprites.ts` (673 lines)
+- **Canvas 2D API** (HIGH confidence): `imageSmoothingEnabled`, `shadowBlur`, `globalCompositeOperation`, `wheel` event, `ellipse()` are stable, long-established browser APIs
+- **macOS trackpad behavior** (HIGH confidence): `wheel` event with `ctrlKey === true` for pinch-to-zoom is the documented, consistent pattern across all macOS browsers
+- **JRPG 3/4 perspective techniques** (HIGH confidence): Well-established in game development (Pokemon, Zelda, Stardew Valley lineage). Standard approach: taller tiles, Y-sorting, no projection math changes from top-down
+- **Aseprite sprite sheet export** (HIGH confidence): Standard tooling in indie game dev, JSON+PNG export format is well-documented
 
 ---
-
-*Stack research: 2026-03-12*
+*Stack research for: Lemon Command Center v1.1 Visual Overhaul*
+*Researched: 2026-03-13*
