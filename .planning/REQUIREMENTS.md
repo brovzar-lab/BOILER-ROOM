@@ -13,7 +13,7 @@ Requirements for v1.1 Visual Overhaul. Each maps to roadmap phases.
 - [x] **LAYOUT-02**: Room dimensions accommodate JRPG 3/4 furniture and 24x32 characters with correct spacing
 - [x] **LAYOUT-03**: War Room conference table and seating positions work in compact layout
 - [x] **LAYOUT-04**: BFS pathfinding works correctly on redesigned compact grid
-- [ ] **LAYOUT-05**: All existing features (file icons on desks, decorations, status indicators) work in new layout
+- [x] **LAYOUT-05**: All existing features (file icons on desks, decorations, status indicators) work in new layout
 
 ### Renderer
 
@@ -88,7 +88,7 @@ Deferred to future release.
 | LAYOUT-02 | Phase 9 | Complete |
 | LAYOUT-03 | Phase 9 | Complete |
 | LAYOUT-04 | Phase 9 | Complete |
-| LAYOUT-05 | Phase 9 | Pending |
+| LAYOUT-05 | Phase 9 | Complete |
 | RNDR-01 | Phase 10 | Pending |
 | RNDR-02 | Phase 10 | Pending |
 | RNDR-03 | Phase 10 | Pending |

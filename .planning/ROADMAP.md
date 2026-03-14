@@ -44,7 +44,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
   2. BILLY can walk to any agent office and the War Room via click-to-move pathfinding on the new grid
   3. War Room conference table seats all 5 agents with correct spacing in the compact layout
   4. All existing features (file icons, decorations, status indicators, agent animations) work in the new layout without regression
-**Plans:** 3 plans
+**Plans:** 2/3 plans executed
 Plans:
 - [ ] 09-01-PLAN.md — Compact grid data + centralized coordinates in officeLayout.ts
 - [ ] 09-02-PLAN.md — Update coupled files (characters.ts, renderer.ts) to use centralized data
@@ -109,7 +109,7 @@ Plans:
 | 6. File Handling | v1.0 | 3/3 | Complete | 2026-03-13 |
 | 7. Agent Memory | v1.0 | 4/4 | Complete | 2026-03-13 |
 | 8. Polish | v1.0 | 3/3 | Complete | 2026-03-14 |
-| 9. Compact Layout | v1.1 | 1/3 | In Progress | - |
+| 9. Compact Layout | 2/3 | In Progress|  | - |
 | 10. Rendering Pipeline | v1.1 | 0/? | Not started | - |
 | 11. JRPG Sprite Integration | v1.1 | 0/? | Not started | - |
 | 12. Smooth Zoom | v1.1 | 0/? | Not started | - |
