@@ -16,6 +16,9 @@ export const enum TileType {
 /** Native tile size in pixels (displayed at 2x zoom as 32x32) */
 export const TILE_SIZE = 16;
 
+/** Zoom levels below this threshold are treated as overview mode (no camera follow) */
+export const ZOOM_OVERVIEW_THRESHOLD = 1.5;
+
 /** Base walk speed in pixels/sec (~4 tiles/sec at 16px tiles) */
 export const WALK_SPEED = 64;
 
@@ -87,7 +90,7 @@ export interface Camera {
   x: number;
   /** Current camera Y offset (pixels) */
   y: number;
-  /** Integer zoom level: 1 = overview, 2 = follow */
+  /** Current zoom level (float, e.g. 1.0, 1.5, 2.0) */
   zoom: number;
   /** Target X for smooth lerp */
   targetX: number;

@@ -8,7 +8,7 @@
  * The game loop receives an already-configured canvas.
  */
 import { useOfficeStore } from '@/store/officeStore';
-import { TILE_SIZE } from './types';
+import { TILE_SIZE, ZOOM_OVERVIEW_THRESHOLD } from './types';
 import { updateCamera, computeAutoFitZoom } from './camera';
 import { updateAllCharacters } from './characters';
 import { OFFICE_TILE_MAP } from './officeLayout';
@@ -143,11 +143,11 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
     prevAgentStatuses = { ...currentStatuses };
 
     // If BILLY is walking, set camera target to follow BILLY's pixel position
-    if (billy && state.camera.followTarget === 'billy' && state.camera.zoom >= 2) {
+    if (billy && state.camera.followTarget === 'billy' && state.camera.zoom >= ZOOM_OVERVIEW_THRESHOLD) {
       // Camera targets BILLY's center pixel position, offset to center in viewport
       state.camera.targetX = billy.x * state.camera.zoom - canvasWidth / 2 + (TILE_SIZE * state.camera.zoom) / 2;
       state.camera.targetY = billy.y * state.camera.zoom - canvasHeight / 2 + (TILE_SIZE * state.camera.zoom) / 2;
-    } else if (state.camera.zoom === 1) {
+    } else if (state.camera.zoom < ZOOM_OVERVIEW_THRESHOLD) {
       // Overview mode: center camera on the map
       state.camera.targetX = 0;
       state.camera.targetY = 0;

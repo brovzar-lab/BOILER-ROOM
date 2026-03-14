@@ -1,23 +1,23 @@
 /**
- * Camera system with integer zoom, smooth follow, and coordinate conversion.
- * Supports zoom level 1 (overview: whole floor visible), 2+ (follow: tracks target),
- * and auto-fit zoom that calculates the largest integer zoom fitting the full map.
+ * Camera system with float zoom, smooth follow, and coordinate conversion.
+ * Supports fractional zoom levels (e.g. 1.0, 1.5, 2.7). Below ZOOM_OVERVIEW_THRESHOLD
+ * is overview mode; above is follow mode. Auto-fit zoom returns a raw float.
  */
 import { TILE_SIZE } from './types';
 import type { Camera, TileCoord } from './types';
 import { OFFICE_TILE_MAP } from './officeLayout';
 
 /**
- * Computes the largest integer zoom level at which the entire office map
- * fits within the given canvas dimensions. Minimum return value is 1.
+ * Computes the zoom level at which the entire office map fits within the
+ * given canvas dimensions. Returns a raw float clamped to minimum 1.0.
  */
 export function computeAutoFitZoom(canvasWidth: number, canvasHeight: number): number {
-  const mapCols = OFFICE_TILE_MAP[0]!.length; // 42
-  const mapRows = OFFICE_TILE_MAP.length;       // 34
-  const mapPixelW = mapCols * TILE_SIZE;         // 672
-  const mapPixelH = mapRows * TILE_SIZE;         // 544
+  const mapCols = OFFICE_TILE_MAP[0]!.length;
+  const mapRows = OFFICE_TILE_MAP.length;
+  const mapPixelW = mapCols * TILE_SIZE;
+  const mapPixelH = mapRows * TILE_SIZE;
 
-  return Math.max(1, Math.floor(Math.min(canvasWidth / mapPixelW, canvasHeight / mapPixelH)));
+  return Math.max(1, Math.min(canvasWidth / mapPixelW, canvasHeight / mapPixelH));
 }
 
 /**
@@ -35,8 +35,8 @@ export function createCamera(): Camera {
 }
 
 /**
- * Smoothly lerps camera toward targetX/targetY. Uses Math.round for pixel-perfect alignment.
- * The lerp factor (0.1) provides a smooth follow feel without being sluggish.
+ * Smoothly lerps camera toward targetX/targetY. Camera position is kept as float
+ * for smooth sub-pixel rendering — setTransform handles sub-pixel math uniformly.
  */
 export function updateCamera(
   camera: Camera,
@@ -44,13 +44,9 @@ export function updateCamera(
   _canvasWidth: number,
   _canvasHeight: number,
 ): void {
-  // Lerp toward target
+  // Lerp toward target (float position for smooth sub-pixel rendering)
   camera.x = camera.x + (camera.targetX - camera.x) * 0.1;
   camera.y = camera.y + (camera.targetY - camera.y) * 0.1;
-
-  // Snap to integers for pixel-perfect rendering
-  camera.x = Math.round(camera.x);
-  camera.y = Math.round(camera.y);
 }
 
 /**
@@ -71,9 +67,9 @@ export function screenToTile(
   const mapW = mapCols * tileSize;
   const mapH = mapRows * tileSize;
 
-  // Map is centered in the canvas, then shifted by camera offset
-  const offsetX = Math.floor((canvasWidth - mapW) / 2) - camera.x;
-  const offsetY = Math.floor((canvasHeight - mapH) / 2) - camera.y;
+  // Map is centered in the canvas, then shifted by camera offset (no rounding — float math)
+  const offsetX = (canvasWidth - mapW) / 2 - camera.x;
+  const offsetY = (canvasHeight - mapH) / 2 - camera.y;
 
   const col = Math.floor((screenX - offsetX) / tileSize);
   const row = Math.floor((screenY - offsetY) / tileSize);
@@ -99,8 +95,8 @@ export function tileToScreen(
   const mapW = mapCols * tileSize;
   const mapH = mapRows * tileSize;
 
-  const offsetX = Math.floor((canvasWidth - mapW) / 2) - camera.x;
-  const offsetY = Math.floor((canvasHeight - mapH) / 2) - camera.y;
+  const offsetX = (canvasWidth - mapW) / 2 - camera.x;
+  const offsetY = (canvasHeight - mapH) / 2 - camera.y;
 
   return {
     x: col * tileSize + offsetX,

@@ -85,12 +85,22 @@ export function getEnvironmentSheet(): HTMLImageElement | null {
 }
 
 // ── Sprite Cache ────────────────────────────────────────────────────────────
-// Caches pre-scaled canvas elements per zoom level for fast rendering.
+// Caches pre-scaled canvas elements per quantized zoom level for fast rendering.
+// Zoom is quantized to nearest 0.5 to prevent cache explosion at fractional values.
 
 const spriteCache = new Map<number, Map<string, HTMLCanvasElement>>();
 
 /**
+ * Quantizes zoom to nearest 0.5 increment (e.g. 1.0, 1.5, 2.0, 2.5).
+ * Prevents cache explosion when zoom is a continuous float.
+ */
+function getQuantizedZoom(zoom: number): number {
+  return Math.round(zoom * 2) / 2;
+}
+
+/**
  * Extracts a frame from a sprite sheet and returns a pre-scaled cached canvas.
+ * Uses quantized zoom for both cache key and canvas dimensions.
  * Sets imageSmoothingEnabled=false for pixel-perfect scaling.
  */
 export function getCachedSprite(
@@ -98,10 +108,12 @@ export function getCachedSprite(
   frame: SpriteFrame,
   zoom: number,
 ): HTMLCanvasElement {
-  let zoomCache = spriteCache.get(zoom);
+  const cacheZoom = getQuantizedZoom(zoom);
+
+  let zoomCache = spriteCache.get(cacheZoom);
   if (!zoomCache) {
     zoomCache = new Map();
-    spriteCache.set(zoom, zoomCache);
+    spriteCache.set(cacheZoom, zoomCache);
   }
 
   // Include sheet src in cache key so different sheets with same frame coords don't collide
@@ -109,8 +121,8 @@ export function getCachedSprite(
   let cached = zoomCache.get(key);
   if (!cached) {
     cached = document.createElement('canvas');
-    cached.width = frame.w * zoom;
-    cached.height = frame.h * zoom;
+    cached.width = frame.w * cacheZoom;
+    cached.height = frame.h * cacheZoom;
     const cctx = cached.getContext('2d')!;
     cctx.imageSmoothingEnabled = false;
     cctx.drawImage(

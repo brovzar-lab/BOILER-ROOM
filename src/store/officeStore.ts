@@ -85,8 +85,8 @@ export const useOfficeStore = create<OfficeState>((set) => ({
 
   setZoomLevel: (level) =>
     set((state) => ({
-      zoomLevel: Math.round(level),
-      camera: { ...state.camera, zoom: Math.round(level) },
+      zoomLevel: level,
+      camera: { ...state.camera, zoom: level },
     })),
 
   setAgentStatus: (agentId, status) =>

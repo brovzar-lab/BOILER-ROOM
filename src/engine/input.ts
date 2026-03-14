@@ -12,7 +12,7 @@ import { useFileStore } from '@/store/fileStore';
 import { screenToTile } from './camera';
 import { getRoomAtTile, ROOMS, OFFICE_TILE_MAP } from './officeLayout';
 import { startWalk } from './characters';
-import { WALK_SPEED } from './types';
+import { WALK_SPEED, ZOOM_OVERVIEW_THRESHOLD } from './types';
 import type { AgentId } from '@/types/agent';
 
 /** Valid agent room IDs (excludes war-room and billy) */
@@ -290,7 +290,7 @@ export function removeInputHandlers(cleanup: () => void): void {
  */
 function toggleZoom(): void {
   const state = useOfficeStore.getState();
-  const newLevel = state.zoomLevel === 1 ? 2 : 1;
+  const newLevel = state.zoomLevel < ZOOM_OVERVIEW_THRESHOLD ? 2 : 1;
   state.setZoomLevel(newLevel);
 }
 
