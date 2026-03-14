@@ -1,8 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import { ROOMS, getRoomAtTile, FURNITURE } from '../officeLayout';
+import { TileType } from '../types';
+import {
+  ROOMS,
+  getRoomAtTile,
+  FURNITURE,
+  OFFICE_TILE_MAP,
+  WAR_ROOM_SEATS,
+  DECORATIONS,
+} from '../officeLayout';
 import type { FurnitureItem } from '../officeLayout';
+import { isWalkable, findPath, getTileAt } from '../tileMap';
 
-// ── Room Furniture Tests (ENGN-03 coverage) ─────────────────────────────────
+// ── Room Furniture Tests ─────────────────────────────────────────────────────
 
 describe('office furniture', () => {
   it('each room has at least 1 furniture item (desk at minimum)', () => {
@@ -49,11 +58,11 @@ describe('office furniture', () => {
 
 describe('room layout', () => {
   it('hallway tiles are not inside any room tileRect', () => {
-    // Known hallway tiles from the layout: row 9-10 cols 14-15 (between BILLY and Diana)
+    // Corridor tiles between top rooms and War Room area
     const hallwayTiles = [
-      { col: 14, row: 9 },
+      { col: 8, row: 9 },
       { col: 15, row: 9 },
-      { col: 14, row: 10 },
+      { col: 22, row: 10 },
     ];
     for (const tile of hallwayTiles) {
       const room = getRoomAtTile(tile.col, tile.row);
@@ -72,12 +81,275 @@ describe('room layout', () => {
 
   it('room names are human-readable display names', () => {
     for (const room of ROOMS) {
-      // Name should have at least 3 characters
       expect(room.name.length).toBeGreaterThanOrEqual(3);
-      // Name should not be just an ID slug
       expect(room.name).not.toBe(room.id);
-      // Name should contain at least one uppercase letter or space
       expect(/[A-Z\s]/.test(room.name)).toBe(true);
     }
+  });
+});
+
+// ── Compact Grid Invariant Tests ────────────────────────────────────────────
+
+describe('compact grid invariants', () => {
+  it('grid dimensions are compact', () => {
+    // Rows
+    expect(
+      OFFICE_TILE_MAP.length,
+      `Grid should have <= 28 rows (got ${OFFICE_TILE_MAP.length})`,
+    ).toBeLessThanOrEqual(28);
+    // Cols
+    expect(
+      OFFICE_TILE_MAP[0]!.length,
+      `Grid should have <= 32 cols (got ${OFFICE_TILE_MAP[0]!.length})`,
+    ).toBeLessThanOrEqual(32);
+  });
+
+  it('all room seatTile positions are FLOOR tiles', () => {
+    for (const room of ROOMS) {
+      const tileType = getTileAt(
+        room.seatTile.col,
+        room.seatTile.row,
+        OFFICE_TILE_MAP,
+      );
+      expect(
+        tileType,
+        `${room.id} seatTile (${room.seatTile.col},${room.seatTile.row}) should be FLOOR`,
+      ).toBe(TileType.FLOOR);
+    }
+  });
+
+  it('all room billyStandTile positions are FLOOR tiles', () => {
+    for (const room of ROOMS) {
+      const tileType = getTileAt(
+        room.billyStandTile.col,
+        room.billyStandTile.row,
+        OFFICE_TILE_MAP,
+      );
+      expect(
+        tileType,
+        `${room.id} billyStandTile (${room.billyStandTile.col},${room.billyStandTile.row}) should be FLOOR`,
+      ).toBe(TileType.FLOOR);
+    }
+  });
+
+  it('all room doorTile positions are DOOR tiles', () => {
+    for (const room of ROOMS) {
+      const tileType = getTileAt(
+        room.doorTile.col,
+        room.doorTile.row,
+        OFFICE_TILE_MAP,
+      );
+      expect(
+        tileType,
+        `${room.id} doorTile (${room.doorTile.col},${room.doorTile.row}) should be DOOR`,
+      ).toBe(TileType.DOOR);
+    }
+  });
+
+  it('BFS connectivity: path exists between every pair of room doors', () => {
+    for (const roomA of ROOMS) {
+      for (const roomB of ROOMS) {
+        if (roomA.id === roomB.id) continue;
+        const path = findPath(
+          roomA.doorTile.col,
+          roomA.doorTile.row,
+          roomB.doorTile.col,
+          roomB.doorTile.row,
+          OFFICE_TILE_MAP,
+        );
+        expect(
+          path.length,
+          `Should find path from ${roomA.id} to ${roomB.id}`,
+        ).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("BILLY's office is in top-left region", () => {
+    const billy = ROOMS.find((r) => r.id === 'billy')!;
+    const gridMidCol = OFFICE_TILE_MAP[0]!.length / 2;
+    expect(
+      billy.tileRect.col,
+      "BILLY's office should be in left half",
+    ).toBeLessThan(gridMidCol);
+    const gridMidRow = OFFICE_TILE_MAP.length / 2;
+    expect(
+      billy.tileRect.row,
+      "BILLY's office should be in top half",
+    ).toBeLessThan(gridMidRow);
+  });
+
+  it("Sasha's office is in top-right region", () => {
+    const sasha = ROOMS.find((r) => r.id === 'sasha')!;
+    const gridMidCol = OFFICE_TILE_MAP[0]!.length / 2;
+    expect(
+      sasha.tileRect.col,
+      "Sasha's office should be in right half",
+    ).toBeGreaterThanOrEqual(gridMidCol);
+    const gridMidRow = OFFICE_TILE_MAP.length / 2;
+    expect(
+      sasha.tileRect.row,
+      "Sasha's office should be in top half",
+    ).toBeLessThan(gridMidRow);
+  });
+
+  it('War Room is in center row', () => {
+    const warRoom = ROOMS.find((r) => r.id === 'war-room')!;
+    const topRooms = ROOMS.filter(
+      (r) => r.id === 'billy' || r.id === 'sasha',
+    );
+    const bottomRooms = ROOMS.filter(
+      (r) =>
+        r.id === 'diana' ||
+        r.id === 'marcos' ||
+        r.id === 'roberto' ||
+        r.id === 'valentina',
+    );
+    const topMax = Math.max(
+      ...topRooms.map((r) => r.tileRect.row + r.tileRect.height),
+    );
+    const bottomMin = Math.min(...bottomRooms.map((r) => r.tileRect.row));
+
+    expect(
+      warRoom.tileRect.row,
+      'War Room should be below top rooms',
+    ).toBeGreaterThan(topMax - 1);
+    expect(
+      warRoom.tileRect.row + warRoom.tileRect.height,
+      'War Room should be above bottom rooms',
+    ).toBeLessThan(bottomMin + 1);
+  });
+
+  it('bottom row has 4 agent offices', () => {
+    const bottomRoomIds = ['diana', 'marcos', 'roberto', 'valentina'];
+    for (const id of bottomRoomIds) {
+      const room = ROOMS.find((r) => r.id === id);
+      expect(room, `${id} should exist in ROOMS`).toBeDefined();
+    }
+    // All should be at same row (bottom section)
+    const bottomRooms = ROOMS.filter((r) => bottomRoomIds.includes(r.id));
+    const rows = new Set(bottomRooms.map((r) => r.tileRect.row));
+    expect(rows.size, 'All bottom offices should be at same row').toBe(1);
+  });
+
+  it('corridors are 2 tiles wide', () => {
+    // Check horizontal corridor at rows 9-10 (between top rooms and War Room)
+    // Pick a col in the corridor (col 15) and verify both rows are walkable
+    expect(isWalkable(15, 9, OFFICE_TILE_MAP)).toBe(true);
+    expect(isWalkable(15, 10, OFFICE_TILE_MAP)).toBe(true);
+
+    // Check horizontal corridor at rows 19-20 (between War Room and bottom rooms)
+    expect(isWalkable(15, 19, OFFICE_TILE_MAP)).toBe(true);
+    expect(isWalkable(15, 20, OFFICE_TILE_MAP)).toBe(true);
+
+    // Check vertical corridor at cols 8-9 (left side)
+    expect(isWalkable(8, 15, OFFICE_TILE_MAP)).toBe(true);
+    expect(isWalkable(9, 15, OFFICE_TILE_MAP)).toBe(true);
+
+    // Check vertical corridor at cols 22-23 (right side)
+    expect(isWalkable(22, 15, OFFICE_TILE_MAP)).toBe(true);
+    expect(isWalkable(23, 15, OFFICE_TILE_MAP)).toBe(true);
+  });
+});
+
+// ── WAR_ROOM_SEATS Tests ────────────────────────────────────────────────────
+
+describe('WAR_ROOM_SEATS', () => {
+  it('has 6 entries including billy', () => {
+    const keys = Object.keys(WAR_ROOM_SEATS);
+    expect(keys.length).toBe(6);
+    expect(keys).toContain('billy');
+    expect(keys).toContain('diana');
+    expect(keys).toContain('marcos');
+    expect(keys).toContain('sasha');
+    expect(keys).toContain('roberto');
+    expect(keys).toContain('valentina');
+  });
+
+  it('all seats are within War Room interior', () => {
+    const warRoom = ROOMS.find((r) => r.id === 'war-room')!;
+    const interior = {
+      minCol: warRoom.tileRect.col + 1,
+      maxCol: warRoom.tileRect.col + warRoom.tileRect.width - 2,
+      minRow: warRoom.tileRect.row + 1,
+      maxRow: warRoom.tileRect.row + warRoom.tileRect.height - 2,
+    };
+
+    for (const [agent, seat] of Object.entries(WAR_ROOM_SEATS)) {
+      expect(
+        seat.col,
+        `${agent} col should be >= ${interior.minCol}`,
+      ).toBeGreaterThanOrEqual(interior.minCol);
+      expect(
+        seat.col,
+        `${agent} col should be <= ${interior.maxCol}`,
+      ).toBeLessThanOrEqual(interior.maxCol);
+      expect(
+        seat.row,
+        `${agent} row should be >= ${interior.minRow}`,
+      ).toBeGreaterThanOrEqual(interior.minRow);
+      expect(
+        seat.row,
+        `${agent} row should be <= ${interior.maxRow}`,
+      ).toBeLessThanOrEqual(interior.maxRow);
+    }
+  });
+
+  it('all seats are FLOOR tiles (walkable)', () => {
+    for (const [agent, seat] of Object.entries(WAR_ROOM_SEATS)) {
+      const tileType = getTileAt(seat.col, seat.row, OFFICE_TILE_MAP);
+      expect(
+        tileType,
+        `${agent} seat (${seat.col},${seat.row}) should be FLOOR`,
+      ).toBe(TileType.FLOOR);
+    }
+  });
+
+  it('no seat position overlaps with conference table', () => {
+    // Find the conference table from FURNITURE
+    const table = FURNITURE.find(
+      (f) => f.roomId === 'war-room' && f.type === 'table',
+    )!;
+    expect(table).toBeDefined();
+
+    for (const [agent, seat] of Object.entries(WAR_ROOM_SEATS)) {
+      const onTable =
+        seat.col >= table.col &&
+        seat.col < table.col + table.width &&
+        seat.row >= table.row &&
+        seat.row < table.row + table.height;
+      expect(onTable, `${agent} should NOT be on the table`).toBe(false);
+    }
+  });
+});
+
+// ── DECORATIONS Tests ───────────────────────────────────────────────────────
+
+describe('DECORATIONS', () => {
+  it('all decoration items are within their room boundaries', () => {
+    for (const deco of DECORATIONS) {
+      const room = ROOMS.find((r) => r.id === deco.roomId);
+      expect(room, `Room ${deco.roomId} should exist for decoration ${deco.key}`).toBeDefined();
+      if (!room) continue;
+      const r = room.tileRect;
+      expect(
+        deco.col >= r.col && deco.col < r.col + r.width,
+        `Decoration "${deco.key}" in ${deco.roomId} col ${deco.col} should be inside room (${r.col}-${r.col + r.width})`,
+      ).toBe(true);
+      expect(
+        deco.row >= r.row && deco.row < r.row + r.height,
+        `Decoration "${deco.key}" in ${deco.roomId} row ${deco.row} should be inside room (${r.row}-${r.row + r.height})`,
+      ).toBe(true);
+    }
+  });
+
+  it('has decorations for all expected rooms', () => {
+    const roomsWithDecos = new Set(DECORATIONS.map((d) => d.roomId));
+    expect(roomsWithDecos.has('diana')).toBe(true);
+    expect(roomsWithDecos.has('marcos')).toBe(true);
+    expect(roomsWithDecos.has('sasha')).toBe(true);
+    expect(roomsWithDecos.has('roberto')).toBe(true);
+    expect(roomsWithDecos.has('valentina')).toBe(true);
+    expect(roomsWithDecos.has('billy')).toBe(true);
   });
 });

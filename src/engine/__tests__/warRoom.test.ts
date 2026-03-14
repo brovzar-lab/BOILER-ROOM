@@ -32,17 +32,9 @@ function makeCharacter(overrides: Partial<Character> = {}): Character {
 // ── WAR_ROOM_SEATS positions ──────────────────────────────────────────────────
 
 describe('WAR_ROOM_SEATS', () => {
-  beforeEach(() => {
-    vi.resetModules();
-  });
-
-  it('has entries for all 5 agents', async () => {
-    vi.doMock('@/store/officeStore', () => ({
-      useOfficeStore: { getState: () => ({ characters: [] }) },
-    }));
-
-    const { WAR_ROOM_SEATS } = await import('../characters');
-    const agents = ['diana', 'marcos', 'sasha', 'roberto', 'valentina'];
+  it('has entries for all 5 agents plus billy', async () => {
+    const { WAR_ROOM_SEATS } = await import('../officeLayout');
+    const agents = ['billy', 'diana', 'marcos', 'sasha', 'roberto', 'valentina'];
     for (const agent of agents) {
       expect(WAR_ROOM_SEATS).toHaveProperty(agent);
       expect(WAR_ROOM_SEATS[agent]).toHaveProperty('col');
@@ -50,30 +42,35 @@ describe('WAR_ROOM_SEATS', () => {
     }
   });
 
-  it('all seat positions are within War Room interior (cols 17-24, rows 12-19)', async () => {
-    vi.doMock('@/store/officeStore', () => ({
-      useOfficeStore: { getState: () => ({ characters: [] }) },
-    }));
+  it('all seat positions are within War Room interior (derived from ROOMS)', async () => {
+    const { WAR_ROOM_SEATS, ROOMS } = await import('../officeLayout');
+    const warRoom = ROOMS.find((r) => r.id === 'war-room')!;
+    const interior = {
+      minCol: warRoom.tileRect.col + 1,
+      maxCol: warRoom.tileRect.col + warRoom.tileRect.width - 2,
+      minRow: warRoom.tileRect.row + 1,
+      maxRow: warRoom.tileRect.row + warRoom.tileRect.height - 2,
+    };
 
-    const { WAR_ROOM_SEATS } = await import('../characters');
     for (const [agent, seat] of Object.entries(WAR_ROOM_SEATS)) {
-      expect(seat.col, `${agent} col should be >= 17`).toBeGreaterThanOrEqual(17);
-      expect(seat.col, `${agent} col should be <= 24`).toBeLessThanOrEqual(24);
-      expect(seat.row, `${agent} row should be >= 12`).toBeGreaterThanOrEqual(12);
-      expect(seat.row, `${agent} row should be <= 19`).toBeLessThanOrEqual(19);
+      expect(seat.col, `${agent} col should be >= ${interior.minCol}`).toBeGreaterThanOrEqual(interior.minCol);
+      expect(seat.col, `${agent} col should be <= ${interior.maxCol}`).toBeLessThanOrEqual(interior.maxCol);
+      expect(seat.row, `${agent} row should be >= ${interior.minRow}`).toBeGreaterThanOrEqual(interior.minRow);
+      expect(seat.row, `${agent} row should be <= ${interior.maxRow}`).toBeLessThanOrEqual(interior.maxRow);
     }
   });
 
-  it('no seat position is on the conference table tiles (cols 18-22, rows 14-16)', async () => {
-    vi.doMock('@/store/officeStore', () => ({
-      useOfficeStore: { getState: () => ({ characters: [] }) },
-    }));
+  it('no seat position is on the conference table (derived from FURNITURE)', async () => {
+    const { WAR_ROOM_SEATS, FURNITURE } = await import('../officeLayout');
+    const table = FURNITURE.find(
+      (f) => f.roomId === 'war-room' && f.type === 'table',
+    )!;
+    expect(table).toBeDefined();
 
-    const { WAR_ROOM_SEATS } = await import('../characters');
     for (const [agent, seat] of Object.entries(WAR_ROOM_SEATS)) {
       const onTable =
-        seat.col >= 18 && seat.col <= 22 &&
-        seat.row >= 14 && seat.row <= 16;
+        seat.col >= table.col && seat.col < table.col + table.width &&
+        seat.row >= table.row && seat.row < table.row + table.height;
       expect(onTable, `${agent} should NOT be on the table`).toBe(false);
     }
   });
