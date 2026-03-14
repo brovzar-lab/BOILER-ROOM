@@ -19,7 +19,7 @@
  *
  * UI overlays reset to identity and use worldToScreen() for positioning.
  */
-import { TileType, TILE_SIZE } from './types';
+import { TileType, TILE_SIZE, CHAR_SPRITE_W, CHAR_SPRITE_H } from './types';
 import type { Camera, Character } from './types';
 import type { FurnitureItem, DecorationItem } from './officeLayout';
 import { OFFICE_TILE_MAP, ROOMS, getRoomAtTile } from './officeLayout';
@@ -611,6 +611,23 @@ function renderCharacterWorld(
   const x = ch.x;
   const y = ch.y;
 
+  // Foot-center anchor: sprite centered horizontally on tile, feet at tile bottom
+  const drawX = x - (CHAR_SPRITE_W - TILE_SIZE) / 2;  // x - 4
+  const drawY = y - (CHAR_SPRITE_H - TILE_SIZE);       // y - 16
+
+  // Drop shadow: dark ellipse at feet (draw before character so sprite overlaps it)
+  ctx.save();
+  ctx.globalAlpha = 0.3;
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  const shadowCx = x + TILE_SIZE / 2;       // center of tile
+  const shadowCy = y + TILE_SIZE - 1;        // just above tile bottom
+  const shadowRx = TILE_SIZE * 0.4;          // horizontal radius
+  const shadowRy = TILE_SIZE * 0.15;         // vertical radius (flat ellipse)
+  ctx.ellipse(shadowCx, shadowCy, shadowRx, shadowRy, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
   // Try sprite-based rendering
   const sheet = getCharacterSheet(ch.id);
   if (sheet) {
@@ -624,24 +641,24 @@ function renderCharacterWorld(
     if (frames && frames.length > 0) {
       const frameIdx = Math.min(ch.frame, frames.length - 1);
       const frame = frames[frameIdx]!;
-      // Draw from source sheet at world coords — transform handles zoom
-      ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, x, y, TILE_SIZE, TILE_SIZE);
+      // Draw 24x32 sprite at foot-center anchor position
+      ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, drawX, drawY, CHAR_SPRITE_W, CHAR_SPRITE_H);
       return;
     }
   }
 
-  // Fallback: colored rectangle in world coordinates
-  const size = TILE_SIZE * 0.8;
-  const pad = TILE_SIZE * 0.1;
+  // Fallback: colored rectangle at 24x32 with foot-center anchor
+  const padX = CHAR_SPRITE_W * 0.1;
+  const padY = CHAR_SPRITE_H * 0.1;
 
   const color = PLACEHOLDER_COLORS[ch.id] ?? '#888888';
   ctx.fillStyle = color;
-  ctx.fillRect(x + pad, y + pad, size, size);
+  ctx.fillRect(drawX + padX, drawY + padY, CHAR_SPRITE_W - padX * 2, CHAR_SPRITE_H - padY * 2);
 
   // Direction indicator: small triangle
   ctx.fillStyle = '#ffffff';
-  const cx = x + pad + size / 2;
-  const cy = y + pad + size / 2;
+  const cx = drawX + CHAR_SPRITE_W / 2;
+  const cy = drawY + CHAR_SPRITE_H / 2;
   const indicatorSize = Math.max(2 / zoom, 2);
 
   ctx.beginPath();
@@ -686,7 +703,8 @@ function renderStatusOverlays(
 
     if (status === 'needs-attention') {
       // Speech bubble above character head (screen coordinates)
-      const charScreen = worldToScreen(ch.x + TILE_SIZE / 2, ch.y);
+      // With 24x32 sprites, visual top is at ch.y - (CHAR_SPRITE_H - TILE_SIZE)
+      const charScreen = worldToScreen(ch.x + TILE_SIZE / 2, ch.y - (CHAR_SPRITE_H - TILE_SIZE));
       const cx = Math.floor(charScreen.x);
       const bubbleY = Math.floor(charScreen.y - 4 * zoom);
       const bw = Math.floor(6 * zoom);
@@ -718,7 +736,8 @@ function renderStatusOverlays(
 
     if (status === 'thinking') {
       // Amber dots ("...") above character head (screen coordinates)
-      const charScreen = worldToScreen(ch.x + TILE_SIZE / 2, ch.y);
+      // With 24x32 sprites, visual top is at ch.y - (CHAR_SPRITE_H - TILE_SIZE)
+      const charScreen = worldToScreen(ch.x + TILE_SIZE / 2, ch.y - (CHAR_SPRITE_H - TILE_SIZE));
       const cx = Math.floor(charScreen.x);
       const dotsY = Math.floor(charScreen.y - 2 * zoom);
       const dotR = Math.max(1, Math.floor(zoom * 0.6));
