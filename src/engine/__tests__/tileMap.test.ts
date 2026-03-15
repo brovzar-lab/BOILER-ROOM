@@ -232,8 +232,8 @@ describe('getRoomAtTile', () => {
   });
 
   it('returns null for hallway tiles', () => {
-    // Upper corridor at col 15, row 9 (between top rooms and War Room area)
-    const result = getRoomAtTile(15, 9);
+    // Upper corridor at col 20, row 11 (between top rooms and side offices)
+    const result = getRoomAtTile(20, 11);
     expect(result).toBeNull();
   });
 
