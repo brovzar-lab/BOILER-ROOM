@@ -11,17 +11,17 @@ Requirements for v2.0 Professional Art & Agent Autonomy. Each maps to roadmap ph
 
 - [x] **CHAR-01**: Characters render as 32x32 LimeZu sprites replacing programmatic 24x32 placeholders
 - [x] **CHAR-02**: Each of the 6 characters (BILLY, Patrik, Marcos, Sandra, Isaac, Wendy) has a distinct LimeZu character with walk, idle, sit animations
-- [ ] **CHAR-03**: Character foot-center anchoring updated for 32x32 on 16x16 tile grid (characters are 2 tiles tall)
-- [ ] **CHAR-04**: Drop shadows and depth sorting work correctly with 32x32 character sprites
+- [x] **CHAR-03**: Character foot-center anchoring updated for 32x32 on 16x16 tile grid (characters are 2 tiles tall)
+- [x] **CHAR-04**: Drop shadows and depth sorting work correctly with 32x32 character sprites
 
 ### Art — Environment
 
-- [ ] **ENV-08**: Floor tiles replaced with LimeZu Room Builder tiles (wood, carpet variants)
-- [ ] **ENV-09**: Walls replaced with LimeZu 3D wall system (Room Builder walls + baseboards)
-- [ ] **ENV-10**: All furniture replaced with LimeZu furniture sprites (desks, chairs, monitors, bookshelves, plants, couches, filing cabinets)
-- [ ] **ENV-11**: War Room uses LimeZu Conference Hall assets (conference table, office chairs, whiteboard, projector)
-- [ ] **ENV-12**: Rec area furniture replaced with LimeZu living room/generic assets (water cooler, couch, plants)
-- [ ] **ENV-13**: Personality decorations per office use LimeZu decoration sprites (rugs, art, charts, books)
+- [x] **ENV-08**: Floor tiles replaced with LimeZu Room Builder tiles (wood, carpet variants)
+- [x] **ENV-09**: Walls replaced with LimeZu 3D wall system (Room Builder walls + baseboards)
+- [x] **ENV-10**: All furniture replaced with LimeZu furniture sprites (desks, chairs, monitors, bookshelves, plants, couches, filing cabinets)
+- [x] **ENV-11**: War Room uses LimeZu Conference Hall assets (conference table, office chairs, whiteboard, projector)
+- [x] **ENV-12**: Rec area furniture replaced with LimeZu living room/generic assets (water cooler, couch, plants)
+- [x] **ENV-13**: Personality decorations per office use LimeZu decoration sprites (rugs, art, charts, books)
 - [x] **ENV-14**: Multi-sheet atlas loader supports LimeZu's categorized tile organization (multiple PNG source sheets)
 
 ### Art — UI
@@ -89,14 +89,14 @@ Deferred to future release.
 |-------------|-------|--------|
 | CHAR-01 | Phase 14 | Complete |
 | CHAR-02 | Phase 14 | Complete |
-| CHAR-03 | Phase 14 | Pending |
-| CHAR-04 | Phase 14 | Pending |
-| ENV-08 | Phase 14 | Pending |
-| ENV-09 | Phase 14 | Pending |
-| ENV-10 | Phase 14 | Pending |
-| ENV-11 | Phase 14 | Pending |
-| ENV-12 | Phase 14 | Pending |
-| ENV-13 | Phase 14 | Pending |
+| CHAR-03 | Phase 14 | Complete |
+| CHAR-04 | Phase 14 | Complete |
+| ENV-08 | Phase 14 | Complete |
+| ENV-09 | Phase 14 | Complete |
+| ENV-10 | Phase 14 | Complete |
+| ENV-11 | Phase 14 | Complete |
+| ENV-12 | Phase 14 | Complete |
+| ENV-13 | Phase 14 | Complete |
 | ENV-14 | Phase 14 | Complete |
 | UI-06 | Phase 14 | Pending |
 | UI-07 | Phase 14 | Pending |
