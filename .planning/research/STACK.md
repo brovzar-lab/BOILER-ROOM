@@ -1,385 +1,296 @@
-# Stack Research: v1.1 Visual Overhaul
+# Technology Stack: v2.0 Additions
 
-**Domain:** JRPG 3/4 perspective rendering, smooth zoom, pixel art sprite pipeline
-**Researched:** 2026-03-13
-**Confidence:** HIGH (Canvas 2D APIs are stable; techniques are well-established game dev patterns; all integration points verified against existing codebase)
+**Project:** Lemon Command Center v2.0 -- Professional Art & Agent Autonomy
+**Researched:** 2026-03-15
+**Baseline:** React 19, TypeScript 5.7, Vite 6, Tailwind CSS v4, Zustand 5, HTML5 Canvas 2D, Anthropic SDK 0.78
 
-## Context
+## Executive Assessment
 
-This research covers ONLY the new capabilities needed for v1.1. The existing stack (React 19, TypeScript, Vite 6, Tailwind CSS v4, Zustand 5, Canvas 2D, node-canvas) is validated and unchanged.
+**v2.0 requires ZERO new runtime dependencies.** The existing stack handles everything. This is a feature-architecture milestone, not a technology-addition milestone. Every v2.0 capability maps directly to patterns already established in the codebase.
 
-## Recommended Stack Additions
+The LimeZu art integration is a pure asset swap (the sprite sheet loading pipeline in `spriteSheet.ts` and atlas maps in `spriteAtlas.ts` were explicitly designed for this -- see the SPRT-04 asset swap contract in the code comments). Furniture collision is a tile map flag change. Idle behaviors extend the existing `CharacterState` union. Agent collaboration is an orchestration layer over the existing `sendStreamingMessage` + store pattern.
 
-### Zero New Runtime Dependencies
+---
 
-The v1.1 visual overhaul requires **no new npm packages**. Every capability is achievable with existing Canvas 2D APIs and code-level changes to the engine. This is intentional -- the existing stack handles everything needed.
+## Recommended Stack Changes
 
-### What Changes (Code-Level, Not Package-Level)
+### New Runtime Dependencies: NONE
 
-| Change | Affected Files | Why Needed |
-|--------|---------------|------------|
-| Float zoom support | `engine/types.ts`, `engine/camera.ts`, `engine/spriteSheet.ts`, `store/officeStore.ts` | Smooth pinch-to-zoom needs continuous 0.5-5.0 range instead of integer snap |
-| Wheel event handler | `engine/input.ts` | Trackpad pinch fires as `wheel` + `ctrlKey=true` on macOS |
-| 3/4 perspective tile geometry | `engine/types.ts`, `engine/renderer.ts`, `engine/spriteAtlas.ts` | Taller tiles (16x24 env, 24x32 chars) for north wall visibility |
-| Compact grid layout | `engine/officeLayout.ts` | Replace 42x34 sprawling layout with tight ~28x24 grid |
-| Sprite sheet regeneration | `scripts/generateSprites.ts` | New frame sizes and 3/4 perspective art |
-| Glow/lighting effects | `engine/renderer.ts` | Canvas 2D `shadowBlur` and composite operations for ambient light |
+| Technology | Version | Purpose | Why NOT Needed |
+|------------|---------|---------|----------------|
+| Physics engine (matter.js, etc.) | -- | Collision | Tile-based collision is a walkability flag, not physics simulation. BFS pathfinding already respects `isWalkable()`. |
+| State machine library (xstate, etc.) | -- | Idle behaviors | TypeScript union types + switch statements match existing `CharacterState` pattern. Adding xstate for 4-5 states is over-engineering. |
+| Task queue library | -- | Agent collaboration | Native `Promise` chains with `AbortController` match existing War Room parallel streaming pattern. |
+| Animation library | -- | Sprite animations | Canvas 2D `drawImage` with frame cycling already handles all animation. |
+| Pathfinding library | -- | Enhanced routing | Existing BFS is correct for 4-connected grid. A* would be marginal gain on a 32x30 grid (< 1ms either way). |
 
-### Dev Tooling Addition
+### Dev Dependencies: No Changes
 
-| Tool | Purpose | Why Recommended | Cost |
-|------|---------|-----------------|------|
-| Aseprite 1.3.x | Pixel art sprite creation and sprite sheet export | Industry standard for pixel art. Native sprite sheet export with JSON atlas data. Indexed color mode enforces palette discipline. Onion skinning for walk cycle animation. | $20 one-time or build from source (MIT-licensed) |
+The existing toolchain (Vite 6, TypeScript 5.7, Vitest, sharp for sprite generation) covers all v2.0 needs.
 
-Aseprite is the only recommended addition, and it is a desktop app for the artist, not an npm dependency. The existing `node-canvas` in devDependencies continues to serve as the programmatic fallback for generating placeholder sprites.
+### Anthropic SDK: No Upgrade Needed
 
-## Detailed Implementation: Smooth Pinch-to-Zoom
+Current `@anthropic-ai/sdk` 0.78.0 already supports:
+- Streaming via `.stream()` method (used in `stream.ts`)
+- AbortController cancellation (used for War Room cancel-all)
+- System prompt + messages format (used in `buildContext`)
 
-### Current State
+Agent-to-agent collaboration pipes output from one `sendStreamingMessage` call as input context to another. No new SDK features required.
 
-The zoom system is integer-only. Key enforcement points found in the codebase:
+---
 
-1. **`engine/types.ts` line 91**: Camera.zoom typed as `number` but documented as "Integer zoom level"
-2. **`store/officeStore.ts` line 88-89**: `setZoomLevel` calls `Math.round(level)` on both `zoomLevel` and `camera.zoom`
-3. **`engine/spriteSheet.ts` line 100**: Sprite cache keyed by `zoom` (integer) -- works because only values 1 and 2 exist
-4. **`engine/camera.ts` line 20**: `computeAutoFitZoom` returns `Math.floor(...)` (integer)
-5. **`engine/input.ts` line 295-299**: `toggleZoom()` snaps between 1 and 2
-6. **`engine/gameLoop.ts` line 146**: Camera follow activates at `zoom >= 2`
-7. **`engine/renderer.ts` line 49**: `imageSmoothingEnabled = false` every frame
+## What Actually Changes (Architecture, Not Libraries)
 
-### Required Changes
+### 1. Sprite Atlas Expansion (Asset Swap)
 
-**1. Remove Math.round enforcement in officeStore:**
-```typescript
-// Before (line 88-89):
-zoomLevel: Math.round(level),
-camera: { ...state.camera, zoom: Math.round(level) },
+**What exists:** `spriteAtlas.ts` defines `CHARACTER_FRAMES` (24x32, 10col x 4row layout) and `ENVIRONMENT_ATLAS`/`DECORATION_ATLAS` (16x16 tiles). `spriteSheet.ts` loads PNGs from `/sprites/`.
 
-// After:
-zoomLevel: Math.max(0.5, Math.min(5.0, level)),
-camera: { ...state.camera, zoom: Math.max(0.5, Math.min(5.0, level)) },
-```
+**What changes for LimeZu:**
 
-**2. Quantized sprite cache in spriteSheet.ts:**
+| Component | Current | v2.0 |
+|-----------|---------|------|
+| Character sheet layout | 24x32 frames, 10col x 4row (240x128px) | 32x32 frames from LimeZu pack. New layout mapping in `CHARACTER_FRAMES`. |
+| Character sprite constants | `CHAR_SPRITE_W=24, CHAR_SPRITE_H=32` | `CHAR_SPRITE_W=32, CHAR_SPRITE_H=32` (LimeZu standard) |
+| Environment tiles | Custom 16x16 in `environment.png` | LimeZu Modern Interiors 16x16 tiles. Rebuild `ENVIRONMENT_ATLAS` coordinates. |
+| Tile count | ~30 environment sprites, ~10 decoration sprites | 100+ LimeZu tiles. `ENVIRONMENT_ATLAS` grows significantly. |
+| Sprite sheets loaded | 6 character + 1 environment = 7 PNGs | 6 character + N environment/tileset PNGs. May need multiple environment sheets. |
 
-The current cache keys by exact zoom. With float zoom, the cache would explode (infinite unique keys). Solution: quantize to nearest 0.25 for cache lookup while rendering at exact zoom.
+**Key decision: 32x32 vs 24x32 characters.** LimeZu Modern Interiors characters are 32x32. Options:
+- **Option A (recommended):** Change `CHAR_SPRITE_W` to 32 and update foot-center anchor math in `renderer.ts` (one line: `drawX = x - (32 - 16) / 2 = x - 8`). The depth sort already uses foot position, so Y-sorting stays correct.
+- **Option B:** Crop/repack LimeZu 32x32 into 24x32 frames. Loses detail for no architectural benefit.
 
-```typescript
-// In getCachedSprite(), change zoom parameter usage:
-const cacheZoom = Math.round(zoom * 4) / 4; // Quantize: 1.0, 1.25, 1.5, 1.75, 2.0...
-// Use cacheZoom for cache key and pre-scaled canvas dimensions
-// Max 19 cache entries per sprite (0.5 to 5.0 in 0.25 steps) -- bounded
-```
+**Impact radius:** `types.ts` (constants), `spriteAtlas.ts` (atlas coordinates), `renderer.ts` (anchor math), `spriteSheet.ts` (sheet loading -- minimal, just paths).
 
-Pre-scale sprites to the quantized zoom with `imageSmoothingEnabled = false` in the offscreen cache canvas. This maintains crisp pixel art at any zoom because the actual drawing is always from a pre-scaled, nearest-neighbor-filtered canvas at 1:1.
+### 2. Furniture Collision Layer
 
-**3. Add wheel event handler in input.ts:**
+**What exists:** `tileMap.ts` has `isWalkable()` checking `FLOOR` or `DOOR`. Furniture is rendered by `depthSort.ts` but has no collision data. `FURNITURE` array in `officeLayout.ts` has `col, row, width, height` for every piece.
 
-```typescript
-function handleWheel(e: WheelEvent): void {
-  if (e.ctrlKey || e.metaKey) {
-    e.preventDefault(); // Prevent browser zoom
-    const state = useOfficeStore.getState();
-    const delta = -e.deltaY * 0.01; // Invert: scroll-up = zoom-in
-    const newZoom = Math.max(0.5, Math.min(5.0, state.camera.zoom + delta));
-    state.setZoomLevel(newZoom);
-  }
-}
-// CRITICAL: { passive: false } required for preventDefault() on wheel events
-canvas.addEventListener('wheel', handleWheel, { passive: false });
-```
+**What changes:**
 
-**Why `ctrlKey`:** On macOS, trackpad pinch-to-zoom fires as `wheel` events with `ctrlKey === true` and `deltaY` as the zoom delta. This is consistent across Chrome, Safari, and Firefox on macOS. No touch event handling needed since this is a desktop-only app.
+| Component | Current | v2.0 |
+|-----------|---------|------|
+| `TileType` enum | `VOID=0, FLOOR=1, WALL=2, DOOR=3` | Add `FURNITURE=4` (or use a separate collision overlay) |
+| `isWalkable()` | Returns true for `FLOOR` or `DOOR` | Returns false for `FURNITURE` tiles too |
+| Tile map build | `buildTileMap()` fills rooms with `FLOOR` | After room fill, stamp furniture footprints as `FURNITURE` |
+| BFS pathfinding | Already respects `isWalkable()` | Automatically avoids furniture -- zero changes to `findPath()` |
 
-**4. Update camera follow threshold in gameLoop.ts:**
+**Recommended approach:** Add a `FURNITURE` tile type to the enum. In `buildTileMap()`, after constructing the base map, iterate `FURNITURE` array and stamp blocking tiles. This is ~10 lines of code. Chairs should NOT block (characters sit in them). Tables, desks, bookshelves, and couches SHOULD block.
 
-```typescript
-// Before (line 146):
-if (billy && state.camera.followTarget === 'billy' && state.camera.zoom >= 2) {
-// After:
-if (billy && state.camera.followTarget === 'billy' && state.camera.zoom >= 1.2) {
-```
+**No separate collision layer needed.** The existing single-layer `TileType[][]` is sufficient because furniture doesn't move. If furniture ever becomes dynamic, then add a collision overlay map -- but that is not in scope.
 
-**5. Remove integer snap from computeAutoFitZoom in camera.ts:**
+### 3. Idle Behavior State Machine
+
+**What exists:** `CharacterState = 'idle' | 'walk' | 'work'` in `types.ts`. The `updateCharacter()` function in `characters.ts` switches on state. Agents currently sit at their desk in `idle` state doing nothing, or cycle `work` animation when "thinking."
+
+**What changes:**
+
+| Component | Current | v2.0 |
+|-----------|---------|------|
+| `CharacterState` | `'idle' \| 'walk' \| 'work'` | Keep these 3 states. Add `idleBehavior` sub-state field. |
+| `updateCharacter()` | 3 cases in switch | `idle` case gains timer + sub-behavior transitions |
+| Agent animation | idle=stationary, walk=4 frames, work=3 frames | Idle sub-behaviors reuse existing animations (walk to water cooler, work at desk, talk for phone) |
+| Sprite atlas | 10 cols: idle(1), walk(4), work(3), talk(2) | No new animation states needed. Sub-behaviors map to existing states. |
+
+**Recommended approach:** Keep `CharacterState` simple. Add an `idleBehavior` field to `Character`:
 
 ```typescript
-// Before:
-return Math.max(1, Math.floor(Math.min(...)));
-// After:
-return Math.max(0.5, Math.min(...)); // Exact fit, not snapped to integer
-```
+type IdleBehavior = 'desk' | 'water-cooler' | 'stretch' | 'phone';
 
-**6. Smooth zoom animation:**
-
-The existing `updateCamera` lerp (`camera.x += (target - camera.x) * 0.1`) provides smooth movement. Apply the same lerp to zoom transitions:
-
-```typescript
-// In updateCamera or gameLoop:
-camera.zoom += (targetZoom - camera.zoom) * 0.15;
-```
-
-This makes zoom changes feel smooth rather than instant.
-
-### Performance Note
-
-The sprite cache with 0.25 quantization means at most ~19 zoom levels cached per sprite. With ~50 unique sprite frames across all sheets, that is ~950 cached canvases max (~4MB RAM at 32x48 average). Well within budget.
-
-## Detailed Implementation: JRPG 3/4 Perspective
-
-### What "3/4 Perspective" Means
-
-In games like Pokemon FireRed, Zelda: A Link to the Past, and Stardew Valley, the world is drawn as if viewed from slightly above and to the south. Key characteristics:
-
-- **Floors render flat** (top-down, same as current)
-- **North walls are visible** as a front face (you see the wall's surface, not just its top edge)
-- **Characters face south** toward the camera, showing their face
-- **Furniture has visible front faces** (you see the front of desks, bookshelves)
-- **Y-sorting provides depth** (things further south draw on top)
-
-This is NOT isometric. The grid remains rectangular (no diamond projection). The only change from pure top-down is that tiles are taller to show north-facing surfaces.
-
-### Tile Geometry Changes
-
-| Element | Current | New | Notes |
-|---------|---------|-----|-------|
-| Grid cell (pathfinding) | 16x16 | 16x16 | Grid logic unchanged |
-| Environment tile (rendered) | 16x16 | 16x24 | Extra 8px is north wall face |
-| Character frame | 16x16 | 24x32 | Room for face detail, hair, outfit |
-| `TILE_SIZE` constant | 16 | 16 | Keep for grid math |
-| New `TILE_RENDER_H` | N/A | 24 | Tile draw height for environment |
-| New `CHAR_W` / `CHAR_H` | N/A | 24 / 32 | Character sprite dimensions |
-
-### Rendering Adjustments
-
-**Floor tiles:** Each 16x24 tile image contains:
-- Top 8px: north wall face (brick/wood texture, or transparent for interior tiles)
-- Bottom 16px: floor surface (wood planks, carpet)
-
-Draw at `(col * TILE_SIZE * zoom, row * TILE_SIZE * zoom - 8 * zoom)` -- the tile extends 8px above its grid row to show the wall face. This means tiles naturally overlap the row above, which is correct for the 3/4 look.
-
-**Characters:** Currently drawn at character pixel position `(ch.x, ch.y)`. With 24x32 sprites on a 16x16 grid, center horizontally: `drawX = ch.x * zoom + offsetX - 4 * zoom` (offset by half the width difference). The taller sprite extends upward from the grid position.
-
-**Y-sort unification:** Currently, only characters are Y-sorted (renderer.ts line 109). For proper 3/4 depth, furniture and characters must be sorted together. Create a unified "drawable" list:
-
-```typescript
-interface Drawable {
-  y: number;        // Grid Y position (for sort)
-  zIndex?: number;  // Tiebreaker
-  draw: (ctx: CanvasRenderingContext2D) => void;
-}
-// Merge characters + furniture into one array, sort by y, draw in order
-```
-
-**Drop shadows:** Draw a dark semi-transparent ellipse beneath each character for grounding:
-
-```typescript
-ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-ctx.beginPath();
-ctx.ellipse(charCenterX, charFootY, 5 * zoom, 2 * zoom, 0, 0, Math.PI * 2);
-ctx.fill();
-```
-
-### Sprite Sheet Layout Changes
-
-**Character sheets (each character):**
-
-| | Current | New |
-|---|---------|-----|
-| Frame size | 16x16 | 24x32 |
-| Layout | 10 cols x 4 rows | 10 cols x 4 rows (same structure) |
-| Sheet dimensions | 160x64 | 240x128 |
-| Cols | 0:idle, 1-4:walk, 5-7:work, 8-9:talk | Same mapping |
-| Rows | 0:down, 1:left, 2:right, 3:up | Same mapping |
-
-The `SpriteFrame` interface (`engine/types.ts`) already supports arbitrary `w` and `h`, so no type changes needed. Only the atlas coordinate constants in `spriteAtlas.ts` change.
-
-**Environment sheet:**
-
-| | Current | New |
-|---|---------|-----|
-| Frame size | 16x16 | 16x24 |
-| Layout | 16 cols x 8 rows | 16 cols x 8 rows |
-| Sheet dimensions | 256x128 | 256x192 |
-
-### What Stays The Same
-
-- `TileType` enum (VOID, FLOOR, WALL, DOOR) -- unchanged
-- `TileCoord` interface -- unchanged
-- BFS pathfinding -- operates on grid, unaware of render height
-- `screenToTile` -- needs adjustment for tile render height offset but same structure
-- Room click detection -- uses grid coordinates, not render coordinates
-- Camera follow logic -- follows grid position, not render position
-
-## Detailed Implementation: Compact Grid Layout
-
-### Current Layout Problems
-
-The current `officeLayout.ts` creates a 42x34 tile map (1428 tiles). Rooms are spread across 3 tiers with 2-tile-wide corridors between them. There is significant VOID space. Walking between rooms takes many steps.
-
-### Target Layout
-
-From PROJECT.md: "2 top, War Room center, 4 bottom." Rooms share walls. Minimal hallway. Estimated ~28x24 tile map.
-
-```
-  [Diana  6x6] [Marcos  6x6]
-  [     War Room    10x6    ]
-  [Sasha][Valen][Rober][Billy]
-   6x6    6x6    6x6    6x6
-```
-
-All rooms are ~6x6 interior (8x8 including walls). Rooms share walls (adjacent rooms use a single wall tile between them, not two). Doors open to a 1-tile connector row between tiers instead of long hallways.
-
-### Layout Math
-
-```
-Cols: 4 rooms across at 7 tiles each (6 interior + 1 shared wall) = 28 cols
-Rows:
-  Top tier:    1 wall + 6 interior + 1 shared wall = 8
-  War Room:    6 interior + 1 shared wall = 7
-  Bottom tier: 6 interior + 1 wall = 7
-  Connectors:  2 rows (1 between each tier)
-  Total: ~24 rows
-```
-
-Map shrinks from 42x34 (1428 tiles) to ~28x24 (672 tiles) -- 53% reduction. BILLY's walking distances drop proportionally, making navigation feel snappy.
-
-### BFS Impact
-
-Shorter paths between all rooms. Maximum path length drops from ~40 tiles to ~20. BFS completes faster (smaller grid). Character speed constants may need reduction to avoid BILLY zipping across the tiny map.
-
-## Detailed Implementation: Glow & Lighting Effects
-
-Canvas 2D provides three mechanisms, all native:
-
-**1. `shadowBlur` for soft halos (desk lamps, ambient glow):**
-```typescript
-ctx.shadowColor = 'rgba(255, 200, 100, 0.4)';
-ctx.shadowBlur = 16 * zoom;
-ctx.shadowOffsetX = 0;
-ctx.shadowOffsetY = 0;
-// Draw the light-emitting sprite
-ctx.drawImage(lampSprite, x, y);
-// MUST reset
-ctx.shadowBlur = 0;
-```
-Performance cost: moderate. `shadowBlur` triggers Gaussian blur per draw call. Use sparingly -- only on ~5-10 light-emitting objects (desk lamps, monitors). Not every frame needs recalculation; cache the glow on an offscreen canvas if FPS drops.
-
-**2. `globalCompositeOperation = 'lighter'` for additive blending (monitor screen glow):**
-```typescript
-ctx.globalCompositeOperation = 'lighter';
-ctx.fillStyle = 'rgba(50, 200, 100, 0.15)';
-ctx.fillRect(monitorX - 8, monitorY - 4, 32, 24); // Soft green glow area
-ctx.globalCompositeOperation = 'source-over'; // Reset
-```
-Low performance cost. Good for subtle colored light spillage.
-
-**3. Radial gradients for area lighting:**
-```typescript
-const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * zoom);
-gradient.addColorStop(0, 'rgba(255, 200, 100, 0.2)');
-gradient.addColorStop(1, 'rgba(255, 200, 100, 0)');
-ctx.fillStyle = gradient;
-ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
-```
-Medium performance cost. Best for large area effects like overhead lighting.
-
-**Recommendation:** Use `globalCompositeOperation = 'lighter'` for most effects (cheap). Reserve `shadowBlur` for the 2-3 most prominent light sources. Draw all lighting in a separate pass after characters for correct layering.
-
-## Pixel Art Sprite Pipeline
-
-### Recommended Workflow
-
-```
-1. Create art in Aseprite at native resolution
-   - Characters: 24x32 per frame, 10 frames x 4 directions
-   - Environment: 16x24 per tile
-   - Use indexed color mode with a shared 32-64 color palette
-
-2. Export from Aseprite: File > Export Sprite Sheet
-   - Output: PNG sprite sheet + JSON atlas
-   - Layout: rows by animation state, same as current atlas convention
-
-3. Place exported PNGs in public/sprites/ (replacing generated ones)
-
-4. Either:
-   a. Import Aseprite JSON atlas and convert to SpriteFrame records at build time
-   b. Or update spriteAtlas.ts constants manually (7 sheets, simple coordinates)
-
-5. Fallback: scripts/generateSprites.ts updated for 24x32 / 16x24 dimensions
-   - Used when hand-drawn art isn't ready
-   - Same node-canvas approach, just bigger frames with more detail
-```
-
-### Why Aseprite Over Alternatives
-
-| Criterion | Aseprite | Piskel (free/web) | Photoshop | GIMP |
-|-----------|----------|-------------------|-----------|------|
-| Indexed color palette | Yes (enforces consistency) | No | No | Partial |
-| Sprite sheet export with JSON | Native, one-click | Basic PNG grid only | Manual | No |
-| Onion skinning for animation | Yes | Basic | Clunky | No |
-| Tile/tilemap mode | Yes | No | No | No |
-| Pixel-level workflow | Purpose-built | Good | Overkill | Awkward |
-| Community pixel art resources | Extensive | Moderate | Few | Few |
-
-### Aseprite JSON Format Integration
-
-Aseprite exports JSON like:
-```json
-{
-  "frames": {
-    "billy-idle-down-0.aseprite": {
-      "frame": { "x": 0, "y": 0, "w": 24, "h": 32 }
-    }
-  }
+interface Character {
+  // ... existing fields
+  idleBehavior: IdleBehavior;
+  idleTimer: number;        // seconds until next behavior change
+  idleTarget?: TileCoord;   // where to walk for current behavior
 }
 ```
 
-A small build-time script (or Vite plugin) can convert this to the existing `Record<string, SpriteFrame>` format. Alternatively, since there are only 7 sprite sheets with predictable layouts, hardcoding the atlas coordinates in `spriteAtlas.ts` (as done today) remains viable and simpler.
+The idle behavior system is a timer-driven loop that runs ONLY when `ch.state === 'idle'` and the agent is not engaged (no active conversation). Every 30-90 seconds (randomized), pick a new behavior:
+- **"water-cooler"**: `startWalk()` to recreation area water cooler tile, idle there 5-10s, walk back to seatTile.
+- **"stretch"**: Play idle animation at desk position (subtle frame cycling).
+- **"phone"**: Use talk animation at desk (existing talk frames).
+- **"desk"**: Default sit-at-desk (current behavior, no change).
 
-### Palette Recommendation
+**Integration with existing systems:** When BILLY enters the room or a stream starts, immediately interrupt: set `ch.state = 'walk'`, path back to seatTile, then transition to 'work' or 'idle' as appropriate. This mirrors the existing `disperseAgentsToOffices()` pattern.
 
-For Stardew Valley / Pokemon FireRed quality, use a curated 32-color palette:
-- 4-5 skin tones (warm, for the Mexican character designs)
-- 6-8 environment colors (wood browns, stone grays, carpet tones)
-- 5-6 per-agent accent colors (purple Diana, blue Marcos, green Sasha, red Roberto, orange Valentina, gold Billy)
-- 3-4 lighting colors (warm lamp glow, cool monitor light, shadow)
-- 2 UI colors (white highlights, near-black outlines)
+### 4. Agent-to-Agent Collaboration Orchestration
 
-Indexed color mode in Aseprite enforces this palette across all sprites, ensuring visual consistency.
+**What exists:** `sendStreamingMessage()` in `stream.ts` sends to one agent, `buildContext()` creates system prompts, `parseDealAction()` extracts structured actions from responses. War Room already handles 5 parallel streams with per-agent abort controllers.
+
+**What changes:**
+
+| Component | Current | v2.0 |
+|-----------|---------|------|
+| Orchestration | User sends message -> one agent responds | Agent A responds -> parsed output -> user approves -> Agent B gets context -> responds |
+| Message routing | Direct user-to-agent only | Agent-to-agent messages with source attribution |
+| Deal creation | `<create-deal>` tag in agent response, user-triggered | Auto-created when collaboration chain starts |
+| Stream management | Single stream or War Room parallel | Sequential chain with approval gates between hops |
+
+**No new library needed.** The collaboration orchestrator is a service module:
+
+```
+1. Agent A receives user message, generates response
+2. Response is parsed for <collaborate with="marcos" task="review contract terms"/>
+3. UI shows approval dialog: "Patrik wants to ask Marcos to review contract terms. Allow?"
+4. On approval: create conversation context with Agent A's output as input
+5. sendStreamingMessage(agentB, contextFromAgentA)
+6. Agent B responds, may trigger another <collaborate> tag
+7. Repeat until no more collaboration tags or user cancels
+```
+
+**Key pattern:** This is a recursive `Promise` chain with user approval gates (async `Promise` that resolves on user click). Each hop is a standard `sendStreamingMessage` call. The orchestrator tracks the chain in a new Zustand store slice:
+
+```typescript
+interface CollaborationChain {
+  id: string;
+  dealId: string;
+  steps: CollaborationStep[];
+  status: 'pending-approval' | 'streaming' | 'complete' | 'cancelled';
+}
+
+interface CollaborationStep {
+  fromAgent: AgentId;
+  toAgent: AgentId;
+  task: string;
+  input: string;   // previous agent's response (context)
+  output: string;  // this agent's response
+  status: 'pending' | 'approved' | 'streaming' | 'complete' | 'rejected';
+}
+```
+
+**Game engine integration:** When Agent A "visits" Agent B for collaboration, use `startWalk()` to walk Agent A's character to Agent B's office. The walking animation already exists. This is purely visual -- the API call happens regardless of walk completion.
+
+### 5. Auto Deal Creation
+
+**What exists:** `parseDealAction.ts` parses `<create-deal name="..." description="..."/>` from agent responses. `dealStore.ts` manages deal CRUD.
+
+**What changes:** Add a `<collaborate>` tag parser alongside the existing `<create-deal>` parser. The collaboration orchestrator calls `dealStore.createDeal()` when starting a chain if no active deal exists.
+
+This is a ~15-line addition to `parseDealAction.ts`:
+- Add `parseCollaborateAction()` that extracts `with` and `task` attributes
+- Add `stripCollaborateAction()` for display text cleaning
+
+---
+
+## Integration Points (How v2.0 Features Connect)
+
+```
+LimeZu Sprites ──> spriteAtlas.ts ──> renderer.ts (draw calls unchanged, just new coordinates)
+                                   ──> spriteSheet.ts (load new PNGs, same loadSpriteSheet API)
+
+Furniture Collision ──> officeLayout.ts (FURNITURE array already exists with col/row/width/height)
+                    ──> tileMap.ts (stamp FURNITURE tiles in buildTileMap, add to isWalkable check)
+                    ──> characters.ts (BFS already respects isWalkable -- zero changes)
+
+Idle Behaviors ──> types.ts (extend Character interface with idleBehavior, idleTimer)
+               ──> characters.ts (add idle timer logic in updateCharacter idle case)
+               ──> officeLayout.ts (define idle target tiles: water cooler position, etc.)
+               ──> renderer.ts (already renders any state with sprite frames -- zero changes)
+
+Collaboration ──> NEW: services/collaboration/orchestrator.ts (chain management)
+              ──> NEW: services/collaboration/parser.ts (or extend parseDealAction.ts)
+              ──> NEW: store/collaborationStore.ts (chain state, approval tracking)
+              ──> stream.ts (reuse sendStreamingMessage -- no changes)
+              ──> chatStore.ts (collaboration messages stored in conversations)
+              ──> characters.ts (startWalk for visual agent-visits between offices)
+              ──> officeStore.ts (agentStatuses extended for 'collaborating' status)
+```
+
+---
 
 ## What NOT to Add
 
-| Avoid | Why | Use Instead |
-|-------|-----|-------------|
-| WebGL / PixiJS / Three.js | Massive overkill. 3/4 perspective is standard 2D tile rendering with taller tiles and Y-sorting. Would require rewriting the entire ~500 LOC renderer. | Canvas 2D (existing) |
-| Phaser / Kaboom.js | Game framework lock-in. Current custom engine is lean and fits perfectly. Frameworks add 200KB+ for features not needed. | Custom engine (existing) |
-| hammerjs / use-gesture | Trackpad pinch fires as native `wheel` events. No touch events needed (desktop app). A gesture library adds complexity for a 15-line handler. | Native `wheel` event |
-| GSAP / anime.js | Zoom animation is a single lerp in the existing camera system. One line of code. | Existing `updateCamera` lerp |
-| Tiled map editor | The tile map is ~50 lines of code for 7 rooms. A visual editor adds workflow complexity without proportional value at this scale. | Hand-coded `officeLayout.ts` |
-| Spine / DragonBones | Skeletal animation for smooth character motion. Pixel art at 24x32 looks best with hand-crafted frame animation, not interpolated bones. The 3/4 perspective style specifically demands frame-by-frame art. | Frame-based sprite sheets |
-| sharp / imagemagick | Image processing for sprites. node-canvas already handles PNG generation. | node-canvas (existing) |
-| react-zoom-pan-pinch | React wrapper for zoom/pan. The Canvas is rendered outside React's cycle. A React zoom library would fight the game loop. | Native wheel event + camera system |
+| Temptation | Why Resist |
+|------------|-----------|
+| **XState for idle behaviors** | 4 idle states with timer transitions is a simple switch statement. XState's value is in complex state charts with guards/actions/parallel states. This is not that. |
+| **Tiled map editor export format** | LimeZu tiles will be hand-placed in `officeLayout.ts` data arrays, matching the existing pattern. Importing Tiled `.tmx`/`.json` adds parsing complexity for a fixed 32x30 map that changes rarely. |
+| **TexturePacker / sprite sheet packing tool** | LimeZu already ships as organized sprite sheets. Manual atlas coordinate mapping in `spriteAtlas.ts` gives full control and zero build-time dependencies. |
+| **A* pathfinding library** | BFS on a 32x30 grid (960 tiles) runs in microseconds. A* saves nothing at this scale. |
+| **React state machine (useReducer for collaboration)** | Collaboration state belongs in Zustand, matching every other store in the codebase. The game loop reads via `getState()` (non-reactive), React subscribes reactively. Do not break this pattern. |
+| **Message queue (RxJS, etc.)** | Agent-to-agent messages are sequential with user approval gates. A Promise chain with AbortController handles this cleanly. RxJS is overkill for "wait for response, ask user, send next." |
+| **Web Workers for pathfinding** | BFS on 960 tiles takes <0.1ms. Moving it off-thread adds message-passing complexity for zero performance gain. |
+| **Canvas rendering library (PixiJS, Phaser)** | The 6-layer setTransform pipeline is already built and working. Migrating to a framework would be a rewrite, not an upgrade. |
+| **LangChain / AI orchestration framework** | The collaboration chain is 3 concepts: parse tag, await approval, pipe context. LangChain adds 500KB+ for abstractions the app does not need. The existing `sendStreamingMessage` + `buildContext` pattern handles this directly. |
 
-## Version Compatibility
+---
 
-| Technology | Compatibility Notes |
-|------------|-------------------|
-| `wheel` event | All modern browsers. `ctrlKey` for trackpad pinch consistent on macOS Chrome/Safari/Firefox. |
-| `{ passive: false }` | Required for `preventDefault()` on wheel. Chrome warns without explicit setting. |
-| `shadowBlur` | All modern browsers. Performance varies -- faster in Chrome than Safari. |
-| `globalCompositeOperation: 'lighter'` | All modern browsers. Hardware-accelerated in all major engines. |
-| `ctx.ellipse()` | All modern browsers (Chrome 31+, Safari 9+, Firefox 48+). |
-| `createRadialGradient` | Universal Canvas 2D support. |
-| Canvas `roundRect()` | Already used in production (renderer.ts). Chrome 99+, Safari 15.4+, Firefox 112+. |
+## New Files to Create (v2.0)
+
+| File | Purpose | Estimated Size |
+|------|---------|---------------|
+| `src/services/collaboration/orchestrator.ts` | Chain execution: parse collaborate tags, manage approval flow, pipe context between agents | ~150 LOC |
+| `src/services/collaboration/parser.ts` | Parse `<collaborate>` tags from agent responses | ~40 LOC |
+| `src/store/collaborationStore.ts` | Zustand store for collaboration chain state, step tracking, approval status | ~100 LOC |
+| `src/components/CollaborationPanel.tsx` | UI for viewing/approving collaboration chain steps | ~200 LOC |
+| `src/components/ApprovalDialog.tsx` | Modal for approving individual collaboration hops | ~80 LOC |
+| `src/engine/idleBehavior.ts` | Timer-driven idle behavior logic, separated from `characters.ts` for clarity | ~120 LOC |
+
+**Total new code estimate:** ~700 LOC across 6 new files, plus ~200 LOC modifications to existing files.
+
+---
+
+## Existing Stack: Version Verification
+
+All current dependencies are at appropriate versions for v2.0 work:
+
+| Dependency | Current | Action |
+|------------|---------|--------|
+| `@anthropic-ai/sdk` | 0.78.0 | No upgrade needed. Streaming + abort works. |
+| `react` | ^19 | Current. No new React features needed for collaboration UI. |
+| `zustand` | ^5 | Current. New store slice for collaboration follows existing pattern. |
+| `vite` | ^6 | Current. Static asset handling for new LimeZu sprite PNGs. |
+| `typescript` | ^5.7 | Current. Discriminated unions for new types. |
+| `tailwindcss` | ^4 | Current. Approval dialog and collaboration panel styling. |
+| `idb` | ^8 | Current. Collaboration chains can persist to IndexedDB using existing adapter. |
+
+---
+
+## Installation
+
+```bash
+# No new packages to install.
+# v2.0 is entirely new TypeScript code + LimeZu PNG assets.
+
+# Asset preparation (one-time):
+# 1. Prepare LimeZu Modern Interiors character sprites -> public/sprites/{characterId}.png
+#    - Repack LimeZu 32x32 character frames into the expected sheet layout
+#    - 6 sheets: billy.png, patrik.png, marcos.png, sandra.png, isaac.png, wendy.png
+#
+# 2. Prepare LimeZu environment tiles -> public/sprites/environment.png (or multiple sheets)
+#    - Map LimeZu floor/wall/furniture tile coordinates
+#    - Rebuild ENVIRONMENT_ATLAS and DECORATION_ATLAS in spriteAtlas.ts
+#
+# 3. Update types.ts: CHAR_SPRITE_W = 32 (from 24)
+#
+# 4. Update spriteAtlas.ts: CHARACTER_FRAMES for 32x32 layout
+#    - Column/row structure may differ from current 10x4 layout
+#    - Depends on how LimeZu animations are organized
+#
+# 5. Update renderer.ts: foot-center anchor drawX = x - (32 - 16) / 2
+```
+
+---
+
+## Confidence Assessment
+
+| Finding | Confidence | Basis |
+|---------|------------|-------|
+| Zero new runtime dependencies | HIGH | Direct codebase analysis -- every integration point maps to existing patterns |
+| LimeZu sprite integration path | HIGH | `spriteAtlas.ts` SPRT-04 contract explicitly designed for asset swaps |
+| Furniture collision via TileType | HIGH | `isWalkable()` + `findPath()` already respect tile types; adding FURNITURE is trivial |
+| Idle behavior without XState | HIGH | Existing `CharacterState` switch in `updateCharacter()` is the proven pattern |
+| Collaboration via Promise chains | MEDIUM | War Room parallel streaming validates the pattern, but sequential chaining with user approval gates is architecturally new. Edge cases around cancellation mid-chain, chain persistence across page reloads, and concurrent BILLY activity during background collaboration need careful design. |
+| Auto deal creation extension | HIGH | `parseDealAction.ts` pattern is proven; adding `<collaborate>` tag is identical approach |
+| No Anthropic SDK upgrade needed | HIGH | `sendStreamingMessage()` already has all needed capabilities for agent-to-agent context routing |
+| ~700 LOC new code estimate | MEDIUM | Based on comparable features in the codebase; collaboration orchestrator complexity may be higher |
+
+---
 
 ## Sources
 
-- **Existing codebase** (HIGH confidence): Full analysis of `engine/renderer.ts` (727 lines), `engine/camera.ts` (109 lines), `engine/spriteSheet.ts` (138 lines), `engine/spriteAtlas.ts` (123 lines), `engine/input.ts` (337 lines), `engine/gameLoop.ts` (179 lines), `engine/types.ts` (110 lines), `engine/officeLayout.ts` (303 lines), `scripts/generateSprites.ts` (673 lines)
-- **Canvas 2D API** (HIGH confidence): `imageSmoothingEnabled`, `shadowBlur`, `globalCompositeOperation`, `wheel` event, `ellipse()` are stable, long-established browser APIs
-- **macOS trackpad behavior** (HIGH confidence): `wheel` event with `ctrlKey === true` for pinch-to-zoom is the documented, consistent pattern across all macOS browsers
-- **JRPG 3/4 perspective techniques** (HIGH confidence): Well-established in game development (Pokemon, Zelda, Stardew Valley lineage). Standard approach: taller tiles, Y-sorting, no projection math changes from top-down
-- **Aseprite sprite sheet export** (HIGH confidence): Standard tooling in indie game dev, JSON+PNG export format is well-documented
+- **Direct codebase analysis** (HIGH): `spriteSheet.ts`, `spriteAtlas.ts`, `tileMap.ts`, `characters.ts`, `types.ts`, `officeLayout.ts`, `renderer.ts`, `depthSort.ts`, `stream.ts`, `chatStore.ts`, `officeStore.ts`, `parseDealAction.ts`, `package.json`
+- **LimeZu Modern Interiors** (MEDIUM): Standard 16x16 tile, 32x32 character format -- standard pixel art asset pack conventions
+- **Anthropic SDK 0.78** (HIGH): Streaming API verified from `stream.ts` implementation in codebase
 
 ---
-*Stack research for: Lemon Command Center v1.1 Visual Overhaul*
-*Researched: 2026-03-13*
+*Stack research for: Lemon Command Center v2.0 Professional Art & Agent Autonomy*
+*Researched: 2026-03-15*

@@ -1,636 +1,584 @@
-# Architecture Patterns: v1.1 Visual Overhaul Integration
+# Architecture Research: v2.0 Integration Points
 
-**Domain:** JRPG 3/4 perspective, smooth zoom, compact layout integration into existing Canvas 2D engine
-**Researched:** 2026-03-13
-**Overall Confidence:** HIGH (based on direct codebase analysis of all engine files)
+**Domain:** JRPG-style multi-agent AI workspace -- adding professional art, collision, idle behaviors, and agent-to-agent collaboration
+**Researched:** 2026-03-15
+**Confidence:** HIGH (based on direct codebase analysis; all recommendations grounded in existing code)
 
-## Executive Summary
+## Existing Architecture Overview
 
-The v1.1 visual overhaul touches three orthogonal concerns: (1) JRPG 3/4 perspective art requiring new sprite dimensions and a multi-layer tile renderer, (2) smooth trackpad zoom replacing integer-snap zoom, and (3) a compact room layout replacing the sprawling hub-and-spoke tile map. Each concern has clear boundaries in the existing code. The architecture is well-structured for these changes -- most modifications are isolated to specific files rather than requiring systemic rewrites.
+```
++-----------------------------------------------------------------------+
+|                          React DOM Layer                               |
+|  +------------+  +------------+  +-------------+  +----------------+  |
+|  | ChatPanel  |  | DealSidbar |  | MemoryPanel |  | OfficeCanvas   |  |
+|  +-----+------+  +-----+------+  +------+------+  +-------+--------+  |
+|        |              |                |                  |            |
++--------+--------------+----------------+------------------+------------+
+|                      Zustand Store Layer                               |
+|  +----------+  +-----------+  +----------+  +---------+  +----------+ |
+|  | chatStore|  | dealStore |  | fileStore|  |memoryStr|  |officeStr | |
+|  +----------+  +-----------+  +----------+  +---------+  +----+-----+ |
++-----------------------------------------------+-----------+----+------+
+|                      Service Layer             |  Canvas Engine        |
+|  +----------+  +---------+  +------------+     | +----------+         |
+|  | anthropic|  | context |  | memory     |     | | gameLoop |         |
+|  | /stream  |  | /builder|  | /extract   |     | | renderer |         |
+|  +----------+  +---------+  +------------+     | | characters|        |
+|  +----------+  +---------+                     | | tileMap  |         |
+|  | actions  |  | files   |                     | | depthSort|         |
+|  +----------+  +---------+                     | +----------+         |
++------------------------------------------------+-----------------------+
+```
 
-**Key insight:** The existing engine already separates concerns cleanly (camera.ts, renderer.ts, officeLayout.ts, spriteAtlas.ts, characters.ts). The v1.1 changes modify internals of these files but do not change the boundaries between them. The Zustand bridge, game loop structure, and React integration remain untouched.
+### Three-World Separation (Existing)
+
+| World | Technology | Owns | Update Pattern |
+|-------|-----------|------|----------------|
+| Game Engine | Canvas 2D, rAF loop | Characters, camera, tiles, rendering | 60fps via `getState()` (non-reactive) |
+| Chat Interface | React DOM | Conversation UI, deal sidebar, file viewer | React re-renders via Zustand subscriptions |
+| Services/Stores | Framework-agnostic TS | API calls, persistence, context building | Called by hooks and engine, reads stores |
+
+### Key Architectural Contracts
+
+1. **Sprite Sheet Contract (SPRT-04):** Character PNGs at `public/sprites/{id}.png`, layout 10 cols x 4 rows at 24x32. Environment PNG at `public/sprites/environment.png`, 16 cols x 12 rows at 16x16.
+2. **Tile Map Contract:** `OFFICE_TILE_MAP` is a `TileType[][]` (VOID/FLOOR/WALL/DOOR). BFS pathfinding via `findPath()` respects only FLOOR and DOOR as walkable.
+3. **Character State Machine:** Three states: `idle | walk | work`. Walk uses BFS path with lerp interpolation. Work cycles animation frames. Idle does nothing.
+4. **Store Update Discipline:** officeStore updates only on meaningful state changes (room arrival, zoom change), never per-frame.
+5. **Depth Sort Contract:** All visible objects go through `buildRenderables()` with Y-sort by `baseRow`. Priority 0 = furniture/decorations, priority 1 = characters.
+6. **Agent Action Pattern:** Agents emit sentinel tags in response text (e.g., `<create-deal .../>`), parsed by `parseDealAction()`, handled in `useChat.onComplete`.
 
 ---
 
-## Current Architecture (What Exists)
+## v2.0 Integration Architecture
 
-```
-React Shell (OfficeCanvas.tsx)
-  |
-  v
-Game Loop (gameLoop.ts) -- requestAnimationFrame
-  |-- reads officeStore.getState() non-reactively
-  |-- updateAllCharacters(dt, tileMap)
-  |-- updateCamera(camera, dt, w, h)
-  |-- renderFrame(ctx, camera, characters, activeRoom, w, h, statuses)
-  |
-  +-- camera.ts:        integer zoom, Math.round snapping, screenToTile/tileToScreen
-  +-- renderer.ts:      layered draw (clear > floor > furniture > characters > overlays)
-  +-- officeLayout.ts:  42x34 tile map, ROOMS[], FURNITURE[], hub-and-spoke
-  +-- spriteAtlas.ts:   16x16 frame coordinates for characters (10col x 4row sheets)
-  +-- spriteSheet.ts:   PNG loading, zoom-keyed sprite cache (getCachedSprite)
-  +-- characters.ts:    BFS walk, state machine (idle/walk/work), pixel interpolation
-  +-- tileMap.ts:       walkability checks, BFS pathfinding
-  +-- input.ts:         click-to-tile, zoom toggle, drag-drop, keyboard shortcuts
-  +-- types.ts:         TILE_SIZE=16, Camera, Character, SpriteFrame, Room interfaces
-  |
-  v
-officeStore (Zustand) -- bridge to React
-  |-- camera, characters, activeRoomId, zoomLevel, agentStatuses
-  |-- setZoomLevel: Math.round(level) -- forces integer zoom
-```
+### Integration Point 1: LimeZu Sprite Sheet Mapping
 
-### Critical Dimensions
+**What changes:** Replace 24x32 programmatic character sprites with 32x32 LimeZu sprites. Replace 16x16 environment sheet with LimeZu Modern Interiors tiles.
 
-| Constant | Current Value | Used By |
-|----------|---------------|---------|
-| `TILE_SIZE` | 16px | Everything -- camera, renderer, characters, pathfinding |
-| Grid | 42 cols x 34 rows | officeLayout.ts, camera.ts (map centering) |
-| Character sprites | 16x16 per frame | spriteAtlas.ts (10col x 4row layout) |
-| Zoom | Integer (1 or 2) | camera.ts, renderer.ts, spriteSheet.ts cache |
-| Character position | `x = tileCol * TILE_SIZE` | characters.ts, renderer.ts |
+**Where it integrates:**
+
+| File | Change Type | What Changes |
+|------|------------|--------------|
+| `engine/types.ts` | MODIFY | `CHAR_SPRITE_W = 32`, `CHAR_SPRITE_H = 32` (was 24x32) |
+| `engine/spriteAtlas.ts` | MODIFY | `makeCharFrame()` uses new 32x32 grid; column layout will differ from current 10x4 |
+| `engine/spriteSheet.ts` | MODIFY (minor) | `loadAllAssets()` paths unchanged if PNGs keep same names |
+| `engine/renderer.ts` | MODIFY | Foot-center anchor math changes: `drawX = x - (32 - 16) / 2 = x - 8` (was x - 4), `drawY = y - (32 - 16) = y - 16` (unchanged if 32 tall) |
+| `engine/depthSort.ts` | NO CHANGE | baseRow uses `ch.y / TILE_SIZE` which is tile-based, independent of sprite dimensions |
+| `public/sprites/*.png` | REPLACE | Drop new PNGs, same filenames |
+
+**Critical constraint:** LimeZu character sprites use a different sheet layout than the current 10-column (idle/walk4/work3/talk2) arrangement. The `spriteAtlas.ts` `stateConfigs` array must be remapped to match LimeZu's actual frame layout. This is the highest-risk integration point because it touches rendering of every character on every frame.
+
+**Recommended approach:**
+1. Audit the LimeZu character sheet layout to determine exact frame positions
+2. Create updated `stateConfigs` in `spriteAtlas.ts` mapping to LimeZu positions
+3. Update `CHAR_SPRITE_W` / `CHAR_SPRITE_H` in `types.ts`
+4. Keep the existing fallback (colored rectangles) until all characters are swapped
+5. Add new animation states (`sit`, `phone`) to `CharacterState` type for idle behaviors
+
+**Environment tiles (16x16):** LimeZu Modern Interiors uses 16x16 tiles -- matches `TILE_SIZE = 16` exactly. The `ENVIRONMENT_ATLAS` keys need remapping to LimeZu tile positions, but the rendering pipeline is unchanged. Furniture rendering in `renderFurnitureSprite()` already composes multi-tile items from single-tile atlas entries.
+
+**LimeZu UI elements:** These integrate into the React DOM layer (chat panels, deal sidebar), not the Canvas engine. They are CSS/image assets applied to existing React components. No architectural changes needed -- purely visual replacement.
 
 ---
 
-## Integration Architecture: What Changes vs What Stays
+### Integration Point 2: Furniture Collision System
 
-### UNCHANGED (Do Not Touch)
+**What changes:** Characters currently walk through furniture. Furniture tiles need to be marked unwalkable.
 
-| Component | Why It Survives |
-|-----------|----------------|
-| **Game loop structure** (gameLoop.ts) | rAF loop, dt capping, state reads -- all generic |
-| **Zustand store pattern** | officeStore shape unchanged; camera/characters/rooms still same concepts |
-| **React integration** | OfficeCanvas mount/unmount, chatStore, dealStore -- completely decoupled |
-| **BFS pathfinding** (tileMap.ts) | Pure grid-based; works identically on any grid size |
-| **Character state machine** | idle/walk/work states, path following, speed ramping -- grid-agnostic |
-| **Audio system** (audioManager.ts) | No visual dependencies |
-| **Input handlers** (input.ts) | Click-to-tile, keyboard shortcuts -- only need screenToTile update |
+**Where it integrates:**
 
-### MODIFIED (Change Internals, Keep Interface)
+| File | Change Type | What Changes |
+|------|------------|--------------|
+| `engine/collisionMap.ts` | NEW FILE | Builds walkability overlay from tile map + furniture |
+| `engine/tileMap.ts` | MODIFY | `isWalkable()` delegates to collision map |
+| `engine/characters.ts` | NO CHANGE | Already uses `findPath()` which calls `isWalkable()` |
+| `engine/officeLayout.ts` | NO CHANGE | Furniture data already has col/row/width/height |
 
-| Component | What Changes | Interface Impact |
-|-----------|-------------|-----------------|
-| **camera.ts** | Float zoom, remove Math.round snapping, add zoom min/max/speed | Camera.zoom becomes float; screenToTile/tileToScreen use float math |
-| **renderer.ts** | Multi-layer JRPG rendering (ground, walls, objects-below, characters, objects-above) | Same renderFrame signature, new internal draw order |
-| **officeLayout.ts** | New compact grid (~24x20), new ROOMS[] coords, new FURNITURE[] | Same interfaces (Room, FurnitureItem), different data |
-| **spriteAtlas.ts** | New frame dimensions (24x32 characters, multi-tile furniture) | CHARACTER_FRAMES layout changes, ENVIRONMENT_ATLAS grows |
-| **spriteSheet.ts** | Cache key includes float zoom, possibly atlas-based character sheets | getCachedSprite API unchanged, internal cache strategy changes |
-| **types.ts** | TILE_SIZE stays 16, add CHARACTER_WIDTH/HEIGHT constants | New constants, Camera.zoom comment updated |
-| **officeStore.ts** | setZoomLevel removes Math.round, stores float | Minor change |
+**Recommended approach -- Collision Overlay Map:**
 
-### NEW (Add These)
-
-| Component | Purpose |
-|-----------|---------|
-| **depthSort.ts** | Y-sort comparator for JRPG depth ordering (characters + furniture mixed) |
-| **tileLayer.ts** | Ground layer vs wall/object layer tile definitions for 3/4 perspective |
-
----
-
-## Change 1: JRPG 3/4 Perspective
-
-### What "3/4 Perspective" Means for the Engine
-
-In JRPG 3/4 view (Pokemon FireRed, Zelda: Link to the Past):
-- **Floors** are drawn flat (top-down, occupying their tile exactly)
-- **Walls** on the north edge of rooms are visible as 1-2 tile tall faces
-- **Furniture/objects** are drawn "standing up" -- taller than their footprint, anchored at their base tile
-- **Characters** are taller than 1 tile (typically 1 tile wide x 2 tiles tall), anchored at feet
-- **Depth ordering** is critical: everything is Y-sorted by its base row so objects in front occlude objects behind
-
-### Impact on Existing Renderer
-
-The current renderer draws in fixed layers:
-```
-Layer 2: ALL floor tiles
-Layer 3: ALL furniture
-Layer 4: ALL characters (Y-sorted)
-Layer 5: UI overlays
-```
-
-For JRPG 3/4, furniture and characters must be **interleaved** in the Y-sort, not drawn in separate passes. A character walking behind a desk must be occluded by the desk; a character in front must occlude it.
-
-**New draw order:**
-```
-Layer 1: Clear canvas
-Layer 2: Ground tiles (floors, ground-level decorations like rugs)
-Layer 3: North wall faces (the visible wall "height" in 3/4 view)
-Layer 4: Y-sorted renderables (characters + furniture + desk items, sorted by base row)
-Layer 5: Overlay-layer objects (ceiling decorations, glow effects -- drawn after everything)
-Layer 6: UI overlays (room labels, status bubbles, drop zones, file icons)
-```
-
-### Character Sprite Changes
-
-**Current:** 16x16 per frame, 10 columns x 4 rows per sheet, `ch.x = tileCol * TILE_SIZE`, drawn at exact tile position.
-
-**New:** 24x32 per frame (1.5 tiles wide x 2 tiles tall). Characters occupy 1 tile on the walkability grid but render larger. The sprite is anchored at the bottom-center so the feet align with the tile position.
+Do NOT modify `OFFICE_TILE_MAP` directly (it defines room structure, not furniture). Build a derived walkability map at initialization:
 
 ```typescript
-// Current (types.ts)
-export const TILE_SIZE = 16;
-
-// New additions
-export const CHAR_SPRITE_W = 24;  // Character frame width
-export const CHAR_SPRITE_H = 32;  // Character frame height
-```
-
-**Rendering anchor change in renderer.ts:**
-```typescript
-// Current: draw at tile position directly
-const x = Math.floor(ch.x * zoom + offsetX);
-const y = Math.floor(ch.y * zoom + offsetY);
-
-// New: anchor at bottom-center of character sprite
-// ch.x/ch.y still represent the tile position (feet)
-const drawX = Math.floor(ch.x * zoom + offsetX - (CHAR_SPRITE_W - TILE_SIZE) * zoom / 2);
-const drawY = Math.floor(ch.y * zoom + offsetY - (CHAR_SPRITE_H - TILE_SIZE) * zoom);
-```
-
-**spriteAtlas.ts changes:** The CHARACTER_FRAMES builder must use `CHAR_SPRITE_W` and `CHAR_SPRITE_H` instead of `TILE_SIZE` for frame dimensions. The sheet layout (10 cols x 4 rows) can stay the same, just with larger frames:
-```
-Sheet size: 240x128 (10 * 24 wide, 4 * 32 tall)
-vs current: 160x64 (10 * 16 wide, 4 * 16 tall)
-```
-
-### Wall Rendering in 3/4 View
-
-Current walls are single tiles (`TileType.WALL = 2`) drawn the same as floors -- just a different color/sprite. In 3/4 perspective, the north wall of a room has a visible "face" extending downward.
-
-**Approach: Wall tile types expansion.** Instead of a single `WALL` type, add `WALL_TOP` (the ceiling-line, drawn in ground layer) and render the wall face as a taller sprite anchored at that position, drawn in the Y-sorted layer.
-
-Alternatively (simpler): Keep `TileType.WALL` as-is in the walkability grid. During rendering, detect north-edge walls (wall tile with floor tile directly below) and draw them with a taller sprite that extends down. This avoids changing tileMap.ts or pathfinding logic.
-
-**Recommended approach:** Detect wall orientation during rendering (not in tile data). The tile map remains a pure walkability grid. The renderer checks neighbors to determine wall sprite variant:
-- Wall with floor below = north-facing wall face (draw tall)
-- Wall with floor to the right = west wall edge
-- Wall with no adjacent floor = corner/interior wall (draw as ceiling line)
-
-### Furniture as Y-Sorted Renderables
-
-Current furniture is drawn in a flat layer before characters. In 3/4 view, furniture sprites are taller (e.g., a desk is 2x1 tiles footprint but renders as 2x2 tiles visually with the front face visible).
-
-**Data model change:** Add `renderHeight` to FurnitureItem:
-```typescript
-export interface FurnitureItem {
-  roomId: string;
-  type: string;
-  col: number;
-  row: number;
-  width: number;   // footprint tiles
-  height: number;  // footprint tiles
-  renderHeight?: number;  // visual height in tiles (for 3/4 sprites)
-  depthRow?: number;  // override Y-sort position (default: row + height - 1)
-}
-```
-
-### Depth Sort Implementation
-
-Create a unified "renderable" concept for Y-sorting:
-
-```typescript
-interface Renderable {
-  type: 'character' | 'furniture' | 'decoration';
-  baseRow: number;  // Y-sort key (bottom edge of the object)
-  render: (ctx: CanvasRenderingContext2D, tileSize: number, offsetX: number, offsetY: number, zoom: number) => void;
-}
-```
-
-Each frame, collect all characters and furniture into a `Renderable[]`, sort by `baseRow`, and draw in order. This replaces the current separate furniture pass + character pass.
-
-### Drop Shadows
-
-JRPG characters typically have small elliptical shadows at their feet. Add a shadow pass before drawing the character sprite:
-
-```typescript
-// Draw shadow ellipse at character feet
-ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-ctx.beginPath();
-ctx.ellipse(
-  drawX + CHAR_SPRITE_W * zoom / 2,
-  drawY + CHAR_SPRITE_H * zoom - 2 * zoom,
-  6 * zoom, 3 * zoom,
-  0, 0, Math.PI * 2
-);
-ctx.fill();
-```
-
----
-
-## Change 2: Smooth Trackpad Zoom
-
-### Current Integer Zoom System
-
-The existing system is deeply committed to integer zoom:
-
-1. **camera.ts** `computeAutoFitZoom`: returns `Math.floor(...)` -- integer only
-2. **camera.ts** `updateCamera`: `camera.x = Math.round(camera.x)` -- pixel snapping
-3. **camera.ts** `screenToTile`: uses `TILE_SIZE * camera.zoom` -- works with any number
-4. **officeStore.ts** `setZoomLevel`: `Math.round(level)` -- forces integer
-5. **gameLoop.ts**: compares `state.camera.zoom === 1` for overview mode
-6. **spriteSheet.ts** `getCachedSprite`: cache keyed by zoom -- works but generates many entries for float zoom
-7. **renderer.ts**: uses `tileSize = TILE_SIZE * zoom` everywhere -- actually works with floats
-8. **input.ts** `toggleZoom`: toggles between 1 and 2
-
-### What Must Change
-
-**camera.ts:**
-- `computeAutoFitZoom` returns float instead of Math.floor
-- `updateCamera` removes `Math.round` snapping (or uses sub-pixel rendering). For smooth zoom, positions must be float. Pixel-perfect crispness comes from `imageSmoothingEnabled = false` at integer zoom; at fractional zoom, slight softness is acceptable and expected.
-- Add `ZOOM_MIN`, `ZOOM_MAX`, `ZOOM_SPEED` constants
-- Add `handleWheel(deltaY, camera)` function for pinch-to-zoom
-
-**officeStore.ts:**
-- `setZoomLevel` removes `Math.round(level)`, stores raw float
-- Consider adding `setZoomSmooth(delta: number)` that clamps to min/max
-
-**gameLoop.ts:**
-- Replace `state.camera.zoom === 1` check with `state.camera.zoom <= ZOOM_THRESHOLD_OVERVIEW` for overview mode detection
-- Camera follow behavior scales smoothly with zoom level
-
-**input.ts:**
-- Replace `toggleZoom()` (1 <-> 2 toggle) with `handleWheel` for pinch zoom
-- Add `wheel` event listener to canvas
-- Optionally keep double-click as zoom-to-fit / zoom-to-follow toggle
-
-**spriteSheet.ts:**
-- The sprite cache keyed by exact zoom value will create many cache entries at fractional zoom levels. Two options:
-  1. **Quantize cache key** to nearest 0.25 or 0.5 (reduces cache entries, slight visual imprecision)
-  2. **Use ctx.drawImage scaling** directly instead of pre-cached canvases (slower per frame but no cache bloat)
-
-  **Recommendation:** Quantize to nearest 0.5 for cache key. At smooth zoom levels, the 0.5 resolution is imperceptible. This means max ~8 cache entries per sprite (zoom 1.0 to 5.0 in 0.5 steps) instead of potentially hundreds.
-
-```typescript
-// Quantize zoom for cache key
-const cacheZoom = Math.round(zoom * 2) / 2;  // Rounds to nearest 0.5
-```
-
-### Pinch-to-Zoom Implementation
-
-Trackpad pinch on macOS fires `wheel` events with `ctrlKey: true` and fractional `deltaY`. Standard scroll-wheel fires `wheel` events without `ctrlKey`.
-
-```typescript
-function handleWheel(e: WheelEvent): void {
-  e.preventDefault();
-
-  const state = useOfficeStore.getState();
-  const zoomDelta = -e.deltaY * ZOOM_SPEED;  // deltaY is negative for zoom-in
-  const newZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, state.camera.zoom + zoomDelta));
-
-  // Zoom toward cursor position (not center)
-  // This requires adjusting camera.targetX/targetY to keep the point under cursor stable
-  const rect = canvas.getBoundingClientRect();
-  const cursorX = e.clientX - rect.left;
-  const cursorY = e.clientY - rect.top;
-
-  // Calculate world position under cursor before zoom
-  const worldX = (cursorX - offsetX) / state.camera.zoom;
-  const worldY = (cursorY - offsetY) / state.camera.zoom;
-
-  // After zoom, adjust camera so same world position is under cursor
-  state.camera.zoom = newZoom;
-  // ... recalculate offsets
-
-  state.setZoomLevel(newZoom);
-}
-```
-
-**Zoom-toward-cursor** is essential for trackpad UX. Without it, pinch zoom feels wrong because the area of interest slides away from the pinch point.
-
-### Recommended Zoom Constants
-
-```typescript
-export const ZOOM_MIN = 1.0;    // Full map visible
-export const ZOOM_MAX = 5.0;    // Close-up detail
-export const ZOOM_SPEED = 0.005; // Per deltaY unit
-export const ZOOM_OVERVIEW_THRESHOLD = 1.5;  // Below this, treat as overview mode
-```
-
----
-
-## Change 3: Compact Room Layout
-
-### Current Layout Analysis
-
-The current 42x34 grid is spacious with wide hallways:
-```
-Row 0-1:   VOID / top border
-Row 2-8:   BILLY's office (10 wide, 7 tall)
-Row 9-10:  Hallway (2 rows tall, 34 wide)
-Row 11-20: Diana (10x10) | War Room (10x10) | Marcos (10x10) -- with gaps
-Row 21-22: Hallway (2 rows tall, 34 wide)
-Row 23-32: Sasha (10x10) | Valentina (10x10) | Roberto (10x10)
-Row 32-33: Border / VOID
-```
-
-Each room is 10x10 tiles (8x8 interior). Hallways are 2 tiles wide, spanning the full width. This creates a lot of empty traversal space.
-
-### Target Layout: Compact Grid
-
-The mockup calls for "2 top, War Room center, 4 bottom" with no sprawling hallways. Targeting approximately **24 cols x 20 rows**:
-
-```
-+--+--------+--+--------+--+
-|  | Diana  |  | Marcos |  |
-|  | (6x6)  |  | (6x6)  |  |
-+--+---DD---+--+---DD---+--+
-|       Hallway (1 row)      |
-+--+---DD---+--+---DD---+--+
-|  |  War   Room  (8x6) |  |
-|  |   (center)         |  |
-+--+---DD---+--+---DD---+--+
-|       Hallway (1 row)      |
-+--DD--+--DD--+--DD--+--DD--+
-|Sasha |Valen |Rober |Billy |
-|(5x5) |tina  |to    |(5x5) |
-|      |(5x5) |(5x5) |      |
-+------+------+------+------+
-```
-
-**Key changes:**
-- Rooms shrink from 10x10 to 6x6 or 5x5 (4x4 or 3x3 interior)
-- Hallways shrink from 2 tiles to 1 tile wide
-- BILLY's office moves to bottom row (equal status with agents, not special top-center)
-- War Room stays center but smaller
-- Total grid: ~24x20 instead of 42x34
-
-### What This Affects
-
-**officeLayout.ts (complete rewrite of data, same interfaces):**
-- `buildTileMap()` produces a smaller grid
-- `ROOMS[]` array has new coordinates for every room
-- `FURNITURE[]` array has new coordinates
-- `getRoomAtTile()` works unchanged (just iterates ROOMS)
-
-**camera.ts:**
-- `computeAutoFitZoom()` reads `OFFICE_TILE_MAP` dimensions -- auto-adapts
-- `screenToTile()` and `tileToScreen()` read map dimensions -- auto-adapt
-
-**characters.ts:**
-- `WAR_ROOM_SEATS` coordinates change to match new War Room position
-- `startWalk()` uses new room coordinates from ROOMS -- auto-adapts via ROOMS lookup
-- Walk distances are shorter, so `SPEED_RAMP_TILES` threshold (8) may need adjustment (down to 4-5)
-
-**renderer.ts:**
-- Decoration positions hardcoded in `renderDecorations()` must update to new coordinates
-- Viewport culling math auto-adapts (reads mapCols/mapRows from tile map)
-
-**gameLoop.ts:**
-- Camera follow targeting auto-adapts
-
-**Pathfinding (tileMap.ts):**
-- No changes needed -- BFS operates on whatever grid it receives
-- With 1-tile-wide hallways, all paths still work (4-connected grid)
-- Shorter paths = faster walk times = snappier navigation feel
-
-### Room Size Considerations
-
-Shrinking rooms from 8x8 interior to 3x3 or 4x4 interior means:
-- **Furniture must fit in fewer tiles.** A desk + chair + bookshelf in 3x3 is tight. Consider 4x4 interior (6x6 room with walls) as minimum for agent offices.
-- **billyStandTile must be adjacent to the agent's seat** within the smaller room. With 4x4 interior, this is always possible.
-- **War Room needs enough space for 5 seats around a table.** Minimum 6x4 interior (8x6 room with walls).
-
----
-
-## Component Boundaries (Modified Architecture)
-
-| Component | Responsibility | Communicates With | v1.1 Change Level |
-|-----------|---------------|-------------------|-------------------|
-| **types.ts** | Constants, interfaces | All engine files | LOW -- add CHAR_SPRITE_W/H, zoom constants |
-| **officeLayout.ts** | Grid data, room coords, furniture | renderer, camera, characters, input | HIGH -- complete data rewrite, same interfaces |
-| **tileMap.ts** | Walkability, BFS pathfinding | characters.ts | NONE |
-| **camera.ts** | Zoom, pan, coordinate conversion | gameLoop, input, renderer | MEDIUM -- float zoom, remove rounding |
-| **renderer.ts** | All drawing to canvas | gameLoop (called each frame) | HIGH -- new draw order, depth sort, wall faces |
-| **spriteAtlas.ts** | Sprite frame coordinates | renderer, spriteSheet | MEDIUM -- new frame sizes, more environment tiles |
-| **spriteSheet.ts** | Asset loading, sprite cache | renderer | LOW -- cache key quantization |
-| **characters.ts** | Movement, animation, room logic | gameLoop, officeStore | LOW -- update WAR_ROOM_SEATS coords |
-| **input.ts** | User interaction | canvas events, officeStore | MEDIUM -- add wheel zoom handler |
-| **gameLoop.ts** | Frame loop orchestration | All engine modules | LOW -- overview threshold check |
-| **officeStore.ts** | Zustand state bridge | React, engine | LOW -- remove Math.round from setZoomLevel |
-
----
-
-## Data Flow Changes
-
-### Current Flow (Zoom)
-```
-User double-clicks -> input.ts toggleZoom() -> officeStore.setZoomLevel(1 or 2)
-  -> Math.round(level) stored
-  -> gameLoop detects store zoom != camera zoom -> sets camera.zoom = integer
-  -> renderer uses tileSize = TILE_SIZE * integer_zoom
-  -> spriteSheet caches at integer zoom
-```
-
-### New Flow (Smooth Zoom)
-```
-User pinch/scroll -> input.ts handleWheel(e) -> compute new float zoom, clamp to [MIN, MAX]
-  -> officeStore.setZoomLevel(float)
-  -> gameLoop detects change -> sets camera.zoom = float
-  -> camera.ts lerps zoom smoothly (optional: animate to target zoom)
-  -> renderer uses tileSize = TILE_SIZE * float_zoom
-  -> spriteSheet caches at quantized zoom (nearest 0.5)
-  -> screenToTile uses float math (works as-is)
-```
-
-### Current Flow (Rendering)
-```
-renderFrame():
-  1. Clear canvas
-  2. For each visible tile: draw floor sprite (or color)
-  3. For each furniture: draw furniture sprite
-  4. Sort characters by Y -> draw each
-  5. Draw status overlays
-  6. Draw UI overlays
-```
-
-### New Flow (JRPG Rendering)
-```
-renderFrame():
-  1. Clear canvas
-  2. GROUND PASS: For each visible tile: draw floor/ground sprite
-  3. WALL PASS: For north-edge walls, draw wall face sprites
-  4. DEPTH-SORTED PASS:
-     a. Collect all renderables (characters + furniture + decorations)
-     b. Sort by baseRow (Y-sort)
-     c. Draw each in order (behind-to-front)
-  5. OVERLAY PASS: Glow effects, ceiling items
-  6. UI PASS: Labels, bubbles, drop zones, file icons
-```
-
----
-
-## Patterns to Follow
-
-### Pattern 1: Renderable Interface for Depth Sorting
-
-**What:** Unify characters and furniture under a common interface for Y-sort rendering.
-**When:** Any time objects at different Y positions must correctly overlap.
-
-```typescript
-interface Renderable {
-  /** Y-sort key: the bottom tile row of this object's footprint */
-  baseRow: number;
-  /** Secondary sort: furniture renders before characters at same row */
-  priority: number;  // 0 = furniture, 1 = character
-  /** Draw this object */
-  draw(ctx: CanvasRenderingContext2D, zoom: number, offsetX: number, offsetY: number): void;
-}
-
-function buildRenderables(characters: Character[], furniture: FurnitureItem[]): Renderable[] {
-  const list: Renderable[] = [];
-
-  for (const item of furniture) {
-    list.push({
-      baseRow: item.depthRow ?? (item.row + item.height - 1),
-      priority: 0,
-      draw: (ctx, zoom, ox, oy) => renderFurnitureItem(ctx, item, zoom, ox, oy),
-    });
+// engine/collisionMap.ts (NEW FILE)
+
+let walkabilityMap: boolean[][] = [];
+
+export function buildWalkabilityMap(): boolean[][] {
+  const rows = OFFICE_TILE_MAP.length;
+  const cols = OFFICE_TILE_MAP[0]!.length;
+  const map: boolean[][] = [];
+
+  // Base walkability from tile types
+  for (let r = 0; r < rows; r++) {
+    const row: boolean[] = [];
+    for (let c = 0; c < cols; c++) {
+      const tile = OFFICE_TILE_MAP[r]![c]!;
+      row.push(tile === TileType.FLOOR || tile === TileType.DOOR);
+    }
+    map.push(row);
   }
 
-  for (const ch of characters) {
-    list.push({
-      baseRow: ch.tileRow + ch.moveProgress * (/* next row delta */),
-      priority: 1,
-      draw: (ctx, zoom, ox, oy) => renderCharacterJRPG(ctx, ch, zoom, ox, oy),
-    });
+  // Stamp furniture footprints as unwalkable (skip chairs -- agents sit in them)
+  for (const item of FURNITURE) {
+    if (item.type === 'chair') continue;
+    for (let r = item.row; r < item.row + item.height; r++) {
+      for (let c = item.col; c < item.col + item.width; c++) {
+        if (r >= 0 && r < rows && c >= 0 && c < cols) {
+          map[r]![c] = false;
+        }
+      }
+    }
   }
 
-  list.sort((a, b) => a.baseRow - b.baseRow || a.priority - b.priority);
-  return list;
+  walkabilityMap = map;
+  return map;
+}
+
+export function isWalkableWithFurniture(col: number, row: number): boolean {
+  if (row < 0 || row >= walkabilityMap.length) return false;
+  return walkabilityMap[row]?.[col] ?? false;
 }
 ```
 
-### Pattern 2: Anchor-Point Sprite Drawing
+Then modify `tileMap.ts::isWalkable()` to delegate to `isWalkableWithFurniture()`, or pass the collision map to `findPath()`.
 
-**What:** Draw sprites anchored at bottom-center (feet) rather than top-left (tile origin).
-**When:** Any sprite taller than TILE_SIZE (characters, furniture).
+**Why a separate overlay, not modifying OFFICE_TILE_MAP:** The tile map encodes room structure (`getRoomAtTile()` depends on it). Furniture is a separate layer. Mixing them makes room editing brittle. The collision overlay is derived data, computed once from source data.
+
+**Agent seat tiles must remain walkable.** `seatTile` and `billyStandTile` for each room must be excluded from furniture collision stamps. Currently chairs occupy seat positions, so skipping `type === 'chair'` handles this. Verify no desk tiles overlap `billyStandTile` positions.
+
+---
+
+### Integration Point 3: Idle Behavior State Machine
+
+**What changes:** Agents currently have 3 states (`idle | walk | work`). Idle does nothing. v2.0 adds autonomous idle behaviors: work at desk, get water, stretch.
+
+**Where it integrates:**
+
+| File | Change Type | What Changes |
+|------|------------|--------------|
+| `engine/idleBehavior.ts` | NEW FILE | Idle behavior state machine, POI definitions |
+| `engine/types.ts` | MODIFY | Expand `CharacterState` with `sit`, `stretch`, etc. |
+| `engine/characters.ts` | MODIFY | `updateAllCharacters()` ticks idle behaviors |
+| `engine/officeLayout.ts` | MODIFY (minor) | Add IDLE_POIS for water cooler, stretch zones |
+| `engine/spriteAtlas.ts` | MODIFY | Add frame mappings for new animation states |
+| `store/officeStore.ts` | NO CHANGE | `agentStatuses` unchanged; idle behaviors are engine-internal |
+
+**Recommended approach -- Hierarchical State Machine:**
 
 ```typescript
-function drawAnchored(
-  ctx: CanvasRenderingContext2D,
-  sprite: HTMLCanvasElement,
-  footTileCol: number,
-  footTileRow: number,
-  spriteW: number,  // source pixel width
-  spriteH: number,  // source pixel height
-  zoom: number,
-  offsetX: number,
-  offsetY: number,
-): void {
-  const tileSize = TILE_SIZE * zoom;
-  // Foot position (bottom-center of the tile the object stands on)
-  const footX = footTileCol * tileSize + offsetX + tileSize / 2;
-  const footY = (footTileRow + 1) * tileSize + offsetY;  // bottom edge of tile
+// engine/idleBehavior.ts (NEW FILE)
 
-  // Draw sprite with bottom-center at foot position
-  const drawW = spriteW * zoom;
-  const drawH = spriteH * zoom;
-  ctx.drawImage(sprite, footX - drawW / 2, footY - drawH, drawW, drawH);
+type IdleSubState =
+  | { type: 'seated'; timer: number }           // working at desk
+  | { type: 'walking-to-poi'; poi: string }     // heading to water cooler
+  | { type: 'at-poi'; poi: string; timer: number } // standing at water cooler
+  | { type: 'returning-to-desk' };              // walking back to seat
+
+interface AgentIdleState {
+  subState: IdleSubState;
+  nextActionTime: number;  // seconds until next behavior check
 }
+
+// Module-scoped state -- NOT in Zustand
+const agentIdleStates = new Map<string, AgentIdleState>();
 ```
 
-### Pattern 3: Zoom-Quantized Sprite Cache
+**Key design decision: Idle behaviors are engine-local state, NOT Zustand store state.**
 
-**What:** Round zoom to nearest 0.5 for cache keys to prevent unbounded cache growth.
-**When:** Smooth zoom with pre-scaled sprite caching.
+Rationale: Idle behaviors update per-frame (timers, sub-states). The store update discipline forbids per-frame writes. Idle state is purely visual -- it has no meaning to the React UI layer. Store it in a `Map<string, AgentIdleState>` module variable, ticked from `updateAllCharacters()`.
+
+**Interaction with existing agent status system:** When `agentStatuses[id]` is `'thinking'` (agent streaming response), idle behavior is paused -- they switch to `work` animation. When status returns to `'idle'`, idle behavior resumes. The existing bridge in `updateAllCharacters()` already handles these transitions; idle behaviors layer underneath.
+
+**POI definitions:** Add to `officeLayout.ts`:
 
 ```typescript
-function getQuantizedZoom(zoom: number): number {
-  return Math.round(zoom * 2) / 2;  // 1.0, 1.5, 2.0, 2.5, ...
+export const IDLE_POIS: Record<string, TileCoord[]> = {
+  'water-cooler': [
+    { col: 15, row: 9 },   // hallway water cooler
+    { col: 10, row: 23 },  // rec area water cooler
+  ],
+  'stretch-zone': [
+    { col: 8, row: 15 },   // left corridor
+    { col: 23, row: 15 },  // right corridor
+  ],
+};
+```
+
+**Out of scope (per PROJECT.md):** Agents visiting each other's offices (idle social visits). Idle behaviors are personal activities only -- agent walks to water cooler and back to own desk, never into another agent's room.
+
+---
+
+### Integration Point 4: Agent-to-Agent Collaboration Service
+
+**What changes:** Agents autonomously converse with each other, producing work. User approves each hop. BILLY can keep working during collaboration.
+
+**Where it integrates:**
+
+| File | Change Type | What Changes |
+|------|------------|--------------|
+| `services/collaboration/orchestrator.ts` | NEW FILE | Chain execution, hop management |
+| `services/collaboration/contextBuilder.ts` | NEW FILE | Build collaboration-specific context |
+| `services/actions/parseCollabAction.ts` | NEW FILE | Parse `<collaborate-with .../>` sentinel |
+| `store/collaborationStore.ts` | NEW FILE | Chain state, approval queue |
+| `components/chat/CollaborationPanel.tsx` | NEW FILE | View/approve collaboration chains |
+| `hooks/useCollaboration.ts` | NEW FILE | Wire collab store to UI |
+| `hooks/useChat.ts` | MODIFY | `onComplete` detects collaboration sentinel tags |
+| `services/context/builder.ts` | MODIFY | New collaboration context layer |
+| `engine/characters.ts` | MODIFY | Agent walk-to-office animation during collab |
+| `store/dealStore.ts` | NO CHANGE | `createDeal()` already exists |
+
+**This is the most architecturally significant new feature.** It creates a parallel execution context alongside user-to-agent chat.
+
+**Recommended architecture -- Collaboration Service Layer:**
+
+```
++-------------------------------------------------------------------+
+|                  Collaboration Orchestration                       |
+|  +-------------------+  +------------------+  +----------------+  |
+|  | CollaborationStore|  | orchestrator.ts  |  | CollabPanel UI |  |
+|  | (approval queue,  |  | (chain exec,     |  | (live view,    |  |
+|  |  chain state,     |  |  agent API calls, |  |  approve/deny) |  |
+|  |  active chains)   |  |  context passing) |  +-------+--------+  |
+|  +--------+----------+  +--------+---------+          |            |
+|           |                      |                    |            |
++-----------+----------------------+--------------------+------------+
+            |                      |
+   +--------v----------+  +-------v----------+
+   | officeStore       |  | chatStore        |
+   | (agent walking    |  | (persist collab  |
+   |  animations)      |  |  messages)       |
+   +-------------------+  +------------------+
+```
+
+**New store: `collaborationStore.ts`**
+
+```typescript
+interface CollaborationChain {
+  id: string;
+  dealId: string;
+  originAgentId: AgentId;
+  currentAgentId: AgentId;
+  targetAgentId: AgentId;
+  status: 'awaiting-approval' | 'in-progress' | 'completed' | 'cancelled';
+  hops: CollaborationHop[];
+  createdAt: number;
 }
 
-export function getCachedSprite(
-  sheet: HTMLImageElement,
-  frame: SpriteFrame,
-  zoom: number,
-): HTMLCanvasElement {
-  const cacheZoom = getQuantizedZoom(zoom);
-  // ... rest of cache logic uses cacheZoom for key, zoom for draw size
+interface CollaborationHop {
+  fromAgent: AgentId;
+  toAgent: AgentId;
+  context: string;      // what the sending agent wants
+  response?: string;    // what the receiving agent produced
+  status: 'pending' | 'approved' | 'streaming' | 'complete';
+  approvedAt?: number;
+}
+
+interface CollaborationState {
+  activeChains: CollaborationChain[];
+  pendingApprovals: CollaborationHop[];
+
+  proposeHop: (chain: CollaborationChain, hop: CollaborationHop) => void;
+  approveHop: (chainId: string, hopIndex: number) => void;
+  denyHop: (chainId: string, hopIndex: number) => void;
+  completeHop: (chainId: string, hopIndex: number, response: string) => void;
 }
 ```
+
+**Why a separate store, not extending chatStore:** chatStore manages user-to-agent conversations with per-deal indexing, single-stream mode, and War Room parallel mode. Agent-to-agent collaboration has a fundamentally different lifecycle: multiple concurrent chains, approval queues, background execution while user chats. Mixing these concerns would violate chatStore's single responsibility and create tangled state transitions.
+
+**How agent-to-agent API calls work:**
+
+The collaboration service reuses `sendStreamingMessage()` from `services/anthropic/stream.ts` with modified context. Instead of user conversation history, it builds context from:
+1. Base system prompt (layer 1, same)
+2. Agent persona (layer 2, same)
+3. Deal context (layer 3, same)
+4. **Collaboration context (NEW layer):** "Agent X has asked you to help with: {context}. Their relevant findings: {summary}"
+5. Memory/files (layers 4-5, same)
+
+This means `buildContext()` needs a new optional parameter for collaboration context, similar to the existing `crossVisibilityBlock` parameter.
+
+**How auto deal creation integrates:**
+
+The existing `parseDealAction()` pattern already handles `<create-deal ... />` sentinel tags. When a collaboration needs a new deal, the initiating agent's response includes the sentinel. The collaboration service detects it (same as `useChat.onComplete`) and calls `dealStore.createDeal()`. No new mechanism needed.
+
+**Canvas animation during collaboration:**
+
+When a collaboration hop is approved and in-progress:
+1. Sending agent walks from their office to receiving agent's office (reuses `startWalk()`)
+2. Both agents face each other (reuses `getCharacterDirection()`)
+3. Receiving agent enters `work` state (typing animation)
+4. On completion, sending agent walks back
+
+This uses the same movement system as War Room gathering. The engine integration is minimal: collaboration service calls `startWalk()` and sets `agentStatuses`.
+
+**Concurrent user activity:**
+
+BILLY's chat flow is completely independent of the collaboration pipeline. The user can walk to any room and chat while agents collaborate in the background. The only shared resource is the Anthropic API -- concurrent requests are fine (client-side, rate limits per-key).
+
+---
+
+### Integration Point 5: Auto Deal Creation from Agent Collaboration
+
+**What changes:** When agent collaboration is triggered and no deal exists for the topic, a deal is auto-created.
+
+**Where it integrates:** Already solved by existing patterns. The collaboration service reuses `parseDealAction()`:
+
+```typescript
+// In collaboration service, after receiving agent response:
+const dealAction = parseDealAction(agentResponse);
+if (dealAction) {
+  const newDealId = await dealStore.createDeal(dealAction.name, dealAction.description);
+  collaborationStore.updateChainDeal(chainId, newDealId);
+}
+```
+
+No new architecture needed. The sentinel tag pattern is the mechanism.
+
+---
+
+## Recommended Project Structure (New Files)
+
+```
+src/
+  engine/
+    collisionMap.ts          # NEW: Furniture collision overlay
+    idleBehavior.ts          # NEW: Agent idle behavior state machine
+    types.ts                 # MODIFY: New CharacterState values, sprite dimensions
+    characters.ts            # MODIFY: Tick idle behaviors in update loop
+    officeLayout.ts          # MODIFY: Add IDLE_POIS
+    spriteAtlas.ts           # MODIFY: LimeZu frame mappings, new animation states
+    renderer.ts              # MODIFY: Updated sprite dimensions in anchor math
+  store/
+    collaborationStore.ts    # NEW: Agent-to-agent chain state
+  services/
+    collaboration/
+      orchestrator.ts        # NEW: Chain execution, hop management
+      contextBuilder.ts      # NEW: Build collaboration-specific prompt context
+    actions/
+      parseCollabAction.ts   # NEW: Parse <collaborate-with .../> sentinel
+  components/
+    chat/
+      CollaborationPanel.tsx # NEW: View/approve collaboration chains
+      CollabHopCard.tsx      # NEW: Individual hop approval UI
+  hooks/
+    useCollaboration.ts      # NEW: Hook wiring collab store to UI
+```
+
+---
+
+## Data Flow: New Flows
+
+### Flow 1: Furniture Collision (Build Time)
+
+```
+officeLayout.ts::FURNITURE
+    |
+    v
+collisionMap.ts::buildWalkabilityMap()  -- called once at init
+    |
+    v
+walkabilityMap: boolean[][]  -- cached module variable
+    |
+    v (read by)
+tileMap.ts::isWalkable() -> findPath() -> characters.ts
+```
+
+### Flow 2: Idle Behavior Loop (Per Frame)
+
+```
+gameLoop.ts::frame()
+    |
+    v
+characters.ts::updateAllCharacters(dt)
+    |
+    +--> For each agent where agentStatuses[id] !== 'thinking':
+    |      idleBehavior.ts::tickIdleBehavior(agentId, dt)
+    |        |
+    |        +--> Timer expires? Pick random behavior
+    |        +--> 'walking-to-poi'? Call startWalk() to water cooler
+    |        +--> 'at-poi'? Run timer, then set 'returning-to-desk'
+    |        +--> 'returning-to-desk'? Call startWalk() to seatTile
+    v
+    Character.state updates (walk/idle) -- engine-local, no store writes
+```
+
+### Flow 3: Agent-to-Agent Collaboration
+
+```
+User sends message to Agent A
+    |
+    v
+useChat.onComplete()
+    |
+    +--> parseDealAction() -- existing
+    +--> parseCollabAction() -- NEW: detects <collaborate-with .../>
+           |
+           v
+    collaborationStore.proposeHop(chain, hop)
+           |
+           v
+    CollaborationPanel shows pending approval
+           |
+           v (user clicks Approve)
+    collaborationStore.approveHop()
+           |
+           v
+    orchestrator.executeHop()
+      1. startWalk(agentA, agentB.office)     -- canvas animation
+      2. officeStore.setAgentStatus(agentB, 'thinking')
+      3. sendStreamingMessage(agentB, collabContext)
+      4. On complete: collaborationStore.completeHop()
+      5. Check for next hop or chain completion
+           |
+           v
+    If agentB response contains <collaborate-with agentC .../>:
+      Recurse: proposeHop() for next leg
+```
+
+---
+
+## Architectural Patterns
+
+### Pattern 1: Engine-Local State for Visual-Only Data
+
+**What:** Per-frame visual state (idle behavior timers, animation sub-states) lives in module-scoped Maps, not Zustand stores.
+**When to use:** Data that changes every frame, has no meaning to React UI, and does not need persistence.
+**Trade-offs:** Invisible to React DevTools; cannot trigger React re-renders. This is a feature -- it prevents 60fps store churn.
+
+### Pattern 2: Sentinel Tag Action Parsing
+
+**What:** Agents embed structured XML-like tags in natural language responses. A parser extracts the action, the orchestration layer executes it.
+**When to use:** Any new agent-initiated action (deal creation, collaboration requests).
+**Trade-offs:** Fragile if agent does not emit the tag correctly. Mitigated by clear prompt instructions and forgiving regex parsing.
+
+**Extend for collaboration:**
+```typescript
+// <collaborate-with agent="marcos" context="Review the loan terms"/>
+export function parseCollabAction(content: string): CollabAction | null { ... }
+```
+
+### Pattern 3: Derived Data Maps (Collision Overlay)
+
+**What:** Compute a derived data structure from source data (tile map + furniture = walkability map). Cache it. Recompute on source change.
+**When to use:** When multiple data sources combine for a query-optimized structure.
+**Trade-offs:** Must recompute when sources change. For static furniture, compute once at init.
 
 ---
 
 ## Anti-Patterns to Avoid
 
-### Anti-Pattern 1: Isometric Projection
-**What:** Using isometric (diamond-shaped) tile projection instead of orthographic 3/4 view.
-**Why bad:** The milestone explicitly calls for JRPG 3/4 perspective (Pokemon/Zelda style), which is orthographic top-down with "tall" sprites. Isometric would require rewriting coordinate conversion, pathfinding visualization, click detection, and all sprites. It is a fundamentally different projection.
-**Instead:** Keep orthographic grid. Tiles are still axis-aligned rectangles. The "3/4" effect comes entirely from sprite art (drawn at an angle) and depth sorting.
+### Anti-Pattern 1: Modifying OFFICE_TILE_MAP for Collision
 
-### Anti-Pattern 2: Changing TILE_SIZE for Character Sprites
-**What:** Changing `TILE_SIZE = 16` to 24 or 32 to match new character dimensions.
-**Why bad:** TILE_SIZE is the grid cell size, not the character size. Characters in JRPG are taller than a grid cell. Changing TILE_SIZE would break the entire coordinate system, pathfinding, camera math, and require recalculating every position in the codebase.
-**Instead:** Add `CHAR_SPRITE_W` and `CHAR_SPRITE_H` as separate constants. Characters occupy 1 tile in the grid but render larger.
+**What people do:** Mark furniture tiles as WALL in the tile map.
+**Why it's wrong:** Tile map defines room structure (`getRoomAtTile()` depends on it). Marking furniture as WALL breaks room detection, floor rendering, and makes the map impossible to reason about.
+**Do this instead:** Separate collision overlay that composes tile walkability + furniture footprints.
 
-### Anti-Pattern 3: Rebuilding Sprite Cache on Every Zoom Change
-**What:** Calling `clearSpriteCache()` when zoom changes, forcing all sprites to re-render.
-**Why bad:** With smooth zoom, zoom changes every frame during a pinch gesture. Clearing cache every frame destroys performance.
-**Instead:** Let cache accumulate entries at quantized zoom levels. Cache entries at zoom 2.0 remain valid even when current zoom is 2.3. The quantized key (2.5 in this case) means the drawn sprite is slightly scaled from the cached version, which is imperceptible.
+### Anti-Pattern 2: Storing Idle Behavior State in Zustand
 
-### Anti-Pattern 4: Splitting Tile Map into Multiple Layers in Data
-**What:** Having separate 2D arrays for ground tiles, wall tiles, object tiles.
-**Why bad:** Adds complexity to pathfinding (must merge layers for walkability), room detection, and coordinate conversion. The walkability grid is orthogonal to the visual representation.
-**Instead:** Keep one tile map for walkability/room logic. Handle visual layers in the renderer only.
+**What people do:** Put idle timers, sub-states, and POI targets in officeStore.
+**Why it's wrong:** 60fps timer updates would trigger store mutations and potential React re-renders. The store update discipline explicitly forbids per-frame writes.
+**Do this instead:** Module-scoped Map in `idleBehavior.ts`, ticked from game loop.
 
----
+### Anti-Pattern 3: Extending chatStore for Agent-to-Agent Collaboration
 
-## Suggested Build Order
+**What people do:** Add collaboration chains, approval queues, multi-agent streaming into chatStore.
+**Why it's wrong:** chatStore manages user-to-agent conversations with single-stream and War Room modes. Agent-to-agent is a parallel pipeline with different lifecycle (approval gates, background execution, chain state). Mixing creates a god-store with tangled state transitions.
+**Do this instead:** New `collaborationStore` with its own state shape, connected to chatStore only for message persistence.
 
-The three changes have dependencies that dictate build order:
+### Anti-Pattern 4: Hardcoding LimeZu Frame Positions in Renderer
 
-```
-1. Compact Layout (officeLayout.ts)
-   |-- No visual dependencies, purely data
-   |-- All other changes reference room/tile positions
-   |-- Can test with existing renderer (just looks different)
-   |
-   v
-2. Smooth Zoom (camera.ts, input.ts, officeStore.ts, spriteSheet.ts, gameLoop.ts)
-   |-- Independent of art style
-   |-- Needed before JRPG art (float zoom + 3/4 art = full visual)
-   |-- Can test with existing sprites (squares zoom smoothly)
-   |
-   v
-3. JRPG Renderer (renderer.ts, spriteAtlas.ts, types.ts)
-   |-- Depends on layout (needs correct coordinates)
-   |-- Benefits from smooth zoom (art looks better at non-integer zoom)
-   |-- Largest change, highest risk -- do last
-   |
-   v
-4. Character Sprites (spriteAtlas.ts, spriteSheet.ts, new PNG assets)
-   |-- Depends on JRPG renderer (anchor-point drawing)
-   |-- New 24x32 sprites replace 16x16
-   |-- Can be incremental (one character at a time, fallback rectangles)
-```
+**What people do:** Put sprite sheet coordinates directly in `renderCharacterWorld()`.
+**Why it's wrong:** The existing architecture correctly separates atlas (coordinates) from renderer (drawing). Hardcoding breaks the swap contract.
+**Do this instead:** Update `spriteAtlas.ts` frame mappings. Renderer remains coordinate-agnostic.
 
-### Why This Order
+### Anti-Pattern 5: Making Collaboration Blocking
 
-1. **Layout first** because every coordinate in every test depends on room positions. Changing layout later would invalidate all tests and positions set up during other changes.
-
-2. **Zoom second** because it is mechanically independent of art style. You can test smooth zoom with the existing colored rectangles and 16x16 sprites. It touches fewer files and has clear pass/fail criteria (pinch works, zoom is smooth, no visual bugs).
-
-3. **JRPG renderer third** because it is the largest and most visually complex change. Having the correct layout and working zoom in place means you can focus purely on draw order, depth sorting, and wall rendering without worrying about coordinate bugs.
-
-4. **Character sprites last** because they are the most art-dependent component. The renderer must support 24x32 drawing before new sprites can be loaded and tested. The existing fallback (colored rectangles) means the app works at every stage.
+**What people do:** Lock BILLY's chat while agent-to-agent collaboration runs.
+**Why it's wrong:** The PROJECT.md requirement explicitly states "BILLY can keep working while agents collaborate independently." The user's primary workflow must not be interrupted.
+**Do this instead:** Collaboration runs as a separate async pipeline. The only user interaction point is the approval step, shown as a non-blocking notification in the CollaborationPanel.
 
 ---
 
-## Risk Assessment
+## Integration Boundaries
 
-| Risk | Severity | Likelihood | Mitigation |
-|------|----------|------------|------------|
-| Sprite cache memory bloat at float zoom | Medium | Medium | Quantize cache keys to 0.5 intervals |
-| Sub-pixel rendering artifacts (shimmer/jitter) | Low | High | Accept slight softness at fractional zoom; snap to nearest integer when zoom is within 0.05 of integer |
-| Y-sort visual glitches (character pops in front/behind furniture) | Medium | Medium | Use fractional baseRow (tileRow + moveProgress * dirDelta) for smooth transitions |
-| Compact layout pathfinding dead ends (1-tile hallways) | Low | Low | BFS handles 1-tile-wide paths fine; test all room-to-room paths |
-| Performance regression from interleaved Y-sort (was separate passes) | Low | Low | Building renderable list is O(n), sort is O(n log n) where n < 30. Negligible. |
+### Internal Boundaries
+
+| Boundary | Communication | Notes |
+|----------|---------------|-------|
+| Idle behaviors <-> Character system | Direct function calls in game loop | `tickIdleBehavior()` calls `startWalk()`, reads `Character.state` |
+| Collision map <-> Pathfinding | Collision map replaces `isWalkable()` internals | Single integration point in `tileMap.ts` |
+| Collaboration service <-> Chat | Reuses `sendStreamingMessage()` | Same API client, different context builder |
+| Collaboration service <-> Engine | Calls `startWalk()` for agent movement | Same as War Room gathering pattern |
+| Collaboration store <-> Deal store | Calls `dealStore.createDeal()` | Existing API, no new coupling |
+| LimeZu sprites <-> Renderer | spriteAtlas.ts coordinate mapping | Same contract as current programmatic sprites |
+
+### External Services
+
+| Service | Integration Pattern | Notes |
+|---------|---------------------|-------|
+| Anthropic API | Existing `stream.ts` + `retryBackoff.ts` | Collaboration adds concurrent requests; rate limiting per-API-key |
+| IndexedDB | Existing persistence adapter | Collaboration messages persist via same `addMessage()` path |
+
+---
+
+## Build Order (Dependency-Driven)
+
+Based on the dependency graph between features:
+
+```
+Phase 1: LimeZu Art Integration
+  - No dependencies on other v2.0 features
+  - Unblocks: visual quality for all subsequent features
+  - Risk: sprite atlas remapping (highest effort in this phase)
+  - Scope: types.ts, spriteAtlas.ts, sprite PNGs, renderer anchor math
+
+Phase 2: Furniture Collision
+  - Depends on: Phase 1 (LimeZu furniture tiles define visual collision shapes)
+  - Unblocks: Phase 3 (idle behaviors need collision-aware pathfinding)
+  - Risk: low (small, well-scoped change to walkability)
+  - Scope: collisionMap.ts (new), tileMap.ts (modify isWalkable)
+
+Phase 3: Idle Behaviors
+  - Depends on: Phase 2 (agents must not walk through furniture)
+  - Depends on: Phase 1 (need sit/stretch/phone animations from LimeZu)
+  - Unblocks: Phase 4 (visual foundation for agent movement)
+  - Risk: medium (state machine complexity, animation timing tuning)
+  - Scope: idleBehavior.ts (new), characters.ts, officeLayout.ts (POIs)
+
+Phase 4: Agent-to-Agent Collaboration
+  - Depends on: Phase 2 (agents walk between offices with collision)
+  - Benefits from: Phase 3 (visually compelling idle -> walk transitions)
+  - Most complex feature; benefits from all prior phases being stable
+  - Risk: high (new execution pipeline, approval UX, concurrent state)
+  - Scope: collaboration/ directory, collaborationStore, CollabPanel, useChat modification
+```
+
+**Phase ordering rationale:**
+- Art first because it is purely visual, zero behavioral risk, and makes all subsequent work look professional during development.
+- Collision before idle because idle behaviors that walk through furniture look broken.
+- Idle before collaboration because collaboration reuses `startWalk()` which should already be tested with collision + idle integration.
+- Collaboration last because it is the highest-risk, highest-complexity feature and benefits from a stable visual foundation.
 
 ---
 
 ## Sources
 
-- Direct codebase analysis of `/Users/quantumcode/CODE/BOILER-ROOM/src/engine/` (all 10 engine files)
-- Project spec in `.planning/PROJECT.md`
-- JRPG rendering patterns from training data on Canvas 2D game engines (MEDIUM confidence -- standard, well-established patterns)
-- Trackpad wheel event behavior on macOS (HIGH confidence -- well-documented Web API)
+- Direct codebase analysis of all files in `/Users/quantumcode/CODE/BOILER-ROOM/src/`
+- `engine/types.ts` -- sprite dimensions, character state machine contract
+- `engine/officeLayout.ts` -- tile map, furniture data, room definitions, ROOMS[], FURNITURE[]
+- `engine/characters.ts` -- character update loop, War Room gathering pattern, startWalk()
+- `engine/tileMap.ts` -- BFS pathfinding, isWalkable()
+- `engine/spriteAtlas.ts` -- sprite sheet coordinate contract (SPRT-04), CHARACTER_FRAMES
+- `engine/depthSort.ts` -- Y-sorted rendering pipeline, Renderable interface
+- `engine/renderer.ts` -- 6-layer rendering pipeline, renderCharacterWorld()
+- `engine/spriteSheet.ts` -- asset loading, loadAllAssets()
+- `store/officeStore.ts` -- Zustand bridge, store update discipline, Character creation
+- `store/chatStore.ts` -- conversation management, War Room streaming, streaming state
+- `store/dealStore.ts` -- deal CRUD, switchDeal(), createDeal()
+- `hooks/useChat.ts` -- orchestration hook, sentinel tag handling in onComplete
+- `services/actions/parseDealAction.ts` -- action parsing pattern (sentinel tags)
+- `services/context/builder.ts` -- 5-layer system prompt assembly, crossVisibilityBlock
+
+---
+*Architecture research for: Lemon Command Center v2.0 integration*
+*Researched: 2026-03-15*
