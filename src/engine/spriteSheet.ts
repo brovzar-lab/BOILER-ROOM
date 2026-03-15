@@ -1,11 +1,14 @@
 /**
  * Sprite loading, caching, and Phase 2 placeholder colors (fallback).
  *
- * Phase 8: Loads real PNG sprite sheets for characters and environment.
+ * Phase 14: Multi-sheet loader for LimeZu Modern Interiors assets.
+ * Loads 6 character sheets (32x32 premade) and 12 environment sheets in parallel.
  * Falls back to PLACEHOLDER_COLORS if sheets haven't loaded yet.
  */
 import type { SpriteFrame } from './types';
 import { CHARACTER_SHEET_NAMES } from './spriteAtlas';
+import { SHEET_PATHS } from './limeZuAtlas';
+import { CHAR_SHEET_PATHS } from './limeZuCharFrames';
 
 // ── Placeholder Colors (Phase 2 fallback) ────────────────────────────────────
 // Warm tones in offices, cool tones in hallways and War Room
@@ -26,6 +29,9 @@ export const PLACEHOLDER_COLORS: Record<string, string> = {
 // ── Sprite Sheet Storage ─────────────────────────────────────────────────────
 
 const characterSheets: Map<string, HTMLImageElement> = new Map();
+const environmentSheets: Map<string, HTMLImageElement> = new Map();
+
+/** @deprecated Single environment sheet replaced by multi-sheet system in Phase 14. */
 let environmentSheet: HTMLImageElement | null = null;
 
 // ── Sprite Sheet Loading ────────────────────────────────────────────────────
@@ -44,26 +50,36 @@ export function loadSpriteSheet(src: string): Promise<HTMLImageElement> {
 }
 
 /**
- * Loads all required sprite sheets: 6 character sheets + 1 environment sheet.
+ * Loads all required sprite sheets: 6 character sheets + 12 environment sheets.
  * Called during app initialization. Renderer falls back to colored rectangles
  * if this hasn't completed yet.
+ *
+ * Phase 14: Loads LimeZu premade character sheets from CHAR_SHEET_PATHS
+ * and LimeZu environment/furniture/UI sheets from SHEET_PATHS.
  */
 export async function loadAllAssets(): Promise<void> {
   const promises: Promise<void>[] = [];
 
+  // Load character sheets from LimeZu premade character paths
   for (const name of CHARACTER_SHEET_NAMES) {
+    const path = CHAR_SHEET_PATHS[name];
+    if (path) {
+      promises.push(
+        loadSpriteSheet(path).then((img) => {
+          characterSheets.set(name, img);
+        }),
+      );
+    }
+  }
+
+  // Load all environment sheets from SHEET_PATHS registry in parallel
+  for (const [sheetId, path] of Object.entries(SHEET_PATHS)) {
     promises.push(
-      loadSpriteSheet(`/sprites/${name}.png`).then((img) => {
-        characterSheets.set(name, img);
+      loadSpriteSheet(path).then((img) => {
+        environmentSheets.set(sheetId, img);
       }),
     );
   }
-
-  promises.push(
-    loadSpriteSheet('/sprites/environment.png').then((img) => {
-      environmentSheet = img;
-    }),
-  );
 
   await Promise.all(promises);
 }
@@ -78,7 +94,16 @@ export function getCharacterSheet(characterId: string): HTMLImageElement | null 
 }
 
 /**
- * Returns the loaded environment sprite sheet, or null if not yet loaded.
+ * Returns the loaded environment sprite sheet by sheet ID, or null if not yet loaded.
+ * Sheet IDs correspond to keys in SHEET_PATHS (e.g., 'generic', 'floors', 'conference').
+ */
+export function getEnvironmentSheetById(sheetId: string): HTMLImageElement | null {
+  return environmentSheets.get(sheetId) ?? null;
+}
+
+/**
+ * @deprecated Use getEnvironmentSheetById() instead. Single environment sheet
+ * replaced by multi-sheet system in Phase 14. Returns null.
  */
 export function getEnvironmentSheet(): HTMLImageElement | null {
   return environmentSheet;

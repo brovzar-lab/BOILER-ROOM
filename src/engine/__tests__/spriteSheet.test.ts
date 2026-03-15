@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { getQuantizedZoom } from '../spriteSheet';
+import { getQuantizedZoom, getEnvironmentSheetById } from '../spriteSheet';
+import { CHARACTER_SHEET_NAMES } from '../spriteAtlas';
 
 describe('getQuantizedZoom', () => {
   it('returns 1.0 for exact half-integer 1.0', () => {
@@ -42,5 +43,29 @@ describe('getQuantizedZoom', () => {
     expect(key1).toBe(key2);
     expect(key2).toBe(key3);
     expect(key1).toBe(2.0);
+  });
+});
+
+describe('getEnvironmentSheetById', () => {
+  it('returns null for unknown sheetId before any loading', () => {
+    expect(getEnvironmentSheetById('nonexistent-sheet')).toBeNull();
+  });
+
+  it('returns null for empty string sheetId', () => {
+    expect(getEnvironmentSheetById('')).toBeNull();
+  });
+});
+
+describe('CHARACTER_SHEET_NAMES', () => {
+  const expectedNames = ['billy', 'patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
+
+  it('contains all 6 character IDs', () => {
+    for (const name of expectedNames) {
+      expect(CHARACTER_SHEET_NAMES, `missing character: ${name}`).toContain(name);
+    }
+  });
+
+  it('has exactly 6 entries', () => {
+    expect(CHARACTER_SHEET_NAMES).toHaveLength(6);
   });
 });
