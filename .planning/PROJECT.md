@@ -43,6 +43,36 @@ Multi-perspective, context-aware AI advisory for complex production deals — ty
 - ✓ Always-visible deals sidebar with per-agent activity summary — v1.1
 - ✓ All-room labels on canvas at zoom >= 1.5x — v1.1
 
+## Current Milestone: v2.0 Professional Art & Agent Autonomy
+
+**Goal:** Replace programmatic sprites with LimeZu Modern Interiors professional pixel art, add furniture collision physics, idle agent behaviors, and autonomous agent-to-agent collaboration with user-approved chaining.
+
+**Target features:**
+- 32x32 character sprites from LimeZu pack replacing 24x32 programmatic placeholders
+- 16x16 environment tilesets (floors, walls, furniture) from LimeZu Modern Interiors
+- LimeZu UI elements integrated into chat/deal panels
+- Furniture collision — characters respect table/desk/furniture boundaries
+- Idle behaviors — agents work at desk, get water, stretch when not engaged
+- Agent-to-agent collaboration — agents visit each other, share context, produce work autonomously
+- Auto deal creation when agent collaboration is triggered
+- User approves each agent-to-agent hop in the chain
+- Live viewing or background summary of agent collaboration
+- BILLY can keep working while agents collaborate independently
+
+### Active
+
+- [ ] 32x32 LimeZu character sprites with walk/idle/sit/phone animations
+- [ ] 16x16 LimeZu environment tiles (floors, walls, furniture, decorations)
+- [ ] LimeZu Conference Hall assets for War Room
+- [ ] LimeZu UI elements for chat/deal panels
+- [ ] Furniture collision boundaries (no walking through tables)
+- [ ] Agent idle behaviors (work at desk, get water, stretch)
+- [ ] Agent-to-agent autonomous collaboration
+- [ ] Auto deal creation from agent instructions
+- [ ] User-approved agent chaining (approve each hop)
+- [ ] Live-view or background-summary for agent collaboration
+- [ ] Concurrent BILLY activity during agent collaboration
+
 ### Out of Scope
 
 - Real-time collaboration / multi-user — personal productivity tool
@@ -50,6 +80,7 @@ Multi-perspective, context-aware AI advisory for complex production deals — ty
 - Server-side backend — client-side with direct Anthropic API calls
 - OAuth/SSO authentication — single-user, API key in .env
 - Custom LLM fine-tuning — uses Claude via standard API with system prompts
+- Agents visiting each other casually (idle social visits) — keep idle behaviors to personal activities only
 
 ## Context
 
@@ -62,7 +93,7 @@ Architecture: three-world separation — game engine (Canvas 2D with 6-layer pip
 
 **Known issues:**
 - War Room agent gathering may not always trigger (pre-existing pathfinding edge case)
-- Programmatically generated sprites are functional but could benefit from professional pixel art
+- Programmatically generated sprites being replaced with LimeZu Modern Interiors pack (v2.0)
 - renderHeight dead field on FurnitureItem (unused by depthSort)
 - Sprite cache exists but renderer bypasses it (intentional — draws via setTransform)
 
@@ -97,4 +128,4 @@ Architecture: three-world separation — game engine (Canvas 2D with 6-layer pip
 - **Context window:** Auto-summarize at 80% capacity, memory never summarized
 
 ---
-*Last updated: 2026-03-14 after v1.1 Visual Overhaul shipped*
+*Last updated: 2026-03-15 after v2.0 milestone start*
