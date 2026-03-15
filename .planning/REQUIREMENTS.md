@@ -9,8 +9,8 @@ Requirements for v2.0 Professional Art & Agent Autonomy. Each maps to roadmap ph
 
 ### Art — Characters
 
-- [ ] **CHAR-01**: Characters render as 32x32 LimeZu sprites replacing programmatic 24x32 placeholders
-- [ ] **CHAR-02**: Each of the 6 characters (BILLY, Patrik, Marcos, Sandra, Isaac, Wendy) has a distinct LimeZu character with walk, idle, sit animations
+- [x] **CHAR-01**: Characters render as 32x32 LimeZu sprites replacing programmatic 24x32 placeholders
+- [x] **CHAR-02**: Each of the 6 characters (BILLY, Patrik, Marcos, Sandra, Isaac, Wendy) has a distinct LimeZu character with walk, idle, sit animations
 - [ ] **CHAR-03**: Character foot-center anchoring updated for 32x32 on 16x16 tile grid (characters are 2 tiles tall)
 - [ ] **CHAR-04**: Drop shadows and depth sorting work correctly with 32x32 character sprites
 
@@ -22,7 +22,7 @@ Requirements for v2.0 Professional Art & Agent Autonomy. Each maps to roadmap ph
 - [ ] **ENV-11**: War Room uses LimeZu Conference Hall assets (conference table, office chairs, whiteboard, projector)
 - [ ] **ENV-12**: Rec area furniture replaced with LimeZu living room/generic assets (water cooler, couch, plants)
 - [ ] **ENV-13**: Personality decorations per office use LimeZu decoration sprites (rugs, art, charts, books)
-- [ ] **ENV-14**: Multi-sheet atlas loader supports LimeZu's categorized tile organization (multiple PNG source sheets)
+- [x] **ENV-14**: Multi-sheet atlas loader supports LimeZu's categorized tile organization (multiple PNG source sheets)
 
 ### Art — UI
 
@@ -87,8 +87,8 @@ Deferred to future release.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CHAR-01 | Phase 14 | Pending |
-| CHAR-02 | Phase 14 | Pending |
+| CHAR-01 | Phase 14 | Complete |
+| CHAR-02 | Phase 14 | Complete |
 | CHAR-03 | Phase 14 | Pending |
 | CHAR-04 | Phase 14 | Pending |
 | ENV-08 | Phase 14 | Pending |
@@ -97,7 +97,7 @@ Deferred to future release.
 | ENV-11 | Phase 14 | Pending |
 | ENV-12 | Phase 14 | Pending |
 | ENV-13 | Phase 14 | Pending |
-| ENV-14 | Phase 14 | Pending |
+| ENV-14 | Phase 14 | Complete |
 | UI-06 | Phase 14 | Pending |
 | UI-07 | Phase 14 | Pending |
 | COLL-01 | Phase 15 | Pending |
