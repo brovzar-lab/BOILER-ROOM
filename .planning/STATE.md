@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Professional Art & Agent Autonomy
-status: defining_requirements
-stopped_at: Defining requirements for v2.0
+status: ready_to_plan
+stopped_at: v2.0 roadmap created — Phase 14 ready to plan
 last_updated: "2026-03-15"
-last_activity: 2026-03-15 — Milestone v2.0 started
+last_activity: 2026-03-15 — v2.0 roadmap created (Phases 14-17)
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** Multi-perspective, context-aware AI advisory for complex production deals
-**Current focus:** Defining requirements for v2.0 Professional Art & Agent Autonomy
+**Current focus:** Phase 14 — LimeZu Art Integration
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-03-15 — Milestone v2.0 started
+Phase: 14 of 17 (LimeZu Art Integration)
+Plan: 0 of TBD in current phase
+Status: Ready to plan
+Last activity: 2026-03-15 — v2.0 roadmap created (Phases 14-17)
 
 Progress: [░░░░░░░░░░] 0% (v2.0)
 
@@ -46,7 +46,12 @@ Progress: [░░░░░░░░░░] 0% (v2.0)
 
 ### Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table.
+Decisions logged in PROJECT.md Key Decisions table.
+Recent decisions affecting current work:
+
+- [v2.0 roadmap]: 4-phase sequential ordering (Art -> Collision -> Idle -> Collaboration) — hard dependency chain
+- [v2.0 roadmap]: collaborationStore separate from chatStore — singleton streaming conflict
+- [v2.0 roadmap]: Idle state engine-local (module-scoped Maps), not Zustand — no React re-renders
 
 ### Pending Todos
 
@@ -54,12 +59,11 @@ None yet.
 
 ### Blockers/Concerns
 
-- LimeZu character sheets use different frame layout than current spriteAtlas.ts — needs remapping
-- Agent-to-agent collaboration requires new API orchestration layer (multi-turn between agents)
-- Furniture collision needs tile-level walkability data in officeLayout.ts
+- Phase 14 needs research-phase: LimeZu asset layout unknown (frame counts, padding, multi-file org)
+- Phase 17 needs research-phase: Collaboration trigger format, approval UX, context budget
 
 ## Session Continuity
 
 Last session: 2026-03-15
-Stopped at: Defining requirements for v2.0
+Stopped at: v2.0 roadmap created — 4 phases (14-17) covering 32 requirements
 Resume file: None

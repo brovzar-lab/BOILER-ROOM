@@ -87,44 +87,44 @@ Deferred to future release.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CHAR-01 | TBD | Pending |
-| CHAR-02 | TBD | Pending |
-| CHAR-03 | TBD | Pending |
-| CHAR-04 | TBD | Pending |
-| ENV-08 | TBD | Pending |
-| ENV-09 | TBD | Pending |
-| ENV-10 | TBD | Pending |
-| ENV-11 | TBD | Pending |
-| ENV-12 | TBD | Pending |
-| ENV-13 | TBD | Pending |
-| ENV-14 | TBD | Pending |
-| UI-06 | TBD | Pending |
-| UI-07 | TBD | Pending |
-| COLL-01 | TBD | Pending |
-| COLL-02 | TBD | Pending |
-| COLL-03 | TBD | Pending |
-| COLL-04 | TBD | Pending |
-| IDLE-01 | TBD | Pending |
-| IDLE-02 | TBD | Pending |
-| IDLE-03 | TBD | Pending |
-| IDLE-04 | TBD | Pending |
-| IDLE-05 | TBD | Pending |
-| COLLAB-01 | TBD | Pending |
-| COLLAB-02 | TBD | Pending |
-| COLLAB-03 | TBD | Pending |
-| COLLAB-04 | TBD | Pending |
-| COLLAB-05 | TBD | Pending |
-| COLLAB-06 | TBD | Pending |
-| COLLAB-07 | TBD | Pending |
-| COLLAB-08 | TBD | Pending |
-| COLLAB-09 | TBD | Pending |
-| COLLAB-10 | TBD | Pending |
+| CHAR-01 | Phase 14 | Pending |
+| CHAR-02 | Phase 14 | Pending |
+| CHAR-03 | Phase 14 | Pending |
+| CHAR-04 | Phase 14 | Pending |
+| ENV-08 | Phase 14 | Pending |
+| ENV-09 | Phase 14 | Pending |
+| ENV-10 | Phase 14 | Pending |
+| ENV-11 | Phase 14 | Pending |
+| ENV-12 | Phase 14 | Pending |
+| ENV-13 | Phase 14 | Pending |
+| ENV-14 | Phase 14 | Pending |
+| UI-06 | Phase 14 | Pending |
+| UI-07 | Phase 14 | Pending |
+| COLL-01 | Phase 15 | Pending |
+| COLL-02 | Phase 15 | Pending |
+| COLL-03 | Phase 15 | Pending |
+| COLL-04 | Phase 15 | Pending |
+| IDLE-01 | Phase 16 | Pending |
+| IDLE-02 | Phase 16 | Pending |
+| IDLE-03 | Phase 16 | Pending |
+| IDLE-04 | Phase 16 | Pending |
+| IDLE-05 | Phase 16 | Pending |
+| COLLAB-01 | Phase 17 | Pending |
+| COLLAB-02 | Phase 17 | Pending |
+| COLLAB-03 | Phase 17 | Pending |
+| COLLAB-04 | Phase 17 | Pending |
+| COLLAB-05 | Phase 17 | Pending |
+| COLLAB-06 | Phase 17 | Pending |
+| COLLAB-07 | Phase 17 | Pending |
+| COLLAB-08 | Phase 17 | Pending |
+| COLLAB-09 | Phase 17 | Pending |
+| COLLAB-10 | Phase 17 | Pending |
 
 **Coverage:**
 - v2.0 requirements: 32 total
-- Mapped to phases: 0
-- Unmapped: 32
+- Mapped to phases: 32
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-15*
-*Last updated: 2026-03-15 after initial definition*
+*Last updated: 2026-03-15 after roadmap creation*
