@@ -31,9 +31,6 @@ export const PLACEHOLDER_COLORS: Record<string, string> = {
 const characterSheets: Map<string, HTMLImageElement> = new Map();
 const environmentSheets: Map<string, HTMLImageElement> = new Map();
 
-/** @deprecated Single environment sheet replaced by multi-sheet system in Phase 14. */
-let environmentSheet: HTMLImageElement | null = null;
-
 // ── Sprite Sheet Loading ────────────────────────────────────────────────────
 
 /**
@@ -99,14 +96,6 @@ export function getCharacterSheet(characterId: string): HTMLImageElement | null 
  */
 export function getEnvironmentSheetById(sheetId: string): HTMLImageElement | null {
   return environmentSheets.get(sheetId) ?? null;
-}
-
-/**
- * @deprecated Use getEnvironmentSheetById() instead. Single environment sheet
- * replaced by multi-sheet system in Phase 14. Returns null.
- */
-export function getEnvironmentSheet(): HTMLImageElement | null {
-  return environmentSheet;
 }
 
 // ── Sprite Cache ────────────────────────────────────────────────────────────

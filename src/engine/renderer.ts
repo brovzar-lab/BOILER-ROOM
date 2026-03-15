@@ -24,7 +24,7 @@ import { TileType, TILE_SIZE, CHAR_SPRITE_W, CHAR_SPRITE_H, ZOOM_OVERVIEW_THRESH
 import type { Camera, Character } from './types';
 import type { FurnitureItem, DecorationItem } from './officeLayout';
 import { OFFICE_TILE_MAP, ROOMS, ROOM_RUGS, getRoomAtTile, isRecAreaTile } from './officeLayout';
-import { PLACEHOLDER_COLORS, getCharacterSheet, getEnvironmentSheetById } from './spriteSheet';
+import { PLACEHOLDER_COLORS, getCharacterSheet, getEnvironmentSheetById, getCachedSprite } from './spriteSheet';
 import { CHARACTER_FRAMES } from './spriteAtlas';
 import { LIMEZU_ATLAS } from './limeZuAtlas';
 import type { SheetFrame } from './limeZuAtlas';
@@ -694,7 +694,7 @@ function renderCharacterWorld(
   ctx.fill();
 }
 
-// ── Status Overlays (speech bubbles, thinking dots) ─────────────────────────
+// ── Status Overlays (LimeZu emote + speech bubble sprites) ──────────────────
 
 function renderStatusOverlays(
   ctx: CanvasRenderingContext2D,
@@ -708,52 +708,45 @@ function renderStatusOverlays(
     const status = agentStatuses[ch.id];
 
     if (status === 'needs-attention') {
-      // Speech bubble above character head (screen coordinates)
+      // LimeZu speech bubble sprite above character head (screen coordinates)
       // With 32x32 sprites, visual top is at ch.y - (CHAR_SPRITE_H - TILE_SIZE)
-      const charScreen = worldToScreen(ch.x + TILE_SIZE / 2, ch.y - (CHAR_SPRITE_H - TILE_SIZE));
-      const cx = Math.floor(charScreen.x);
-      const bubbleY = Math.floor(charScreen.y - 4 * zoom);
-      const bw = Math.floor(6 * zoom);
-      const bh = Math.floor(5 * zoom);
-      const radius = Math.max(1, Math.floor(zoom));
+      const bubbleSf = LIMEZU_ATLAS['speech-bubble-left'];
+      if (bubbleSf) {
+        const sheet = getEnvironmentSheetById(bubbleSf.sheetId);
+        if (sheet) {
+          const charScreen = worldToScreen(ch.x + TILE_SIZE / 2, ch.y - (CHAR_SPRITE_H - TILE_SIZE));
+          const cx = Math.floor(charScreen.x);
+          // Speech bubble is 2x2 tiles (32x32 in source). Scale by zoom * 0.8 for visual balance.
+          const size = 16 * zoom * 0.8;
+          const spriteCanvas = getCachedSprite(sheet, bubbleSf.frame, zoom);
+          const drawX = cx - size;
+          const drawY = Math.floor(charScreen.y - size * 2 - 2 * zoom);
+          ctx.drawImage(spriteCanvas, drawX, drawY, size * 2, size * 2);
 
-      // Bubble body (white rounded rect)
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.roundRect(cx - bw / 2, bubbleY - bh, bw, bh, radius);
-      ctx.fill();
-
-      // Small triangle pointer
-      const triSize = Math.max(1, Math.floor(zoom));
-      ctx.beginPath();
-      ctx.moveTo(cx - triSize, bubbleY);
-      ctx.lineTo(cx + triSize, bubbleY);
-      ctx.lineTo(cx, bubbleY + triSize);
-      ctx.closePath();
-      ctx.fill();
-
-      // Red notification dot inside bubble
-      ctx.fillStyle = '#f87171';
-      const dotR = Math.max(1, Math.floor(zoom * 0.8));
-      ctx.beginPath();
-      ctx.arc(cx, bubbleY - bh / 2, dotR, 0, Math.PI * 2);
-      ctx.fill();
+          // Red notification dot on top-right of speech bubble (functional indicator)
+          ctx.fillStyle = '#f87171';
+          const dotR = Math.max(1, Math.floor(zoom * 0.8));
+          ctx.beginPath();
+          ctx.arc(drawX + size * 2 - dotR, drawY + dotR + 1, dotR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
     }
 
     if (status === 'thinking') {
-      // Amber dots ("...") above character head (screen coordinates)
+      // LimeZu thinking emote sprite above character head (screen coordinates)
       // With 32x32 sprites, visual top is at ch.y - (CHAR_SPRITE_H - TILE_SIZE)
-      const charScreen = worldToScreen(ch.x + TILE_SIZE / 2, ch.y - (CHAR_SPRITE_H - TILE_SIZE));
-      const cx = Math.floor(charScreen.x);
-      const dotsY = Math.floor(charScreen.y - 2 * zoom);
-      const dotR = Math.max(1, Math.floor(zoom * 0.6));
-      const spacing = Math.floor(2.5 * zoom);
-
-      ctx.fillStyle = '#fbbf24';
-      for (let i = -1; i <= 1; i++) {
-        ctx.beginPath();
-        ctx.arc(cx + i * spacing, dotsY, dotR, 0, Math.PI * 2);
-        ctx.fill();
+      const emoteSf = LIMEZU_ATLAS['emote-thinking'];
+      if (emoteSf) {
+        const sheet = getEnvironmentSheetById(emoteSf.sheetId);
+        if (sheet) {
+          const charScreen = worldToScreen(ch.x + TILE_SIZE / 2, ch.y - (CHAR_SPRITE_H - TILE_SIZE));
+          const cx = Math.floor(charScreen.x);
+          // Emote is 16x16. Scale by zoom * 0.8 (slightly smaller than a full tile)
+          const size = 16 * zoom * 0.8;
+          const spriteCanvas = getCachedSprite(sheet, emoteSf.frame, zoom);
+          ctx.drawImage(spriteCanvas, cx - size / 2, Math.floor(charScreen.y - size - 2 * zoom), size, size);
+        }
       }
     }
   }
