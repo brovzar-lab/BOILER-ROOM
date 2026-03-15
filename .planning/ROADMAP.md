@@ -58,14 +58,12 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
   3. War Room displays LimeZu Conference Hall assets (conference table, office chairs, whiteboard) matching the professional art style
   4. Agent thinking/status indicators appear as LimeZu emote sprites on the canvas, and speech bubbles use LimeZu UI elements
   5. Drop shadows, depth sorting, and foot-center anchoring work correctly at all zoom levels with the new 32x32 character dimensions on the 16x16 tile grid
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 14-01: TBD
-- [ ] 14-02: TBD
-- [ ] 14-03: TBD
-
-**Research flag:** NEEDS RESEARCH-PHASE — LimeZu sheet layout must be audited (frame arrangement, animation counts, tile padding, multi-file organization) before atlas remapping code begins.
+- [ ] 14-01-PLAN.md — Atlas foundation: multi-sheet registry, character frame mapping, 32x32 dimensions, loader
+- [ ] 14-02-PLAN.md — Renderer overhaul: floors, 3D walls, furniture, decorations, character anchoring
+- [ ] 14-03-PLAN.md — UI overlays (emotes, speech bubbles) + visual verification checkpoint
 
 ### Phase 15: Furniture Collision
 **Goal**: Characters respect physical furniture boundaries — no agent or BILLY walks through desks, tables, bookshelves, or any solid furniture
@@ -128,7 +126,7 @@ Plans:
 |-------|-----------|-------|--------|-----------|
 | 1-8 | v1.0 | 24/24 | Complete | 2026-03-14 |
 | 9-13 | v1.1 | 14/14 | Complete | 2026-03-14 |
-| 14. LimeZu Art Integration | v2.0 | 0/TBD | Not started | - |
+| 14. LimeZu Art Integration | v2.0 | 0/3 | Planned | - |
 | 15. Furniture Collision | v2.0 | 0/TBD | Not started | - |
 | 16. Idle Behaviors | v2.0 | 0/TBD | Not started | - |
 | 17. Agent Collaboration | v2.0 | 0/TBD | Not started | - |
