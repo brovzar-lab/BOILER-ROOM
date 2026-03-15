@@ -199,6 +199,20 @@ export const LIMEZU_ATLAS: Record<string, SheetFrame> = {
   'sandra-schedule':     sf('generic', 4, 5, 2, 1),
   'billy-award':         sf('generic', 6, 5, 2, 2),
 
+  // ── Whiteboard alias (for furniture atlasKey lookup) ─────────────────────
+  'conf-whiteboard':   sf('conference', 8, 0, 3, 2),
+
+  // ── Personal Touch Decorations (small desk items from Generic sheet) ────
+  'coffee-mug':        sf('generic', 10, 1),
+  'pen-holder':        sf('generic', 11, 1),
+  'photo-frame':       sf('generic', 12, 3),
+  'desk-plant':        sf('generic', 14, 7),
+  'figurine':          sf('generic', 13, 3),
+  'candle':            sf('generic', 15, 3),
+  'papers':            sf('generic', 13, 1),
+  'water-glass':       sf('generic', 14, 1),
+  'postit-note':       sf('generic', 15, 1),
+
   // ── UI Elements ────────────────────────────────────────────────────────────
   // Thinking emotes (UI_thinking_emotes_animation_16x16.png, 10 cols x 10 rows)
   'emote-thinking':      sf('ui-emotes', 0, 0),

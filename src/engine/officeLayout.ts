@@ -250,13 +250,15 @@ export const ROOMS: Room[] = [
 
 export interface FurnitureItem {
   roomId: string;
-  type: 'desk' | 'chair' | 'table' | 'bookshelf' | 'plant' | 'water-cooler' | 'artwork' | 'couch';
+  type: 'desk' | 'chair' | 'table' | 'bookshelf' | 'plant' | 'water-cooler' | 'artwork' | 'couch' | 'monitor' | 'whiteboard' | 'filing-cabinet';
   col: number;
   row: number;
   width: number;  // in tiles
   height: number; // in tiles
   /** Visual height in tiles for 3/4 perspective (default: height). Tall items (bookshelf=2, whiteboard=2) occlude more. */
   renderHeight?: number;
+  /** Direct LIMEZU_ATLAS key for sprite lookup. When set, renderer uses this instead of type-based switch. */
+  atlasKey?: string;
 }
 
 /**
@@ -268,59 +270,64 @@ export interface FurnitureItem {
  */
 export const FURNITURE: FurnitureItem[] = [
   // BILLY's Office (interior cols 10-14, rows 3-7) -- CEO corner
-  { roomId: 'billy', type: 'desk', col: 11, row: 3, width: 3, height: 1 },
-  { roomId: 'billy', type: 'chair', col: 12, row: 4, width: 1, height: 1 },
-  { roomId: 'billy', type: 'bookshelf', col: 10, row: 3, width: 1, height: 2, renderHeight: 2 },
+  { roomId: 'billy', type: 'desk', col: 11, row: 3, width: 3, height: 1, atlasKey: 'desk-wood-3wide' },
+  { roomId: 'billy', type: 'chair', col: 12, row: 4, width: 1, height: 1, atlasKey: 'chair-office' },
+  { roomId: 'billy', type: 'bookshelf', col: 10, row: 3, width: 1, height: 2, renderHeight: 2, atlasKey: 'bookshelf-2tall' },
+  { roomId: 'billy', type: 'monitor', col: 13, row: 3, width: 1, height: 1, atlasKey: 'monitor' },
 
   // Patrik's Office (interior cols 18-22, rows 3-7) -- CFO, top-right adjacent to BILLY
-  { roomId: 'patrik', type: 'desk', col: 19, row: 3, width: 2, height: 1 },
-  { roomId: 'patrik', type: 'chair', col: 20, row: 4, width: 1, height: 1 },
+  { roomId: 'patrik', type: 'desk', col: 19, row: 3, width: 2, height: 1, atlasKey: 'desk-wood-2wide' },
+  { roomId: 'patrik', type: 'chair', col: 20, row: 4, width: 1, height: 1, atlasKey: 'chair-office' },
+  { roomId: 'patrik', type: 'monitor', col: 21, row: 3, width: 1, height: 1, atlasKey: 'monitor' },
 
   // War Room (interior cols 11-20, rows 13-21) -- portrait conference table centered
-  { roomId: 'war-room', type: 'table', col: 14, row: 14, width: 4, height: 6 },
+  { roomId: 'war-room', type: 'table', col: 14, row: 14, width: 4, height: 6, atlasKey: 'conf-table' },
   // Chairs around the portrait conference table (cols 14-17, rows 14-19)
-  { roomId: 'war-room', type: 'chair', col: 15, row: 13, width: 1, height: 1 }, // north/head (BILLY)
-  { roomId: 'war-room', type: 'chair', col: 13, row: 15, width: 1, height: 1 }, // left side, upper (Patrik)
-  { roomId: 'war-room', type: 'chair', col: 13, row: 17, width: 1, height: 1 }, // left side, lower (Sandra)
-  { roomId: 'war-room', type: 'chair', col: 18, row: 15, width: 1, height: 1 }, // right side, upper (Marcos)
-  { roomId: 'war-room', type: 'chair', col: 18, row: 17, width: 1, height: 1 }, // right side, lower (Isaac)
-  { roomId: 'war-room', type: 'chair', col: 16, row: 20, width: 1, height: 1 }, // south/foot (Wendy)
+  { roomId: 'war-room', type: 'chair', col: 15, row: 13, width: 1, height: 1, atlasKey: 'conf-chair' }, // north/head (BILLY)
+  { roomId: 'war-room', type: 'chair', col: 13, row: 15, width: 1, height: 1, atlasKey: 'conf-chair' }, // left side, upper (Patrik)
+  { roomId: 'war-room', type: 'chair', col: 13, row: 17, width: 1, height: 1, atlasKey: 'conf-chair' }, // left side, lower (Sandra)
+  { roomId: 'war-room', type: 'chair', col: 18, row: 15, width: 1, height: 1, atlasKey: 'conf-chair' }, // right side, upper (Marcos)
+  { roomId: 'war-room', type: 'chair', col: 18, row: 17, width: 1, height: 1, atlasKey: 'conf-chair' }, // right side, lower (Isaac)
+  { roomId: 'war-room', type: 'chair', col: 16, row: 20, width: 1, height: 1, atlasKey: 'conf-chair' }, // south/foot (Wendy)
+  { roomId: 'war-room', type: 'whiteboard', col: 11, row: 13, width: 2, height: 1, atlasKey: 'conf-whiteboard' },
 
   // Sandra's Office (interior cols 2-6, rows 12-16) -- Line Producer, upper-left
-  { roomId: 'sandra', type: 'desk', col: 3, row: 13, width: 2, height: 1 },
-  { roomId: 'sandra', type: 'chair', col: 4, row: 14, width: 1, height: 1 },
+  { roomId: 'sandra', type: 'desk', col: 3, row: 13, width: 2, height: 1, atlasKey: 'desk-wood-2wide' },
+  { roomId: 'sandra', type: 'chair', col: 4, row: 14, width: 1, height: 1, atlasKey: 'chair-office' },
+  { roomId: 'sandra', type: 'monitor', col: 4, row: 13, width: 1, height: 1, atlasKey: 'monitor' },
 
   // Marcos's Office (interior cols 25-29, rows 12-16) -- Lawyer, upper-right
-  { roomId: 'marcos', type: 'desk', col: 26, row: 13, width: 2, height: 1 },
-  { roomId: 'marcos', type: 'chair', col: 27, row: 14, width: 1, height: 1 },
-  { roomId: 'marcos', type: 'bookshelf', col: 25, row: 12, width: 1, height: 2, renderHeight: 2 },
+  { roomId: 'marcos', type: 'desk', col: 26, row: 13, width: 2, height: 1, atlasKey: 'desk-wood-2wide' },
+  { roomId: 'marcos', type: 'chair', col: 27, row: 14, width: 1, height: 1, atlasKey: 'chair-office' },
+  { roomId: 'marcos', type: 'bookshelf', col: 25, row: 12, width: 1, height: 2, renderHeight: 2, atlasKey: 'bookshelf-2tall' },
 
   // Isaac's Office (interior cols 2-6, rows 21-25) -- Head of Development, lower-left
-  { roomId: 'isaac', type: 'desk', col: 3, row: 22, width: 2, height: 1 },
-  { roomId: 'isaac', type: 'chair', col: 4, row: 23, width: 1, height: 1 },
+  { roomId: 'isaac', type: 'desk', col: 3, row: 22, width: 2, height: 1, atlasKey: 'desk-wood-2wide' },
+  { roomId: 'isaac', type: 'chair', col: 4, row: 23, width: 1, height: 1, atlasKey: 'chair-office' },
+  { roomId: 'isaac', type: 'monitor', col: 4, row: 22, width: 1, height: 1, atlasKey: 'monitor' },
 
   // Wendy's Coaching Room (interior cols 25-29, rows 21-25) -- Performance Coach, lower-right
   // Non-standard layout: coaching space with couch as primary, desk pushed to wall
-  { roomId: 'wendy', type: 'couch', col: 26, row: 22, width: 2, height: 1 },      // comfortable coaching couch (primary)
-  { roomId: 'wendy', type: 'chair', col: 28, row: 23, width: 1, height: 1 },      // coaching chair facing couch
-  { roomId: 'wendy', type: 'desk', col: 29, row: 21, width: 1, height: 1 },       // small secondary desk pushed to wall
-  { roomId: 'wendy', type: 'plant', col: 25, row: 21, width: 1, height: 1 },      // plant 1 (warm feel)
-  { roomId: 'wendy', type: 'plant', col: 25, row: 25, width: 1, height: 1 },      // plant 2
-  { roomId: 'wendy', type: 'plant', col: 29, row: 25, width: 1, height: 1 },      // plant 3
+  { roomId: 'wendy', type: 'couch', col: 26, row: 22, width: 2, height: 1, atlasKey: 'couch-2wide' },      // comfortable coaching couch (primary)
+  { roomId: 'wendy', type: 'chair', col: 28, row: 23, width: 1, height: 1, atlasKey: 'chair-office' },      // coaching chair facing couch
+  { roomId: 'wendy', type: 'desk', col: 29, row: 21, width: 1, height: 1, atlasKey: 'desk-wood-2wide' },       // small secondary desk pushed to wall
+  { roomId: 'wendy', type: 'plant', col: 25, row: 21, width: 1, height: 1, atlasKey: 'plant-large' },      // plant 1 (warm feel)
+  { roomId: 'wendy', type: 'plant', col: 25, row: 25, width: 1, height: 1, atlasKey: 'plant-potted' },      // plant 2
+  { roomId: 'wendy', type: 'plant', col: 29, row: 25, width: 1, height: 1, atlasKey: 'plant-potted' },      // plant 3
 
   // Hallway decorations
-  { roomId: 'hallway', type: 'plant', col: 8, row: 9, width: 1, height: 1 },
-  { roomId: 'hallway', type: 'water-cooler', col: 15, row: 9, width: 1, height: 1 },
-  { roomId: 'hallway', type: 'plant', col: 23, row: 9, width: 1, height: 1 },
-  { roomId: 'hallway', type: 'plant', col: 8, row: 27, width: 1, height: 1 },
-  { roomId: 'hallway', type: 'plant', col: 23, row: 27, width: 1, height: 1 },
+  { roomId: 'hallway', type: 'plant', col: 8, row: 9, width: 1, height: 1, atlasKey: 'plant-potted' },
+  { roomId: 'hallway', type: 'water-cooler', col: 15, row: 9, width: 1, height: 1, atlasKey: 'water-cooler' },
+  { roomId: 'hallway', type: 'plant', col: 23, row: 9, width: 1, height: 1, atlasKey: 'plant-potted' },
+  { roomId: 'hallway', type: 'plant', col: 8, row: 27, width: 1, height: 1, atlasKey: 'plant-potted' },
+  { roomId: 'hallway', type: 'plant', col: 23, row: 27, width: 1, height: 1, atlasKey: 'plant-potted' },
 
   // Recreation area (open-plan break area below War Room, cols 10-21, rows 23-26)
-  { roomId: 'hallway', type: 'water-cooler', col: 10, row: 23, width: 1, height: 1 },
-  { roomId: 'hallway', type: 'table', col: 14, row: 24, width: 3, height: 1 },  // ping pong table
-  { roomId: 'hallway', type: 'couch', col: 18, row: 25, width: 3, height: 1 },
-  { roomId: 'hallway', type: 'plant', col: 11, row: 26, width: 1, height: 1 },
-  { roomId: 'hallway', type: 'plant', col: 20, row: 23, width: 1, height: 1 },
+  { roomId: 'hallway', type: 'water-cooler', col: 10, row: 23, width: 1, height: 1, atlasKey: 'water-cooler' },
+  { roomId: 'hallway', type: 'table', col: 14, row: 24, width: 3, height: 1, atlasKey: 'coffee-table' },  // rec area table
+  { roomId: 'hallway', type: 'couch', col: 18, row: 25, width: 3, height: 1, atlasKey: 'couch-2wide' },
+  { roomId: 'hallway', type: 'plant', col: 11, row: 26, width: 1, height: 1, atlasKey: 'plant-large' },
+  { roomId: 'hallway', type: 'plant', col: 20, row: 23, width: 1, height: 1, atlasKey: 'plant-potted' },
 ];
 
 // -- War Room Seats -----------------------------------------------------------
@@ -349,7 +356,7 @@ export const WAR_ROOM_SEATS: Record<string, TileCoord> = {
 
 /**
  * Personality decoration positioned within a room.
- * Keys match existing DECORATION_ATLAS or ENVIRONMENT_ATLAS sprite keys.
+ * Keys match LIMEZU_ATLAS sprite keys for multi-sheet rendering.
  */
 export interface DecorationItem {
   roomId: string;
@@ -369,40 +376,42 @@ export interface DecorationItem {
  * Wendy:  Motivational artwork, extra plants, cozy items
  */
 export const DECORATIONS: DecorationItem[] = [
-  // BILLY: CEO decor -- framed award + monitor on desk
-  { roomId: 'billy', key: 'artwork', col: 10, row: 3 },       // framed award on wall
-  { roomId: 'billy', key: 'monitor', col: 13, row: 3 },       // monitor on desk
-  { roomId: 'billy', key: 'plant', col: 14, row: 3 },         // small desk plant
+  // BILLY: CEO decor -- framed award + Film Studio props
+  { roomId: 'billy', key: 'billy-award', col: 10, row: 3 },      // framed award on wall
+  { roomId: 'billy', key: 'plant-potted', col: 14, row: 3 },     // small desk plant
+  { roomId: 'billy', key: 'billy-clapboard', col: 14, row: 7 },  // Film Studio clapboard
+  { roomId: 'billy', key: 'film-reel', col: 10, row: 7 },        // Film Studio film reel
 
   // Patrik (CFO): financial charts + monitor showing numbers
-  { roomId: 'patrik', key: 'patrik-chart', col: 22, row: 3 }, // financial chart on wall
-  { roomId: 'patrik', key: 'patrik-monitor', col: 21, row: 3 }, // monitor with numbers on desk
-  { roomId: 'patrik', key: 'filing-cabinet', col: 18, row: 3 }, // filing cabinet (financial records)
+  { roomId: 'patrik', key: 'patrik-chart', col: 22, row: 3 },    // financial chart on wall
+  { roomId: 'patrik', key: 'monitor', col: 21, row: 3 },         // monitor with numbers on desk
+  { roomId: 'patrik', key: 'filing-cabinet', col: 18, row: 3 },  // filing cabinet (financial records)
 
-  // Sandra (Line Producer): production schedule + clipboard
+  // Sandra (Line Producer): production schedule + whiteboard
   { roomId: 'sandra', key: 'sandra-schedule', col: 2, row: 12 }, // production schedule on wall
-  { roomId: 'sandra', key: 'whiteboard', col: 5, row: 12 },      // scheduling whiteboard
-  { roomId: 'sandra', key: 'post-it', col: 6, row: 13 },         // call sheet pinned up
+  { roomId: 'sandra', key: 'whiteboard', col: 5, row: 12 },      // scheduling whiteboard (conf whiteboard atlas key)
+  { roomId: 'sandra', key: 'postit-note', col: 6, row: 13 },     // call sheet pinned up
 
   // Marcos (Lawyer): law books + legal documents
   { roomId: 'marcos', key: 'marcos-lawbooks', col: 29, row: 12 }, // law books on shelf
   { roomId: 'marcos', key: 'filing-cabinet', col: 29, row: 14 }, // legal document filing
 
-  // Isaac (Head of Development): script stacks + corkboard
-  { roomId: 'isaac', key: 'isaac-scripts', col: 2, row: 21 },   // script stacks
-  { roomId: 'isaac', key: 'isaac-corkboard', col: 5, row: 21 }, // corkboard with project notes
-  { roomId: 'isaac', key: 'post-it', col: 6, row: 22 },         // development notes
+  // Isaac (Head of Development): script stacks + corkboard + Film Studio props
+  { roomId: 'isaac', key: 'isaac-scripts', col: 2, row: 21 },    // script stacks
+  { roomId: 'isaac', key: 'isaac-corkboard', col: 5, row: 21 },  // corkboard with project notes
+  { roomId: 'isaac', key: 'clapboard', col: 6, row: 22 },        // Film Studio clapboard
+  { roomId: 'isaac', key: 'camera', col: 2, row: 25 },           // Film Studio camera
 
   // Wendy (Performance Coach): motivational artwork + cozy items
-  { roomId: 'wendy', key: 'artwork', col: 27, row: 21 },         // motivational artwork on wall
-  { roomId: 'wendy', key: 'wendy-cushion', col: 28, row: 22 },   // comfort cushion near couch
+  { roomId: 'wendy', key: 'wendy-motivational', col: 27, row: 21 }, // motivational artwork on wall
+  { roomId: 'wendy', key: 'cushion', col: 28, row: 22 },            // comfort cushion near couch
 
   // ── Personal Touches (1-2 per office) ─────────────────────────────────────
   // BILLY: coffee mug + pen holder on desk
   { roomId: 'billy', key: 'coffee-mug', col: 11, row: 3 },
   { roomId: 'billy', key: 'pen-holder', col: 12, row: 3 },
   // Patrik: calculator + small photo frame
-  { roomId: 'patrik', key: 'calculator', col: 20, row: 3 },
+  { roomId: 'patrik', key: 'patrik-calculator', col: 20, row: 3 },
   { roomId: 'patrik', key: 'photo-frame', col: 18, row: 5 },
   // Sandra: coffee mug on desk + desk plant
   { roomId: 'sandra', key: 'coffee-mug', col: 5, row: 13 },
@@ -454,6 +463,25 @@ export const ROOM_RUGS: RoomRug[] = [
   // Wendy: muted pink rug
   { roomId: 'wendy', col: 26, row: 23, w: 2, h: 2, color: 'rgba(236, 72, 153, 0.12)', borderColor: 'rgba(236, 72, 153, 0.25)' },
 ];
+
+// -- Recreation Area Bounds ---------------------------------------------------
+
+/** Rec area tile bounds for floor type identification (open-plan, no room walls) */
+export const REC_AREA_BOUNDS = {
+  minCol: 10, maxCol: 21,
+  minRow: 23, maxRow: 26,
+} as const;
+
+/**
+ * Returns true if the tile is within the recreation area (open-plan break area
+ * below War Room south wall, cols 10-21, rows 23-26).
+ */
+export function isRecAreaTile(col: number, row: number): boolean {
+  return (
+    col >= REC_AREA_BOUNDS.minCol && col <= REC_AREA_BOUNDS.maxCol &&
+    row >= REC_AREA_BOUNDS.minRow && row <= REC_AREA_BOUNDS.maxRow
+  );
+}
 
 // -- Room Lookup --------------------------------------------------------------
 
