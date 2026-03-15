@@ -23,9 +23,11 @@
 import { TileType, TILE_SIZE, CHAR_SPRITE_W, CHAR_SPRITE_H, ZOOM_OVERVIEW_THRESHOLD } from './types';
 import type { Camera, Character } from './types';
 import type { FurnitureItem, DecorationItem } from './officeLayout';
-import { OFFICE_TILE_MAP, ROOMS, ROOM_RUGS, getRoomAtTile } from './officeLayout';
-import { PLACEHOLDER_COLORS, getCharacterSheet, getEnvironmentSheet } from './spriteSheet';
-import { CHARACTER_FRAMES, ENVIRONMENT_ATLAS, DECORATION_ATLAS } from './spriteAtlas';
+import { OFFICE_TILE_MAP, ROOMS, ROOM_RUGS, getRoomAtTile, isRecAreaTile } from './officeLayout';
+import { PLACEHOLDER_COLORS, getCharacterSheet, getEnvironmentSheetById } from './spriteSheet';
+import { CHARACTER_FRAMES } from './spriteAtlas';
+import { LIMEZU_ATLAS } from './limeZuAtlas';
+import type { SheetFrame } from './limeZuAtlas';
 import { buildRenderables } from './depthSort';
 import { renderGlowEffects } from './glowEffects';
 import { computeTimeOfDay, applyFloorTint } from './timeOfDay';
@@ -50,7 +52,7 @@ export function renderFrame(
   ctx: CanvasRenderingContext2D,
   camera: Camera,
   characters: Character[],
-  activeRoomId: string | null,
+  _activeRoomId: string | null,
   canvasWidth: number,
   canvasHeight: number,
   agentStatuses: Record<string, string>,
@@ -77,8 +79,6 @@ export function renderFrame(
   const minRow = Math.max(0, Math.floor(worldTop / TILE_SIZE));
   const maxRow = Math.min(mapRows - 1, Math.floor(worldBottom / TILE_SIZE));
 
-  const envSheet = getEnvironmentSheet();
-
   // Helper: convert world coordinates to screen coordinates (for UI overlays)
   function worldToScreen(worldX: number, worldY: number): { x: number; y: number } {
     return { x: worldX * zoom + tx, y: worldY * zoom + ty };
@@ -104,17 +104,9 @@ export function renderFrame(
       const x = col * TILE_SIZE;
       const y = row * TILE_SIZE;
 
-      if (envSheet) {
-        const atlasKey = getTileAtlasKey(tile, col, row);
-        const frame = ENVIRONMENT_ATLAS[atlasKey];
-        if (frame) {
-          ctx.drawImage(
-            envSheet,
-            frame.x, frame.y, frame.w, frame.h,
-            x, y, TILE_SIZE, TILE_SIZE,
-          );
-          continue;
-        }
+      const atlasKey = getTileAtlasKey(tile, col, row);
+      if (drawLimeZuTile(ctx, atlasKey, x, y)) {
+        continue;
       }
 
       // Fallback: colored rectangles
@@ -161,8 +153,8 @@ export function renderFrame(
   const renderables = buildRenderables(
     characters,
     (rCtx, ch) => renderCharacterWorld(rCtx, ch, zoom, agentStatuses),
-    (rCtx, item) => renderFurnitureItemWorld(rCtx, item, envSheet),
-    (rCtx, dec) => renderDecorationWorld(rCtx, dec, envSheet),
+    (rCtx, item) => renderFurnitureItemWorld(rCtx, item),
+    (rCtx, dec) => renderDecorationWorld(rCtx, dec),
   );
   for (const r of renderables) {
     r.draw(ctx);
@@ -193,13 +185,17 @@ export function renderFrame(
 function getTileAtlasKey(tile: TileType, col: number, row: number): string {
   switch (tile) {
     case TileType.WALL:
-      return 'wall-top';
+      return 'wall-3d-front';
     case TileType.DOOR:
       return 'door';
     case TileType.FLOOR: {
       const room = getRoomAtTile(col, row);
       if (room?.id === 'war-room') return 'floor-warroom';
-      if (!room) return 'floor-hallway';
+      if (!room) {
+        // Check if in rec area (open-plan break area below War Room)
+        if (isRecAreaTile(col, row)) return 'floor-rec';
+        return 'floor-hallway';
+      }
       return 'floor-office';
     }
     default:
@@ -226,17 +222,67 @@ function getTileColor(tile: TileType, col: number, row: number): string {
   }
 }
 
-// ── 3/4 Wall Rendering ─────────────────────────────────────────────────────
-
-/** Wall strip colors */
-const WALL_COLOR_OFFICE = '#d4c8a8';   // cream/beige for office walls
-const WALL_COLOR_WAR_ROOM = '#6b7280'; // slate gray for War Room walls
-const WALL_SHADOW = 'rgba(0, 0, 0, 0.15)';
+// ── LimeZu Tile Drawing Helper ──────────────────────────────────────────────
 
 /**
- * Renders 3/4 perspective wall strips by checking tile neighbors.
- * North walls: 3px colored strip at bottom of wall tile + 2px shadow on floor below.
- * East/west walls: 2px colored strip on the inner edge facing the room.
+ * Draws a LimeZu tile from the multi-sheet atlas at the given world position.
+ * Returns true if successfully drawn, false if sheet not loaded or key not found.
+ * @param ctx - Canvas rendering context
+ * @param atlasKey - Key in LIMEZU_ATLAS
+ * @param x - World X position
+ * @param y - World Y position
+ * @param w - Width in pixels (default: TILE_SIZE)
+ * @param h - Height in pixels (default: TILE_SIZE)
+ */
+export function drawLimeZuTile(
+  ctx: CanvasRenderingContext2D,
+  atlasKey: string,
+  x: number,
+  y: number,
+  w: number = TILE_SIZE,
+  h: number = TILE_SIZE,
+): boolean {
+  const sf = LIMEZU_ATLAS[atlasKey];
+  if (!sf) return false;
+  const sheet = getEnvironmentSheetById(sf.sheetId);
+  if (!sheet) return false;
+  ctx.drawImage(
+    sheet,
+    sf.frame.x, sf.frame.y, sf.frame.w, sf.frame.h,
+    x, y, w, h,
+  );
+  return true;
+}
+
+/**
+ * Draws a LimeZu tile from a SheetFrame directly (bypasses atlas lookup).
+ * Returns true if successfully drawn, false if sheet not loaded.
+ */
+function drawSheetFrame(
+  ctx: CanvasRenderingContext2D,
+  sf: SheetFrame,
+  x: number,
+  y: number,
+  w: number = TILE_SIZE,
+  h: number = TILE_SIZE,
+): boolean {
+  const sheet = getEnvironmentSheetById(sf.sheetId);
+  if (!sheet) return false;
+  ctx.drawImage(
+    sheet,
+    sf.frame.x, sf.frame.y, sf.frame.w, sf.frame.h,
+    x, y, w, h,
+  );
+  return true;
+}
+
+// ── 3/4 Wall Rendering (LimeZu 3D Wall Tiles) ──────────────────────────────
+
+/**
+ * Renders 3D LimeZu wall tiles by checking tile neighbors.
+ * North walls: Full 16x16 wall-3d-front tile + floor shadow tile below.
+ * East/west walls: Side wall tiles (wall-3d-side-l / wall-3d-side-r).
+ * Corners: Dedicated corner tiles where north + side walls meet.
  */
 function renderWalls(
   ctx: CanvasRenderingContext2D,
@@ -255,169 +301,91 @@ function renderWalls(
       const tile = tileRow[col];
       if (tile !== TileType.WALL) continue;
 
-      // Check south neighbor — north wall face (visible from below)
-      if (row + 1 < mapRows) {
-        const south = OFFICE_TILE_MAP[row + 1]![col];
-        if (south === TileType.FLOOR || south === TileType.DOOR) {
-          const wallColor = getWallColor(col, row + 1);
-          // 3px strip at bottom of wall tile
-          ctx.fillStyle = wallColor;
-          ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE + TILE_SIZE - 3, TILE_SIZE, 3);
-          // 2px shadow on floor tile below
-          ctx.fillStyle = WALL_SHADOW;
-          ctx.fillRect(col * TILE_SIZE, (row + 1) * TILE_SIZE, TILE_SIZE, 2);
-        }
-      }
+      const x = col * TILE_SIZE;
+      const y = row * TILE_SIZE;
 
-      // Check west neighbor — east wall face (left edge visible from room to the left)
-      if (col - 1 >= 0) {
-        const west = OFFICE_TILE_MAP[row]![col - 1];
-        if (west === TileType.FLOOR || west === TileType.DOOR) {
-          ctx.fillStyle = getWallColor(col - 1, row);
-          ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE, 2, TILE_SIZE);
-        }
-      }
+      const hasSouthFloor = row + 1 < mapRows && isFloorOrDoor(OFFICE_TILE_MAP[row + 1]![col]!);
+      const hasWestFloor = col - 1 >= 0 && isFloorOrDoor(OFFICE_TILE_MAP[row]![col - 1]!);
+      const hasEastFloor = col + 1 < mapCols && isFloorOrDoor(OFFICE_TILE_MAP[row]![col + 1]!);
 
-      // Check east neighbor — west wall face (right edge visible from room to the right)
-      if (col + 1 < mapCols) {
-        const east = OFFICE_TILE_MAP[row]![col + 1];
-        if (east === TileType.FLOOR || east === TileType.DOOR) {
-          ctx.fillStyle = getWallColor(col + 1, row);
-          ctx.fillRect(col * TILE_SIZE + TILE_SIZE - 2, row * TILE_SIZE, 2, TILE_SIZE);
-        }
+      // Determine wall tile type based on neighbors
+      if (hasSouthFloor && hasWestFloor) {
+        // Corner: north + east wall face (left side visible)
+        drawLimeZuTile(ctx, 'wall-3d-corner-tl', x, y);
+      } else if (hasSouthFloor && hasEastFloor) {
+        // Corner: north + west wall face (right side visible)
+        drawLimeZuTile(ctx, 'wall-3d-corner-tr', x, y);
+      } else if (hasSouthFloor) {
+        // North wall face: front-facing 3D tile
+        drawLimeZuTile(ctx, 'wall-3d-front', x, y);
+        // Floor shadow on tile below
+        drawLimeZuTile(ctx, 'shadow-top', x, (row + 1) * TILE_SIZE);
+      } else if (hasWestFloor) {
+        // East wall face (left edge visible from room to the left)
+        drawLimeZuTile(ctx, 'wall-3d-side-l', x, y);
+      } else if (hasEastFloor) {
+        // West wall face (right edge visible from room to the right)
+        drawLimeZuTile(ctx, 'wall-3d-side-r', x, y);
+      } else {
+        // Wall tile not adjacent to any floor -- draw top face
+        drawLimeZuTile(ctx, 'wall-3d-top', x, y);
       }
     }
   }
 }
 
-/**
- * Determines wall strip color based on which room the adjacent floor tile belongs to.
- * War Room floors -> slate gray; all others (offices, corridors) -> cream.
- */
-function getWallColor(floorCol: number, floorRow: number): string {
-  const room = getRoomAtTile(floorCol, floorRow);
-  if (room?.id === 'war-room') return WALL_COLOR_WAR_ROOM;
-  return WALL_COLOR_OFFICE;
+/** Returns true if tile is FLOOR or DOOR (walkable neighbor for wall face detection). */
+function isFloorOrDoor(tile: TileType): boolean {
+  return tile === TileType.FLOOR || tile === TileType.DOOR;
 }
 
 // ── Individual Item Rendering (for Y-sort) ──────────────────────────────────
 
 /**
  * Renders a single furniture item at world coordinates.
+ * Uses atlasKey for LimeZu multi-sheet rendering with fallback to colored rectangles.
  * Called by buildRenderables via callback.
  */
 function renderFurnitureItemWorld(
   ctx: CanvasRenderingContext2D,
   item: FurnitureItem,
-  envSheet: HTMLImageElement | null,
 ): void {
   const x = item.col * TILE_SIZE;
   const y = item.row * TILE_SIZE;
+  const w = item.width * TILE_SIZE;
+  const h = item.height * TILE_SIZE;
 
-  if (envSheet) {
-    renderFurnitureSprite(ctx, envSheet, item.type, x, y, item.width, item.height);
-  } else {
-    // Fallback: brown rectangles (world coordinates)
-    ctx.fillStyle = item.type === 'table' ? '#4a3528' : '#5c3d2e';
-    ctx.fillRect(x, y, item.width * TILE_SIZE, item.height * TILE_SIZE);
+  // Primary: atlasKey-based LimeZu rendering
+  if (item.atlasKey) {
+    const sf = LIMEZU_ATLAS[item.atlasKey];
+    if (sf && drawSheetFrame(ctx, sf, x, y, w, h)) {
+      return;
+    }
   }
+
+  // Fallback: brown rectangles (world coordinates)
+  ctx.fillStyle = item.type === 'table' ? '#4a3528' : '#5c3d2e';
+  ctx.fillRect(x, y, w, h);
 }
 
 /**
  * Renders a single decoration item at world coordinates.
+ * Uses LIMEZU_ATLAS for multi-sheet rendering.
  * Called by buildRenderables via callback.
  */
 function renderDecorationWorld(
   ctx: CanvasRenderingContext2D,
   dec: DecorationItem,
-  envSheet: HTMLImageElement | null,
 ): void {
-  if (!envSheet) return;
-  const frame = DECORATION_ATLAS[dec.key] ?? ENVIRONMENT_ATLAS[dec.key];
-  if (!frame) return;
   const x = dec.col * TILE_SIZE;
   const y = dec.row * TILE_SIZE;
-  ctx.drawImage(envSheet, frame.x, frame.y, frame.w, frame.h, x, y, TILE_SIZE, TILE_SIZE);
-}
 
-function renderFurnitureSprite(
-  ctx: CanvasRenderingContext2D,
-  sheet: HTMLImageElement,
-  type: string,
-  x: number,
-  y: number,
-  widthTiles: number,
-  heightTiles: number,
-): void {
-  switch (type) {
-    case 'desk': {
-      const leftFrame = ENVIRONMENT_ATLAS['desk-left'];
-      const rightFrame = ENVIRONMENT_ATLAS['desk-right'];
-      if (leftFrame && rightFrame && widthTiles >= 2) {
-        for (let t = 0; t < widthTiles; t++) {
-          const frame = t < widthTiles - 1 ? leftFrame : rightFrame;
-          ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, x + t * TILE_SIZE, y, TILE_SIZE, TILE_SIZE);
-        }
-      } else if (leftFrame) {
-        for (let t = 0; t < widthTiles; t++) {
-          ctx.drawImage(sheet, leftFrame.x, leftFrame.y, leftFrame.w, leftFrame.h, x + t * TILE_SIZE, y, TILE_SIZE, TILE_SIZE);
-        }
-      }
-      break;
-    }
-    case 'chair': {
-      const frame = ENVIRONMENT_ATLAS['chair'];
-      if (frame) ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, x, y, TILE_SIZE, TILE_SIZE);
-      break;
-    }
-    case 'bookshelf': {
-      const topFrame = ENVIRONMENT_ATLAS['bookshelf-top'];
-      const bottomFrame = ENVIRONMENT_ATLAS['bookshelf-bottom'];
-      if (topFrame) ctx.drawImage(sheet, topFrame.x, topFrame.y, topFrame.w, topFrame.h, x, y, TILE_SIZE, TILE_SIZE);
-      if (bottomFrame && heightTiles >= 2) {
-        ctx.drawImage(sheet, bottomFrame.x, bottomFrame.y, bottomFrame.w, bottomFrame.h, x, y + TILE_SIZE, TILE_SIZE, TILE_SIZE);
-      }
-      break;
-    }
-    case 'table': {
-      const frame = ENVIRONMENT_ATLAS['table-segment'];
-      if (frame) {
-        for (let ty = 0; ty < heightTiles; ty++) {
-          for (let tx = 0; tx < widthTiles; tx++) {
-            ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, x + tx * TILE_SIZE, y + ty * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-          }
-        }
-      }
-      break;
-    }
-    case 'plant': {
-      const frame = ENVIRONMENT_ATLAS['plant'];
-      if (frame) ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, x, y, TILE_SIZE, TILE_SIZE);
-      break;
-    }
-    case 'water-cooler': {
-      const frame = ENVIRONMENT_ATLAS['water-cooler'];
-      if (frame) ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, x, y, TILE_SIZE, TILE_SIZE);
-      break;
-    }
-    case 'artwork': {
-      const frame = ENVIRONMENT_ATLAS['artwork'];
-      if (frame) ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, x, y, TILE_SIZE, TILE_SIZE);
-      break;
-    }
-    case 'couch': {
-      // Render couch segments using table-segment atlas (fallback) or a dedicated couch sprite
-      const frame = ENVIRONMENT_ATLAS['couch'] ?? ENVIRONMENT_ATLAS['table-segment'];
-      if (frame) {
-        for (let t = 0; t < widthTiles; t++) {
-          ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, x + t * TILE_SIZE, y, TILE_SIZE, TILE_SIZE);
-        }
-      }
-      break;
-    }
-    default:
-      break;
+  // Primary: LimeZu atlas lookup
+  const sf = LIMEZU_ATLAS[dec.key];
+  if (sf) {
+    drawSheetFrame(ctx, sf, x, y, TILE_SIZE, TILE_SIZE);
   }
+  // No fallback for decorations -- they are optional visual detail
 }
 
 // ── Drop Zone Highlight ─────────────────────────────────────────────────────
@@ -432,7 +400,7 @@ export function renderDropZoneHighlight(
   tx: number,
   ty: number,
   canvasWidth: number,
-  canvasHeight: number,
+  _canvasHeight: number,
   dpr: number = 1,
 ): void {
   if (dragOverRoomId) {
@@ -648,18 +616,19 @@ function renderCharacterWorld(
   const x = ch.x;
   const y = ch.y;
 
-  // Foot-center anchor: sprite centered horizontally on tile, feet at tile bottom
-  const drawX = x - (CHAR_SPRITE_W - TILE_SIZE) / 2;  // x - 4
+  // Foot-center anchor: 32x32 sprite centered horizontally on 16x16 tile, feet at tile bottom
+  const drawX = x - (CHAR_SPRITE_W - TILE_SIZE) / 2;  // x - 8 (32x32 on 16x16 grid)
   const drawY = y - (CHAR_SPRITE_H - TILE_SIZE);       // y - 16
 
   // Drop shadow: dark ellipse at feet (draw before character so sprite overlaps it)
+  // Sized for 32x32 character sprites
   ctx.save();
   ctx.globalAlpha = 0.3;
   ctx.fillStyle = '#000000';
   ctx.beginPath();
   const shadowCx = x + TILE_SIZE / 2;       // center of tile
   const shadowCy = y + TILE_SIZE - 1;        // just above tile bottom
-  const shadowRx = TILE_SIZE * 0.4;          // horizontal radius
+  const shadowRx = TILE_SIZE * 0.5;          // horizontal radius (wider for 32x32 sprites)
   const shadowRy = TILE_SIZE * 0.15;         // vertical radius (flat ellipse)
   ctx.ellipse(shadowCx, shadowCy, shadowRx, shadowRy, 0, 0, Math.PI * 2);
   ctx.fill();
@@ -678,13 +647,13 @@ function renderCharacterWorld(
     if (frames && frames.length > 0) {
       const frameIdx = Math.min(ch.frame, frames.length - 1);
       const frame = frames[frameIdx]!;
-      // Draw 24x32 sprite at foot-center anchor position
+      // Draw 32x32 sprite at foot-center anchor position
       ctx.drawImage(sheet, frame.x, frame.y, frame.w, frame.h, drawX, drawY, CHAR_SPRITE_W, CHAR_SPRITE_H);
       return;
     }
   }
 
-  // Fallback: colored rectangle at 24x32 with foot-center anchor
+  // Fallback: colored rectangle at 32x32 with foot-center anchor
   const padX = CHAR_SPRITE_W * 0.1;
   const padY = CHAR_SPRITE_H * 0.1;
 
@@ -740,7 +709,7 @@ function renderStatusOverlays(
 
     if (status === 'needs-attention') {
       // Speech bubble above character head (screen coordinates)
-      // With 24x32 sprites, visual top is at ch.y - (CHAR_SPRITE_H - TILE_SIZE)
+      // With 32x32 sprites, visual top is at ch.y - (CHAR_SPRITE_H - TILE_SIZE)
       const charScreen = worldToScreen(ch.x + TILE_SIZE / 2, ch.y - (CHAR_SPRITE_H - TILE_SIZE));
       const cx = Math.floor(charScreen.x);
       const bubbleY = Math.floor(charScreen.y - 4 * zoom);
@@ -773,7 +742,7 @@ function renderStatusOverlays(
 
     if (status === 'thinking') {
       // Amber dots ("...") above character head (screen coordinates)
-      // With 24x32 sprites, visual top is at ch.y - (CHAR_SPRITE_H - TILE_SIZE)
+      // With 32x32 sprites, visual top is at ch.y - (CHAR_SPRITE_H - TILE_SIZE)
       const charScreen = worldToScreen(ch.x + TILE_SIZE / 2, ch.y - (CHAR_SPRITE_H - TILE_SIZE));
       const cx = Math.floor(charScreen.x);
       const dotsY = Math.floor(charScreen.y - 2 * zoom);

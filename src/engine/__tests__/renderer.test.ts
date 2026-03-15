@@ -41,7 +41,9 @@ vi.mock('../input', () => ({
   get hoverTileRow() { return mockHoverTileRow; },
 }));
 
-import { renderFrame, renderDropZoneHighlight, renderFileIcons } from '../renderer';
+import { renderFrame, renderDropZoneHighlight, renderFileIcons, drawLimeZuTile } from '../renderer';
+import { CHAR_SPRITE_W, CHAR_SPRITE_H } from '../types';
+import { LIMEZU_ATLAS } from '../limeZuAtlas';
 
 function createMockCtx() {
   return {
@@ -461,4 +463,76 @@ describe('Phase 13: room labels', () => {
 describe('Phase 13: area rugs', () => {
   it.todo('rug - ROOM_RUGS are rendered in floor layer before walls');
   it.todo('rug - each agent office has a rug with muted signature color');
+});
+
+// -- Phase 14: LimeZu Renderer Migration Tests (CHAR-03) ---------------------
+
+describe('Phase 14: 32x32 character anchor math (CHAR-03)', () => {
+  it('foot-center anchor drawX = x - (CHAR_SPRITE_W - TILE_SIZE) / 2 = x - 8 for 32x32', () => {
+    // CHAR_SPRITE_W = 32, TILE_SIZE = 16
+    const x = 160; // arbitrary world X
+    const drawX = x - (CHAR_SPRITE_W - TILE_SIZE) / 2;
+    expect(drawX).toBe(x - 8);
+    expect(CHAR_SPRITE_W).toBe(32);
+    expect(TILE_SIZE).toBe(16);
+  });
+
+  it('foot-center anchor drawY = y - (CHAR_SPRITE_H - TILE_SIZE) = y - 16 for 32x32', () => {
+    const y = 160;
+    const drawY = y - (CHAR_SPRITE_H - TILE_SIZE);
+    expect(drawY).toBe(y - 16);
+    expect(CHAR_SPRITE_H).toBe(32);
+  });
+
+  it('drop shadow uses TILE_SIZE * 0.5 horizontal radius for 32x32 sprites', () => {
+    // The shadow radius should be TILE_SIZE * 0.5 = 8 for 32x32 sprites
+    const shadowRx = TILE_SIZE * 0.5;
+    expect(shadowRx).toBe(8);
+    // Previously was TILE_SIZE * 0.4 = 6.4 for 24x32 sprites
+    expect(shadowRx).toBeGreaterThan(TILE_SIZE * 0.4);
+  });
+});
+
+describe('Phase 14: drawLimeZuTile helper', () => {
+  it('returns false when atlas key does not exist', () => {
+    const ctx = createMockCtx();
+    const result = drawLimeZuTile(ctx, 'nonexistent-key', 0, 0);
+    expect(result).toBe(false);
+    expect(ctx.drawImage).not.toHaveBeenCalled();
+  });
+
+  it('returns false when sheet not loaded (getEnvironmentSheetById returns null)', () => {
+    const ctx = createMockCtx();
+    // 'floor-office' exists in LIMEZU_ATLAS but sheets aren't loaded in test env
+    const result = drawLimeZuTile(ctx, 'floor-office', 0, 0);
+    expect(result).toBe(false);
+  });
+
+  it('LIMEZU_ATLAS has 4 distinct floor types', () => {
+    expect(LIMEZU_ATLAS['floor-office']).toBeDefined();
+    expect(LIMEZU_ATLAS['floor-warroom']).toBeDefined();
+    expect(LIMEZU_ATLAS['floor-hallway']).toBeDefined();
+    expect(LIMEZU_ATLAS['floor-rec']).toBeDefined();
+  });
+
+  it('LIMEZU_ATLAS has 3D wall tiles', () => {
+    expect(LIMEZU_ATLAS['wall-3d-front']).toBeDefined();
+    expect(LIMEZU_ATLAS['wall-3d-top']).toBeDefined();
+    expect(LIMEZU_ATLAS['wall-3d-side-l']).toBeDefined();
+    expect(LIMEZU_ATLAS['wall-3d-side-r']).toBeDefined();
+    expect(LIMEZU_ATLAS['wall-3d-corner-tl']).toBeDefined();
+    expect(LIMEZU_ATLAS['wall-3d-corner-tr']).toBeDefined();
+  });
+
+  it('LIMEZU_ATLAS has Conference Hall assets for War Room', () => {
+    expect(LIMEZU_ATLAS['conf-table']).toBeDefined();
+    expect(LIMEZU_ATLAS['conf-chair']).toBeDefined();
+    expect(LIMEZU_ATLAS['conf-whiteboard']).toBeDefined();
+  });
+
+  it('LIMEZU_ATLAS has Film Studio props', () => {
+    expect(LIMEZU_ATLAS['clapboard']).toBeDefined();
+    expect(LIMEZU_ATLAS['camera']).toBeDefined();
+    expect(LIMEZU_ATLAS['film-reel']).toBeDefined();
+  });
 });

@@ -55,8 +55,11 @@ export function buildRenderables(
 
   for (const ch of characters) {
     // Character foot is at bottom of their occupied tile (ch.y + TILE_SIZE).
-    // baseRow uses foot position for Y-sort. The 24x32 sprite extends 16px
+    // baseRow uses foot position for Y-sort. The 32x32 sprite extends 16px
     // above ch.y but sorting is by feet, not head — correct for JRPG 3/4 depth.
+    // 32x32 compatible: ch.y is the tile origin (top of occupied tile), not
+    // sprite origin. The taller sprite draws above ch.y but foot position
+    // (ch.y + TILE_SIZE) is unchanged, so baseRow calculation is correct.
     const footRow = ch.y / TILE_SIZE;
     list.push({
       baseRow: footRow + 1, // bottom edge (foot) is one tile below ch.y origin
