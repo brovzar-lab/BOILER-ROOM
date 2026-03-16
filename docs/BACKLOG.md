@@ -67,38 +67,72 @@ Show LimeZu emote sprites above character heads: thinking emote while API is str
 - **Files:** `renderer.ts` (bubble rendering layer), `limeZuAtlas.ts` (emote sprites mapped)
 - **Atlas ready:** `emote-thinking`, `emote-exclamation`, `speech-bubble-left`, `speech-bubble-right`
 
-#### AI-01: Agent-to-Agent Collaboration
-Agents can visit each other's offices to share context and collaborate autonomously. Example: Diana (CFO) walks to Marcos (Lawyer) office to discuss a contract's financial implications, then reports back.
-- **Inspired by:** pixel-agents showing agents interacting in the office space
+#### AI-01: Agent-to-Agent Collaboration Chains
+Agents autonomously visit each other's offices to collaborate on complex tasks that span multiple domains. The user kicks it off by giving one agent a task, and that agent figures out who else needs to be involved, walks to their office, shares context, and continues the chain until the work is done.
+
+**The screenplay workflow (flagship use case):**
+1. User drops a screenplay PDF on Isaac's (Dev) desk and says "Evaluate this for production"
+2. Isaac reads it, forms creative notes, then walks to Sandra's (Producer) office to discuss budget feasibility
+3. Sandra runs preliminary budget numbers, flags tax incentive questions, walks to Patrik's (CFO) office
+4. Patrik models the financing, identifies EFICINE/Decreto 2026 angles, walks to Marcos (Lawyer) to check rights/chain of title
+5. Marcos reviews legal exposure, walks to Wendy (Coach) for packaging/talent strategy
+6. Each agent builds on what the previous agents found — context accumulates through the chain
+7. Final summary delivered back to BILLY with each agent's contribution attributed
+
+**Other example chains:**
+- "Marcos, review this distribution agreement" → Marcos flags financial terms → walks to Patrik for P&L impact → walks to Sandra for production timeline feasibility
+- "Patrik, stress-test this fund model" → Patrik runs numbers → walks to Marcos for legal structure validation → walks to Sandra for deal pipeline reality check
+
+- **Inspired by:** pixel-agents showing agents interacting + the real workflow of a production company where specialists consult each other
 - **Complexity:** High
-- **Key decisions needed:**
-  - How collaboration chains are initiated (user triggers vs agent suggests)
-  - How context is shared between agents during a visit
-  - Visual representation: agent physically walks to other agent's office
-  - Conversation stored as sub-thread within the deal
+- **Key design decisions:**
+  - User gives initial instruction to one agent, agent decides the chain (who to visit and why)
+  - Each agent produces a handoff summary when visiting the next agent (not raw conversation dump)
+  - Chain context accumulates: each agent sees what previous agents concluded
+  - All conversations stored as linked sub-threads within the active deal
+  - Visual: agents physically walk between offices on the canvas as the chain progresses
+  - Each agent's contribution is attributed in the final report
 
 #### AI-02: User-Approved Agent Chaining
-When agents collaborate, each "hop" (Agent A visits Agent B) requires user approval before proceeding. Prevents runaway API costs and keeps user in control.
+Each "hop" in a collaboration chain (Agent A decides to visit Agent B) requires user approval before proceeding. Prevents runaway API costs, keeps user in control, and lets user redirect the chain if needed.
 - **Depends on:** AI-01
 - **Complexity:** Medium
-- **UI:** Approval dialog showing: who wants to visit whom, why, estimated tokens
+- **UI:** Approval dialog showing:
+  - Who wants to visit whom and why
+  - What they plan to discuss / share
+  - Estimated tokens for the next hop
+  - Option to approve, skip this agent, redirect to a different agent, or stop the chain
+- **User can also:** inject additional instructions before approving ("tell Patrik to focus on the Decreto 2026 angle")
 
 #### AI-03: Live View / Background Summary of Agent Collaboration
-User can either watch agent collaboration live (see the conversation as it streams between agents) or let it run in background and get a summary when done.
+User can either watch the collaboration chain live (see agents walking between offices, conversations streaming in real-time) or let it run in background and get a consolidated summary when the chain completes.
 - **Depends on:** AI-01, AI-02
 - **Complexity:** Medium-High
-- **UI:** Split view or notification badge when collaboration completes
+- **Live view:** Camera follows the active agent as they walk to the next office, conversation streams in a special collaboration panel
+- **Background mode:** Notification badge appears when chain completes, summary shows each agent's contribution in order
+- **UI:** Toggle between live/background at any point during the chain
 
 #### AI-04: Concurrent BILLY Activity During Collaboration
-BILLY can continue chatting with other agents or working while an agent collaboration chain runs in the background. Requires decoupling the streaming pipeline from BILLY's active conversation.
+BILLY can continue chatting with other agents or working while a collaboration chain runs in the background. Requires decoupling the streaming pipeline so multiple conversations can run simultaneously.
 - **Depends on:** AI-01, AI-03
 - **Complexity:** High
+- **Example:** BILLY drops a screenplay on Isaac, approves the chain, then walks to Wendy's office to discuss a separate coaching question while the screenplay evaluation chain runs autonomously
 
 #### AI-05: Auto Deal Creation from Agent Instructions
-Agents can suggest or auto-create a new deal when collaboration context warrants it (e.g., "This Netflix negotiation should be its own deal").
+Agents can suggest or auto-create a new deal when collaboration context warrants it. Example: during a screenplay evaluation chain, Isaac says "This project needs its own deal — it's big enough to track separately" and a new deal is created with all the chain's context already scoped to it.
 - **Depends on:** AI-01
 - **Complexity:** Medium
 - **Files:** `parseDealAction.ts` (already started), `dealStore.ts`
+
+#### AI-06: Chain Templates
+Pre-built collaboration chain templates for common workflows that skip the "agent decides who to visit" step:
+- **Screenplay Evaluation:** Isaac → Sandra → Patrik → Marcos → Wendy
+- **Deal Review:** Marcos → Patrik → Sandra
+- **Fund Structuring:** Patrik → Marcos → Sandra
+- **Project Packaging:** Wendy → Sandra → Patrik
+- User can create custom templates from successful past chains
+- **Depends on:** AI-01
+- **Complexity:** Medium
 
 ---
 
