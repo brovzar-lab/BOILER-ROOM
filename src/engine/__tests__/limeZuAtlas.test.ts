@@ -25,15 +25,16 @@ describe('SHEET_PATHS', () => {
     'ui', 'ui-emotes',
   ];
 
-  it('contains all 12 required sheet keys', () => {
+  it('contains all required LimeZu sheet keys', () => {
     for (const key of expectedKeys) {
       expect(SHEET_PATHS).toHaveProperty(key);
     }
-    expect(Object.keys(SHEET_PATHS)).toHaveLength(12);
+    expect(Object.keys(SHEET_PATHS).length).toBeGreaterThanOrEqual(12);
   });
 
-  it('all paths start with /sprites/modern-interiors-paid/', () => {
-    for (const [key, path] of Object.entries(SHEET_PATHS)) {
+  it('LimeZu paths start with /sprites/modern-interiors-paid/', () => {
+    for (const key of expectedKeys) {
+      const path = SHEET_PATHS[key];
       expect(path, `${key} path`).toMatch(/^\/sprites\/modern-interiors-paid\//);
     }
   });

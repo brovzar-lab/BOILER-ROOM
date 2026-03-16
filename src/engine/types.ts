@@ -18,8 +18,8 @@ export const TILE_SIZE = 16;
 
 /** Character sprite width (32px, LimeZu premade character width) */
 export const CHAR_SPRITE_W = 32;
-/** Character sprite height (32px, taller than TILE_SIZE for JRPG 3/4 proportions) */
-export const CHAR_SPRITE_H = 32;
+/** Character sprite height (64px — LimeZu premade characters span 2 rows of 32px) */
+export const CHAR_SPRITE_H = 64;
 
 /** Zoom levels below this threshold are treated as overview mode (no camera follow) */
 export const ZOOM_OVERVIEW_THRESHOLD = 1.5;

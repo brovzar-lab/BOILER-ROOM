@@ -23,7 +23,7 @@
 import { TileType, TILE_SIZE, CHAR_SPRITE_W, CHAR_SPRITE_H, ZOOM_OVERVIEW_THRESHOLD } from './types';
 import type { Camera, Character } from './types';
 import type { FurnitureItem, DecorationItem } from './officeLayout';
-import { OFFICE_TILE_MAP, ROOMS, ROOM_RUGS, getRoomAtTile } from './officeLayout';
+import { OFFICE_TILE_MAP, ROOMS, ROOM_RUGS, getRoomAtTile, getTileStyle } from './officeLayout';
 import { PLACEHOLDER_COLORS, getCharacterSheet, getEnvironmentSheetById, getCachedSprite } from './spriteSheet';
 import { CHARACTER_FRAMES } from './spriteAtlas';
 import { LIMEZU_ATLAS } from './limeZuAtlas';
@@ -184,6 +184,10 @@ export function renderFrame(
 // ── Tile Atlas Key Mapping ───────────────────────────────────────────────────
 
 function getTileAtlasKey(tile: TileType, col: number, row: number): string {
+  // Check for editor-painted custom style first
+  const custom = getTileStyle(col, row);
+  if (custom) return custom;
+
   switch (tile) {
     case TileType.WALL:
       return 'wall-3d-front';

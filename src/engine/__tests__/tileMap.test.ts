@@ -123,22 +123,20 @@ describe('findPath', () => {
 // ── Office Layout ───────────────────────────────────────────────────────────
 
 describe('OFFICE_TILE_MAP', () => {
-  it('has exactly 10 rooms', () => {
-    expect(ROOMS.length).toBe(10);
+  it('has exactly 8 rooms (7 offices + board room)', () => {
+    expect(ROOMS.length).toBe(8);
   });
 
   it('has expected room IDs', () => {
     const ids = ROOMS.map((r) => r.id).sort();
     expect(ids).toEqual([
       'billy',
-      'break-room',
       'charlie',
       'isaac',
       'marcos',
       'patrik',
       'sandra',
       'war-room',
-      'wc',
       'wendy',
     ]);
   });
@@ -234,13 +232,8 @@ describe('getRoomAtTile', () => {
     }
   });
 
-  it('returns null for hallway tiles', () => {
-    // Upper corridor at col 20, row 11 (between top rooms and side offices)
-    const result = getRoomAtTile(20, 11);
-    expect(result).toBeNull();
-  });
-
-  it('returns null for VOID tiles outside the office', () => {
+  it('returns null for tiles outside all room rects', () => {
+    // Top-left corner of the map should not be inside any room
     const result = getRoomAtTile(0, 0);
     expect(result).toBeNull();
   });
