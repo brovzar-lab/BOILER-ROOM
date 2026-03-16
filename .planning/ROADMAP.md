@@ -41,7 +41,7 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 
 ## Phases
 
-- [ ] **Phase 14: LimeZu Art Integration** - Professional pixel art replaces all programmatic sprites (characters, environment, UI)
+- [x] **Phase 14: LimeZu Art Integration** - Professional pixel art replaces all programmatic sprites (characters, environment, UI) (completed 2026-03-16)
 - [ ] **Phase 15: Furniture Collision** - Characters navigate around furniture with collision-aware pathfinding
 - [ ] **Phase 16: Idle Behaviors** - Agents autonomously work, stretch, and visit water cooler when not engaged
 - [ ] **Phase 17: Agent-to-Agent Collaboration** - Agents visit each other, share context, and produce work with user approval
@@ -126,7 +126,7 @@ Plans:
 |-------|-----------|-------|--------|-----------|
 | 1-8 | v1.0 | 24/24 | Complete | 2026-03-14 |
 | 9-13 | v1.1 | 14/14 | Complete | 2026-03-14 |
-| 14. LimeZu Art Integration | 2/3 | In Progress|  | - |
+| 14. LimeZu Art Integration | 3/3 | Complete   | 2026-03-16 | - |
 | 15. Furniture Collision | v2.0 | 0/TBD | Not started | - |
 | 16. Idle Behaviors | v2.0 | 0/TBD | Not started | - |
 | 17. Agent Collaboration | v2.0 | 0/TBD | Not started | - |

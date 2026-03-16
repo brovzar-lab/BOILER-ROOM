@@ -26,8 +26,8 @@ Requirements for v2.0 Professional Art & Agent Autonomy. Each maps to roadmap ph
 
 ### Art — UI
 
-- [ ] **UI-06**: LimeZu thinking emotes integrated as agent status indicators on canvas
-- [ ] **UI-07**: LimeZu UI elements used for speech bubbles and status overlays
+- [x] **UI-06**: LimeZu thinking emotes integrated as agent status indicators on canvas
+- [x] **UI-07**: LimeZu UI elements used for speech bubbles and status overlays
 
 ### Collision
 
@@ -98,8 +98,8 @@ Deferred to future release.
 | ENV-12 | Phase 14 | Complete |
 | ENV-13 | Phase 14 | Complete |
 | ENV-14 | Phase 14 | Complete |
-| UI-06 | Phase 14 | Pending |
-| UI-07 | Phase 14 | Pending |
+| UI-06 | Phase 14 | Complete |
+| UI-07 | Phase 14 | Complete |
 | COLL-01 | Phase 15 | Pending |
 | COLL-02 | Phase 15 | Pending |
 | COLL-03 | Phase 15 | Pending |

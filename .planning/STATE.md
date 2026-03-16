@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Professional Art & Agent Autonomy
 status: executing
-stopped_at: Completed 14-02-PLAN.md
-last_updated: "2026-03-15T16:54:00Z"
-last_activity: 2026-03-15 — Completed 14-02 Renderer Migration
+stopped_at: Completed 14-03-PLAN.md (Phase 14 complete)
+last_updated: "2026-03-16T06:58:00Z"
+last_activity: 2026-03-16 — Completed 14-03 UI Overlays + Visual Verification (Phase 14 complete)
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
-  percent: 17
+  completed_plans: 3
+  percent: 25
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** Multi-perspective, context-aware AI advisory for complex production deals
-**Current focus:** Phase 14 — LimeZu Art Integration
+**Current focus:** Phase 14 complete — Phase 15 (Furniture Collision) next
 
 ## Current Position
 
-Phase: 14 of 17 (LimeZu Art Integration)
-Plan: 2 of 3 in current phase
-Status: Executing
-Last activity: 2026-03-15 — Completed 14-02 Renderer Migration
+Phase: 14 of 17 (LimeZu Art Integration) — COMPLETE
+Plan: 3 of 3 in current phase (all complete)
+Status: Phase complete
+Last activity: 2026-03-16 — Completed 14-03 UI Overlays + Visual Verification
 
-Progress: [██░░░░░░░░] 17% (v2.0)
+Progress: [███░░░░░░░] 25% (v2.0)
 
 ## Performance Metrics
 
@@ -58,6 +58,9 @@ Recent decisions affecting current work:
 - [14-02]: atlasKey on FurnitureItem for renderer sprite selection, type preserved for game logic
 - [14-02]: 3D wall tiles use neighbor-detection for front/side/corner variant selection
 - [14-02]: Drop shadow radius 0.5 (was 0.4) for 32x32 character sprites
+- [14-03]: Static emotes only — no animated emote cycling (deferred to v2.1)
+- [14-03]: Characters use 32x64 paired-row frames (even=head, odd=body) for correct LimeZu rendering
+- [14-03]: Walls use flat tiles + 3/4 depth strip overlay for 3D perspective
 
 ### Pending Todos
 
@@ -70,6 +73,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-15T16:54:00Z
-Stopped at: Completed 14-02-PLAN.md
-Resume file: .planning/phases/14-limezu-art-integration/14-02-SUMMARY.md
+Last session: 2026-03-16T06:58:00Z
+Stopped at: Completed 14-03-PLAN.md (Phase 14 complete)
+Resume file: .planning/phases/14-limezu-art-integration/14-03-SUMMARY.md
