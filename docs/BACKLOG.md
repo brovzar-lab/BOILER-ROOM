@@ -217,7 +217,20 @@ Remove unused `renderHeight` field from FurnitureItem — not used by depthSort.
 
 ---
 
-### P3 — Known Bugs
+### P3 — Someday / Future Vision
+
+#### MARKET-01: Asset Marketplace Room
+A dedicated room in the office where BILLY can browse, import, and manage visual assets (sprite packs, office themes, UI skins). BILLY walks to the Marketplace room, and the panel shows installed asset packs with activate/deactivate/remove controls. Assets are JSON files imported via file upload and stored in IndexedDB.
+- **Includes:** Theme swapping (wall/floor colors), UI skin swapping (CSS variable overrides), sprite pack management
+- **Architecture:** New `assetStore` (Zustand), `assetService` for applying themes/skins, `MarketplacePanel` component routed via `activeRoomId === 'marketplace'`, IndexedDB `assets` object store
+- **Why P3:** Single-user tool with one sprite pack (LimeZu) — no ecosystem of packs to browse yet. The 3x3 office grid is already full, adding an 11th room requires layout rethink. Higher-impact features (agent collaboration, idle behaviors) come first.
+- **When it makes sense:** If the app is productized for other users, or if multiple office themes/sprite packs become available to swap between
+- **Complexity:** Medium
+- **Previous plan exists:** Was fully designed but never executed (grid expansion, types, store, service, UI panel, keyboard shortcut 'K')
+
+---
+
+### P4 — Known Bugs
 
 #### BUG-01: War Room Agent Gathering Inconsistency
 War Room agent gathering animation may not always trigger. Pre-existing pathfinding edge case where some agents fail to find path to their war room seat.
