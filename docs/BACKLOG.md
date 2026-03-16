@@ -230,7 +230,47 @@ A dedicated room in the office where BILLY can browse, import, and manage visual
 
 ---
 
-### P4 — Known Bugs
+---
+
+### P4 — Technical Debt & Bugs
+
+#### AGENT-01: Charlie Persona Config
+Charlie (Designer) exists in the engine (character sprite, room, war room seat, officeStore) but has no AI persona configuration. Missing: `src/config/agents/charlie.ts` with system prompt, personality, domain expertise. Also excluded from `LeftPanel.tsx` Rooms tab (TODO at line 9) and `useWarRoom.ts` broadcast (only 5 agents).
+- **Impact:** Charlie's room is walkable but has no chat functionality
+- **Complexity:** Low
+- **Files:** New `src/config/agents/charlie.ts`, edit `LeftPanel.tsx`, `useWarRoom.ts`, `useChat.ts`
+
+#### EDITOR-01: Unimplemented Editor Tools
+Room Template and Grid Resize tools exist in `editorStore.ts` (tool types defined) but have zero implementation in `editorInput.ts`. No click/drag handlers, no UI feedback. Furniture placement is hardcoded to 1x1 desk type — no size/type selector.
+- **Severity:** Medium (editor is usable for basic painting but incomplete for layout design)
+- **Files:** `editorInput.ts`, `editorStore.ts`
+
+#### EDITOR-02: Tile Style Persistence
+Custom painted tile styles (`TILE_STYLES` map in `officeLayout.ts`) are lost on page reload. `layoutSerializer.ts` serializes room/furniture data but does not include the tile style overrides.
+- **Severity:** Low (editor changes lost, but editor is a dev tool not user-facing)
+- **Files:** `layoutSerializer.ts`, `officeLayout.ts`
+
+#### TEST-01: Engine Test Coverage Gaps
+~45% of engine code is tested. Completely untested modules:
+- `editorInput.ts` — tile painting, furniture placement, undo/redo batching
+- `input.ts` — click navigation, drag-pan, zoom controls, file drag-drop
+- `camera.ts` — cursor-centered zoom, screen-to-tile edge cases
+- `layoutSerializer.ts` — JSON export/import, IndexedDB persistence
+- `audioManager.ts` — lazy loading, volume crossfade, SFX
+- `glowEffects.ts` — glow rendering, time-of-day modulation
+- `timeOfDay.ts` — day/night cycle calculations
+Also 2 skipped tests in `officeLayout.test.ts` (per-room furniture, War Room conference table)
+- **Complexity:** Medium (many modules, but individually straightforward)
+
+#### CLEANUP-01: Unused Dependencies
+`canvas` (^3.2.1) and `sharp` (^0.34.5) in package.json appear unused. `canvas` is for Node.js server-side rendering (we use browser Canvas 2D). `sharp` was likely considered for runtime sprite composition but never used.
+- **Complexity:** Trivial
+- **Action:** `npm uninstall canvas sharp`, verify build still works
+
+#### CLEANUP-02: renderHeight Dead Field
+`renderHeight` field on FurnitureItem is unused by depthSort. Dead code.
+- **Known issue from:** PROJECT.md
+- **Complexity:** Trivial
 
 #### BUG-01: War Room Agent Gathering Inconsistency
 War Room agent gathering animation may not always trigger. Pre-existing pathfinding edge case where some agents fail to find path to their war room seat.
