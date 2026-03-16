@@ -41,15 +41,15 @@ describe('CHARACTER_FRAMES', () => {
 });
 
 describe('CHARACTER_SHEET_NAMES', () => {
-  const expectedNames = ['billy', 'patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
+  const expectedNames = ['billy', 'patrik', 'marcos', 'sandra', 'isaac', 'wendy', 'charlie'];
 
-  it('contains all 6 character IDs', () => {
+  it('contains all 7 character IDs', () => {
     for (const name of expectedNames) {
       expect(CHARACTER_SHEET_NAMES, `missing: ${name}`).toContain(name);
     }
   });
 
-  it('has exactly 6 entries', () => {
-    expect(CHARACTER_SHEET_NAMES).toHaveLength(6);
+  it('has exactly 7 entries', () => {
+    expect(CHARACTER_SHEET_NAMES).toHaveLength(7);
   });
 });

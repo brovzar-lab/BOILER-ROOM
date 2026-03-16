@@ -23,6 +23,7 @@ export const PLACEHOLDER_COLORS: Record<string, string> = {
   sandra: '#10B981',
   isaac: '#F59E0B',
   wendy: '#EC4899',
+  charlie: '#F97316',
   'war-room-floor': '#4a5060',
 };
 

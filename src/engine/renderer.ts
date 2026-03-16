@@ -23,7 +23,7 @@
 import { TileType, TILE_SIZE, CHAR_SPRITE_W, CHAR_SPRITE_H, ZOOM_OVERVIEW_THRESHOLD } from './types';
 import type { Camera, Character } from './types';
 import type { FurnitureItem, DecorationItem } from './officeLayout';
-import { OFFICE_TILE_MAP, ROOMS, ROOM_RUGS, getRoomAtTile, isRecAreaTile } from './officeLayout';
+import { OFFICE_TILE_MAP, ROOMS, ROOM_RUGS, getRoomAtTile } from './officeLayout';
 import { PLACEHOLDER_COLORS, getCharacterSheet, getEnvironmentSheetById, getCachedSprite } from './spriteSheet';
 import { CHARACTER_FRAMES } from './spriteAtlas';
 import { LIMEZU_ATLAS } from './limeZuAtlas';
@@ -41,7 +41,7 @@ const BG_COLOR = '#0d0b09';
 const LABEL_FONT_SIZE = 10;
 
 /** Agent room IDs (excludes war-room and billy) */
-const AGENT_ROOM_IDS = new Set<string>(['patrik', 'marcos', 'sandra', 'isaac', 'wendy']);
+const AGENT_ROOM_IDS = new Set<string>(['patrik', 'marcos', 'sandra', 'isaac', 'wendy', 'charlie']);
 
 /** Currently hovered file ID -- set during renderFileIcons, read by input.ts */
 export let hoveredFileId: string | null = null;
@@ -93,13 +93,15 @@ export function renderFrame(
   ctx.setTransform(zoom * dpr, 0, 0, zoom * dpr, tx * dpr, ty * dpr);
   ctx.imageSmoothingEnabled = false;
 
-  // ── Layer 2: Floor Tiles ───────────────────────────────────────────────
+  // ── Layer 2: Floor Tiles ─────────────────────────────────────────
   for (let row = minRow; row <= maxRow; row++) {
     const tileRow = OFFICE_TILE_MAP[row];
     if (!tileRow) continue;
     for (let col = minCol; col <= maxCol; col++) {
       const tile = tileRow[col];
       if (tile === undefined || tile === TileType.VOID) continue;
+      // WALL tiles are handled exclusively by renderWalls (solid fills, no sprites)
+      if (tile === TileType.WALL) continue;
 
       const x = col * TILE_SIZE;
       const y = row * TILE_SIZE;
@@ -124,7 +126,7 @@ export function renderFrame(
     h: (maxRow - minRow + 1) * TILE_SIZE,
   });
 
-  // ── Layer 2c: Area Rugs (after floor + tint, before walls) ────────────
+  // ── Layer 2c: Area Rugs ────────────────────────────────────────────
   for (const rug of ROOM_RUGS) {
     const rx = rug.col * TILE_SIZE;
     const ry = rug.row * TILE_SIZE;
@@ -133,14 +135,10 @@ export function renderFrame(
     // Fill
     ctx.fillStyle = rug.color;
     ctx.fillRect(rx, ry, rw, rh);
-    // 1px woven edge border
+    // Border
     ctx.strokeStyle = rug.borderColor;
     ctx.lineWidth = 1;
     ctx.strokeRect(rx + 0.5, ry + 0.5, rw - 1, rh - 1);
-    // Inner border pattern (woven suggestion): dashed border 2px inset
-    ctx.setLineDash([2, 2]);
-    ctx.strokeRect(rx + 2.5, ry + 2.5, rw - 5, rh - 5);
-    ctx.setLineDash([]);
   }
 
   // ── Layer 3: 3/4 Wall Strips + Shadows ───────────────────────────────
@@ -191,9 +189,9 @@ function getTileAtlasKey(tile: TileType, col: number, row: number): string {
     case TileType.FLOOR: {
       const room = getRoomAtTile(col, row);
       if (room?.id === 'war-room') return 'floor-warroom';
+      if (room?.id === 'break-room') return 'floor-rec';
+      if (room?.id === 'wc') return 'floor-hallway';
       if (!room) {
-        // Check if in rec area (open-plan break area below War Room)
-        if (isRecAreaTile(col, row)) return 'floor-rec';
         return 'floor-hallway';
       }
       return 'floor-office';
@@ -208,9 +206,9 @@ function getTileAtlasKey(tile: TileType, col: number, row: number): string {
 function getTileColor(tile: TileType, col: number, row: number): string {
   switch (tile) {
     case TileType.WALL:
-      return PLACEHOLDER_COLORS['wall']!;
+      return '#c8bfb0'; // warm beige matching flat interior wall sheet
     case TileType.DOOR:
-      return PLACEHOLDER_COLORS['door']!;
+      return '#b0a898'; // slightly darker for doorway openings
     case TileType.FLOOR: {
       const room = getRoomAtTile(col, row);
       if (room?.id === 'war-room') return PLACEHOLDER_COLORS['war-room-floor']!;
@@ -276,13 +274,22 @@ function drawSheetFrame(
   return true;
 }
 
-// ── 3/4 Wall Rendering (LimeZu 3D Wall Tiles) ──────────────────────────────
+// ── Solid Wall Rendering ──────────────────────────────────────────────────
+
+/** Solid wall body color — neutral warm beige, clean office feel */
+const WALL_COLOR = '#d6cec4';
+/** Slightly darker for the south-face of north-facing walls (3/4-perspective depth strip) */
+const WALL_FACE_COLOR = '#a89f94';
+/** Shadow strip height in pixels on the floor row directly below a north-visible wall */
+const WALL_SHADOW_H = 3;
 
 /**
- * Renders 3D LimeZu wall tiles by checking tile neighbors.
- * North walls: Full 16x16 wall-3d-front tile + floor shadow tile below.
- * East/west walls: Side wall tiles (wall-3d-side-l / wall-3d-side-r).
- * Corners: Dedicated corner tiles where north + side walls meet.
+ * Renders all WALL tiles as solid colored rectangles.
+ * North-facing walls (those with a floor tile directly to the south) get a
+ * darker 4-pixel "face" strip along their bottom edge to give the impression
+ * of depth in the 3/4-perspective view. All other walls are a uniform fill.
+ *
+ * No sprite sheets are used — walls are always crisp and fully opaque.
  */
 function renderWalls(
   ctx: CanvasRenderingContext2D,
@@ -292,7 +299,7 @@ function renderWalls(
   maxRow: number,
 ): void {
   const mapRows = OFFICE_TILE_MAP.length;
-  const mapCols = OFFICE_TILE_MAP[0]!.length;
+  const FACE_H = 4; // px: darker band at south edge of north-facing wall
 
   for (let row = minRow; row <= maxRow; row++) {
     const tileRow = OFFICE_TILE_MAP[row];
@@ -305,30 +312,20 @@ function renderWalls(
       const y = row * TILE_SIZE;
 
       const hasSouthFloor = row + 1 < mapRows && isFloorOrDoor(OFFICE_TILE_MAP[row + 1]![col]!);
-      const hasWestFloor = col - 1 >= 0 && isFloorOrDoor(OFFICE_TILE_MAP[row]![col - 1]!);
-      const hasEastFloor = col + 1 < mapCols && isFloorOrDoor(OFFICE_TILE_MAP[row]![col + 1]!);
 
-      // Determine wall tile type based on neighbors
-      if (hasSouthFloor && hasWestFloor) {
-        // Corner: north + east wall face (left side visible)
-        drawLimeZuTile(ctx, 'wall-3d-corner-tl', x, y);
-      } else if (hasSouthFloor && hasEastFloor) {
-        // Corner: north + west wall face (right side visible)
-        drawLimeZuTile(ctx, 'wall-3d-corner-tr', x, y);
-      } else if (hasSouthFloor) {
-        // North wall face: front-facing 3D tile
-        drawLimeZuTile(ctx, 'wall-3d-front', x, y);
-        // Floor shadow on tile below
-        drawLimeZuTile(ctx, 'shadow-top', x, (row + 1) * TILE_SIZE);
-      } else if (hasWestFloor) {
-        // East wall face (left edge visible from room to the left)
-        drawLimeZuTile(ctx, 'wall-3d-side-l', x, y);
-      } else if (hasEastFloor) {
-        // West wall face (right edge visible from room to the right)
-        drawLimeZuTile(ctx, 'wall-3d-side-r', x, y);
-      } else {
-        // Wall tile not adjacent to any floor -- draw top face
-        drawLimeZuTile(ctx, 'wall-3d-top', x, y);
+      // Solid wall body
+      ctx.fillStyle = WALL_COLOR;
+      ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+
+      if (hasSouthFloor) {
+        // Darker face strip at bottom of north-facing wall
+        ctx.fillStyle = WALL_FACE_COLOR;
+        ctx.fillRect(x, y + TILE_SIZE - FACE_H, TILE_SIZE, FACE_H);
+
+        // Subtle shadow on the floor tile directly below
+        const floorY = (row + 1) * TILE_SIZE;
+        ctx.fillStyle = 'rgba(0,0,0,0.12)';
+        ctx.fillRect(x, floorY, TILE_SIZE, WALL_SHADOW_H);
       }
     }
   }
@@ -352,19 +349,19 @@ function renderFurnitureItemWorld(
 ): void {
   const x = item.col * TILE_SIZE;
   const y = item.row * TILE_SIZE;
-  const w = item.width * TILE_SIZE;
-  const h = item.height * TILE_SIZE;
 
-  // Primary: atlasKey-based LimeZu rendering
+  // Try atlas key first — use sprite's native dimensions
   if (item.atlasKey) {
     const sf = LIMEZU_ATLAS[item.atlasKey];
-    if (sf && drawSheetFrame(ctx, sf, x, y, w, h)) {
+    if (sf && drawSheetFrame(ctx, sf, x, y, sf.frame.w, sf.frame.h)) {
       return;
     }
   }
 
-  // Fallback: brown rectangles (world coordinates)
-  ctx.fillStyle = item.type === 'table' ? '#4a3528' : '#5c3d2e';
+  // Fallback: semi-transparent placeholder at footprint size
+  const w = item.width * TILE_SIZE;
+  const h = item.height * TILE_SIZE;
+  ctx.fillStyle = 'rgba(100, 80, 60, 0.4)';
   ctx.fillRect(x, y, w, h);
 }
 
@@ -380,12 +377,12 @@ function renderDecorationWorld(
   const x = dec.col * TILE_SIZE;
   const y = dec.row * TILE_SIZE;
 
-  // Primary: LimeZu atlas lookup
   const sf = LIMEZU_ATLAS[dec.key];
   if (sf) {
-    drawSheetFrame(ctx, sf, x, y, TILE_SIZE, TILE_SIZE);
+    const w = sf.frame.w;
+    const h = sf.frame.h;
+    drawSheetFrame(ctx, sf, x, y, w, h);
   }
-  // No fallback for decorations -- they are optional visual detail
 }
 
 // ── Drop Zone Highlight ─────────────────────────────────────────────────────
@@ -784,7 +781,10 @@ function renderRoomLabel(
     'marcos': 'Marcos -- Lawyer',
     'isaac': 'Isaac -- Development',
     'wendy': 'Wendy -- Coach',
+    'charlie': 'Charlie -- Designer',
     'war-room': 'War Room',
+    'break-room': 'Break Room',
+    'wc': 'WC',
   };
 
   // Background pill

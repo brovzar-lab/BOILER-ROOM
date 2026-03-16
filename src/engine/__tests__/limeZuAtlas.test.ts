@@ -11,8 +11,8 @@ describe('Dimension constants', () => {
     expect(CHAR_SPRITE_W).toBe(32);
   });
 
-  it('CHAR_SPRITE_H is 32', () => {
-    expect(CHAR_SPRITE_H).toBe(32);
+  it('CHAR_SPRITE_H is 64 (two-row paired sprites)', () => {
+    expect(CHAR_SPRITE_H).toBe(64);
   });
 });
 
@@ -178,7 +178,7 @@ describe('LIMEZU_CHARACTER_FRAMES', () => {
           expect(frame.x, `${state}/${dir} x`).toBeGreaterThanOrEqual(0);
           expect(frame.y, `${state}/${dir} y`).toBeGreaterThanOrEqual(0);
           expect(frame.w, `${state}/${dir} w`).toBe(32);
-          expect(frame.h, `${state}/${dir} h`).toBe(32);
+          expect(frame.h, `${state}/${dir} h`).toBe(64);
         }
       }
     }
@@ -194,13 +194,13 @@ describe('LIMEZU_CHARACTER_FRAMES', () => {
 // ── CHAR_SHEET_PATHS ─────────────────────────────────────────────────────────
 
 describe('CHAR_SHEET_PATHS', () => {
-  const characterIds = ['billy', 'patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
+  const characterIds = ['billy', 'patrik', 'marcos', 'sandra', 'isaac', 'wendy', 'charlie'];
 
-  it('contains all 6 character IDs', () => {
+  it('contains all 7 character IDs', () => {
     for (const id of characterIds) {
       expect(CHAR_SHEET_PATHS, `missing character: ${id}`).toHaveProperty(id);
     }
-    expect(Object.keys(CHAR_SHEET_PATHS)).toHaveLength(6);
+    expect(Object.keys(CHAR_SHEET_PATHS)).toHaveLength(7);
   });
 
   it('all paths reference Premade_Character PNG files', () => {

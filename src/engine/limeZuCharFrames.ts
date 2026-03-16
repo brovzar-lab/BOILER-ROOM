@@ -28,11 +28,17 @@
 import type { SpriteFrame, CharacterState, Direction } from './types';
 
 const W = 32; // Character frame width
-const H = 32; // Character frame height
+const H = 32; // Single row height
 
-/** Create a character SpriteFrame at the given grid position. */
-function frame(col: number, row: number): SpriteFrame {
-  return { x: col * W, y: row * H, w: W, h: H };
+/**
+ * Create a character SpriteFrame spanning TWO rows (32x64).
+ * LimeZu premade characters use paired rows: even row = head top, odd row = body.
+ * The frame starts at the EVEN row and spans 2 rows (64px tall).
+ * @param col - Column index in the 32px grid
+ * @param evenRow - The EVEN row number (head top row). Body is at evenRow+1.
+ */
+function frame(col: number, evenRow: number): SpriteFrame {
+  return { x: col * W, y: evenRow * H, w: W, h: H * 2 };
 }
 
 // ── Character Sheet Paths ────────────────────────────────────────────────────
@@ -47,6 +53,7 @@ export const CHAR_SHEET_PATHS: Record<string, string> = {
   sandra: `${CHAR_BASE}/Premade_Character_32x32_08.png`,
   isaac:  `${CHAR_BASE}/Premade_Character_32x32_03.png`,
   wendy:  `${CHAR_BASE}/Premade_Character_32x32_10.png`,
+  charlie: `${CHAR_BASE}/Premade_Character_32x32_04.png`,
 };
 
 // ── Character Frame Mapping ──────────────────────────────────────────────────
@@ -97,24 +104,36 @@ function buildPackedRow(row: number, framesPerDir: number): Record<Direction, Sp
  * Character frame mapping for all states and directions.
  * Shared across all premade characters (same sheet layout).
  */
+/**
+ * Character frame mapping for all states and directions.
+ * Shared across all premade characters (same sheet layout).
+ *
+ * VERIFIED via pixel scan:
+ *   Row 0: Tiny head icons (4 tiles) — NOT usable as full sprites
+ *   Row 1: Tiny items (4 tiles) — NOT usable
+ *   Rows 2-5: Full-body animations, 24 tiles each = 6 frames × 4 directions
+ *   Row 6: Phone/work animation (12 tiles)
+ *   Row 8-9: More action animations (12 tiles each)
+ *
+ * Direction packing within each 24-frame row:
+ *   Down: cols 0-5, Left: cols 6-11, Right: cols 12-17, Up: cols 18-23
+ */
 export const LIMEZU_CHARACTER_FRAMES: Record<
   CharacterState | 'talk',
   Record<Direction, SpriteFrame[]>
 > = {
-  // Idle: use row 0 preview frames (1 frame per direction)
+  // Idle: rows 2-3 pair (even row 2 = head, odd row 3 = body) → 32x64 frame
   idle: {
-    down:  [frame(0, 0)],
-    left:  [frame(1, 0)],
-    right: [frame(2, 0)],
-    up:    [frame(3, 0)],
+    down:  [frame(0, 2)],
+    left:  [frame(6, 2)],
+    right: [frame(12, 2)],
+    up:    [frame(18, 2)],
   },
 
-  // Walk: row 2, 6 frames per direction packed sequentially
-  walk: buildPackedRow(2, 6),
+  // Walk: rows 4-5 pair (even row 4 = head, odd row 5 = body) → 32x64 frame
+  walk: buildPackedRow(4, 6),
 
-  // Work: row 6 (phone animation), 6 frames per direction
-  // Visual inspection shows phone anim is primarily down-facing with ~10 frames.
-  // Use first 4 frames for each direction; for non-down directions, mirror the down set.
+  // Work: rows 6-7 pair (phone/sit + equipment) → 32x64 frame
   work: {
     down:  [frame(0, 6), frame(1, 6), frame(2, 6), frame(3, 6)],
     left:  [frame(0, 6), frame(1, 6), frame(2, 6), frame(3, 6)],
@@ -122,12 +141,11 @@ export const LIMEZU_CHARACTER_FRAMES: Record<
     up:    [frame(0, 6), frame(1, 6), frame(2, 6), frame(3, 6)],
   },
 
-  // Talk: use idle frames (row 0) + a slight variation
-  // Talk uses the idle preview as a base since LimeZu doesn't have a dedicated talk row
+  // Talk: alternate between first two idle frames (rows 2-3 pair)
   talk: {
-    down:  [frame(0, 0), frame(0, 1)],
-    left:  [frame(1, 0), frame(6, 1)],
-    right: [frame(2, 0), frame(12, 1)],
-    up:    [frame(3, 0), frame(18, 1)],
+    down:  [frame(0, 2), frame(1, 2)],
+    left:  [frame(6, 2), frame(7, 2)],
+    right: [frame(12, 2), frame(13, 2)],
+    up:    [frame(18, 2), frame(19, 2)],
   },
 };

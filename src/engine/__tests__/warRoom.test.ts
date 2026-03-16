@@ -32,9 +32,9 @@ function makeCharacter(overrides: Partial<Character> = {}): Character {
 // ── WAR_ROOM_SEATS positions ──────────────────────────────────────────────────
 
 describe('WAR_ROOM_SEATS', () => {
-  it('has entries for all 5 agents plus billy', async () => {
+  it('has entries for all 6 agents plus billy', async () => {
     const { WAR_ROOM_SEATS } = await import('../officeLayout');
-    const agents = ['billy', 'patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
+    const agents = ['billy', 'patrik', 'marcos', 'sandra', 'isaac', 'wendy', 'charlie'];
     for (const agent of agents) {
       expect(WAR_ROOM_SEATS).toHaveProperty(agent);
       expect(WAR_ROOM_SEATS[agent]).toHaveProperty('col');
@@ -91,8 +91,8 @@ describe('gatherAgentsToWarRoom', () => {
     vi.useRealTimers();
   });
 
-  it('calls startWalk for all 5 agents toward their seat tiles', async () => {
-    const agents = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
+  it('calls startWalk for all 6 agents toward their seat tiles', async () => {
+    const agents = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy', 'charlie'];
     const characters = agents.map((id) =>
       makeCharacter({ id, tileCol: 5, tileRow: 5 }),
     );
@@ -102,7 +102,7 @@ describe('gatherAgentsToWarRoom', () => {
       useOfficeStore: {
         getState: () => ({
           characters,
-          agentStatuses: { patrik: 'idle', marcos: 'idle', sandra: 'idle', isaac: 'idle', wendy: 'idle' },
+          agentStatuses: { patrik: 'idle', marcos: 'idle', sandra: 'idle', isaac: 'idle', wendy: 'idle', charlie: 'idle' },
           activeRoomId: null,
           setActiveRoom: vi.fn(),
           setBillyPosition: vi.fn(),
@@ -153,7 +153,7 @@ describe('gatherAgentsToWarRoom', () => {
   });
 
   it('uses staggered setTimeout calls for agent starts', async () => {
-    const agents = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
+    const agents = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy', 'charlie'];
     const characters = agents.map((id) =>
       makeCharacter({ id, tileCol: 5, tileRow: 5 }),
     );
@@ -163,7 +163,7 @@ describe('gatherAgentsToWarRoom', () => {
       useOfficeStore: {
         getState: () => ({
           characters,
-          agentStatuses: { patrik: 'idle', marcos: 'idle', sandra: 'idle', isaac: 'idle', wendy: 'idle' },
+          agentStatuses: { patrik: 'idle', marcos: 'idle', sandra: 'idle', isaac: 'idle', wendy: 'idle', charlie: 'idle' },
           activeRoomId: null,
           setActiveRoom: vi.fn(),
           setBillyPosition: vi.fn(),
@@ -208,7 +208,7 @@ describe('gatherAgentsToWarRoom', () => {
   });
 
   it('resolves when all agents reach idle state at their seats', async () => {
-    const agents = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
+    const agents = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy', 'charlie'];
     const characters = agents.map((id) =>
       makeCharacter({ id, tileCol: 5, tileRow: 5 }),
     );
@@ -218,7 +218,7 @@ describe('gatherAgentsToWarRoom', () => {
       useOfficeStore: {
         getState: () => ({
           characters,
-          agentStatuses: { patrik: 'idle', marcos: 'idle', sandra: 'idle', isaac: 'idle', wendy: 'idle' },
+          agentStatuses: { patrik: 'idle', marcos: 'idle', sandra: 'idle', isaac: 'idle', wendy: 'idle', charlie: 'idle' },
           activeRoomId: null,
           setActiveRoom: vi.fn(),
           setBillyPosition: vi.fn(),
@@ -247,8 +247,8 @@ describe('gatherAgentsToWarRoom', () => {
     // Not yet resolved (agents still walking)
     expect(resolved).toBe(false);
 
-    // Simulate 4 of 5 agents arriving
-    for (const agent of agents.slice(0, 4)) {
+    // Simulate all but last agent arriving
+    for (const agent of agents.slice(0, agents.length - 1)) {
       const ch = characters.find((c) => c.id === agent)!;
       const seat = WAR_ROOM_SEATS[agent]!;
       ch.state = 'idle';
@@ -258,15 +258,16 @@ describe('gatherAgentsToWarRoom', () => {
     }
 
     await vi.advanceTimersByTimeAsync(200);
-    expect(resolved).toBe(false); // Still waiting for wendy
+    expect(resolved).toBe(false); // Still waiting for last agent
 
     // Last agent arrives
-    const wendy = characters.find((c) => c.id === 'wendy')!;
-    const valSeat = WAR_ROOM_SEATS['wendy']!;
-    wendy.state = 'idle';
-    wendy.path = [];
-    wendy.tileCol = valSeat.col;
-    wendy.tileRow = valSeat.row;
+    const lastAgent = agents[agents.length - 1]!;
+    const lastCh = characters.find((c) => c.id === lastAgent)!;
+    const valSeat = WAR_ROOM_SEATS[lastAgent]!;
+    lastCh.state = 'idle';
+    lastCh.path = [];
+    lastCh.tileCol = valSeat.col;
+    lastCh.tileRow = valSeat.row;
 
     await vi.advanceTimersByTimeAsync(200);
     expect(resolved).toBe(true);
@@ -291,7 +292,7 @@ describe('disperseAgentsToOffices', () => {
   });
 
   it('calls startWalk for each agent back to their office seatTile', async () => {
-    const agents = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
+    const agents = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy', 'charlie'];
     const characters = agents.map((id) =>
       makeCharacter({ id, tileCol: 20, tileRow: 15 }),
     );
@@ -301,7 +302,7 @@ describe('disperseAgentsToOffices', () => {
       useOfficeStore: {
         getState: () => ({
           characters,
-          agentStatuses: { patrik: 'idle', marcos: 'idle', sandra: 'idle', isaac: 'idle', wendy: 'idle' },
+          agentStatuses: { patrik: 'idle', marcos: 'idle', sandra: 'idle', isaac: 'idle', wendy: 'idle', charlie: 'idle' },
           activeRoomId: 'war-room',
           setActiveRoom: vi.fn(),
           setBillyPosition: vi.fn(),
@@ -331,7 +332,7 @@ describe('disperseAgentsToOffices', () => {
       useOfficeStore: {
         getState: () => ({
           characters,
-          agentStatuses: { patrik: 'idle', marcos: 'idle', sandra: 'idle', isaac: 'idle', wendy: 'idle' },
+          agentStatuses: { patrik: 'idle', marcos: 'idle', sandra: 'idle', isaac: 'idle', wendy: 'idle', charlie: 'idle' },
           activeRoomId: 'war-room',
           setActiveRoom: vi.fn(),
           setBillyPosition: vi.fn(),
@@ -384,7 +385,7 @@ describe('updateAllCharacters - War Room entry', () => {
       moveProgress: 0.99,
     });
 
-    const agents = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
+    const agents = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy', 'charlie'];
     const agentChars = agents.map((id) =>
       makeCharacter({ id, tileCol: 8, tileRow: 15 }),
     );
@@ -398,7 +399,7 @@ describe('updateAllCharacters - War Room entry', () => {
           characters: [billyChar, ...agentChars],
           activeRoomId: null,
           targetRoomId: 'war-room',
-          agentStatuses: { patrik: 'idle', marcos: 'idle', sandra: 'idle', isaac: 'idle', wendy: 'idle' },
+          agentStatuses: { patrik: 'idle', marcos: 'idle', sandra: 'idle', isaac: 'idle', wendy: 'idle', charlie: 'idle' },
           setActiveRoom,
           setBillyPosition,
           setTargetRoom: vi.fn(),
@@ -432,6 +433,7 @@ describe('updateAllCharacters - War Room entry', () => {
         sandra:     { col: 18, row: 15 },
         isaac:   { col: 22, row: 15 },
         wendy: { col: 20, row: 16 },
+        charlie: { col: 21, row: 16 },
       },
       OFFICE_TILE_MAP: tileMap,
       getRoomAtTile: (col: number, row: number) => {

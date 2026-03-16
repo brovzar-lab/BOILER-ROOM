@@ -477,11 +477,11 @@ describe('Phase 14: 32x32 character anchor math (CHAR-03)', () => {
     expect(TILE_SIZE).toBe(16);
   });
 
-  it('foot-center anchor drawY = y - (CHAR_SPRITE_H - TILE_SIZE) = y - 16 for 32x32', () => {
+  it('foot-center anchor drawY = y - (CHAR_SPRITE_H - TILE_SIZE) = y - 48 for 32x64', () => {
     const y = 160;
     const drawY = y - (CHAR_SPRITE_H - TILE_SIZE);
-    expect(drawY).toBe(y - 16);
-    expect(CHAR_SPRITE_H).toBe(32);
+    expect(drawY).toBe(y - 48);
+    expect(CHAR_SPRITE_H).toBe(64);
   });
 
   it('drop shadow uses TILE_SIZE * 0.5 horizontal radius for 32x32 sprites', () => {

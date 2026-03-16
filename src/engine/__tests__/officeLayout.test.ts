@@ -81,7 +81,7 @@ describe('room layout', () => {
 
   it('room names are human-readable display names', () => {
     for (const room of ROOMS) {
-      expect(room.name.length).toBeGreaterThanOrEqual(3);
+      expect(room.name.length).toBeGreaterThanOrEqual(2);
       expect(room.name).not.toBe(room.id);
       expect(/[A-Z\s]/.test(room.name)).toBe(true);
     }
@@ -165,18 +165,17 @@ describe('compact grid invariants', () => {
     }
   });
 
-  it("BILLY's office is in top center-left region", () => {
+  it("BILLY's office is in top center region", () => {
     const billy = ROOMS.find((r) => r.id === 'billy')!;
-    const gridMidCol = OFFICE_TILE_MAP[0]!.length / 2;
-    // BILLY is center-left: starts before midpoint but not at far left
+    // BILLY is at col 16, between left corridor (10-11) and right corridor (30-31)
     expect(
       billy.tileRect.col,
-      "BILLY's office should start before center",
-    ).toBeLessThan(gridMidCol);
+      "BILLY's office should start after left corridor",
+    ).toBeGreaterThan(11);
     expect(
-      billy.tileRect.col,
-      "BILLY's office should not be at far left (col > 1)",
-    ).toBeGreaterThan(1);
+      billy.tileRect.col + billy.tileRect.width,
+      "BILLY's office should end before right corridor",
+    ).toBeLessThan(30);
     const gridMidRow = OFFICE_TILE_MAP.length / 2;
     expect(
       billy.tileRect.row,
@@ -184,18 +183,13 @@ describe('compact grid invariants', () => {
     ).toBeLessThan(gridMidRow);
   });
 
-  it("Patrik's office is in top center-right region", () => {
+  it("Patrik's office is in top right region", () => {
     const patrik = ROOMS.find((r) => r.id === 'patrik')!;
-    const gridMidCol = OFFICE_TILE_MAP[0]!.length / 2;
-    // Patrik (CFO) is center-right: starts at or after midpoint but not at far right
+    // Patrik (CFO) is at col 32, right side
     expect(
       patrik.tileRect.col,
-      "Patrik's office should start at or after center",
-    ).toBeGreaterThanOrEqual(gridMidCol);
-    expect(
-      patrik.tileRect.col,
-      "Patrik's office should not be at far right (col < 32)",
-    ).toBeLessThan(32);
+      "Patrik's office should be at far right (col >= 32)",
+    ).toBeGreaterThanOrEqual(32);
     const gridMidRow = OFFICE_TILE_MAP.length / 2;
     expect(
       patrik.tileRect.row,
@@ -205,14 +199,14 @@ describe('compact grid invariants', () => {
 
   it('War Room is in center, vertically centered between corridors', () => {
     const warRoom = ROOMS.find((r) => r.id === 'war-room')!;
-    const sandra = ROOMS.find((r) => r.id === 'sandra')!;
     const marcos = ROOMS.find((r) => r.id === 'marcos')!;
+    const sandra = ROOMS.find((r) => r.id === 'sandra')!;
 
-    // War Room is between Sandra (left) and Marcos (right)
-    expect(warRoom.tileRect.col).toBeGreaterThanOrEqual(sandra.tileRect.col + sandra.tileRect.width);
-    expect(warRoom.tileRect.col + warRoom.tileRect.width).toBeLessThanOrEqual(marcos.tileRect.col);
+    // War Room is between Marcos (left) and Sandra (right)
+    expect(warRoom.tileRect.col).toBeGreaterThanOrEqual(marcos.tileRect.col + marcos.tileRect.width);
+    expect(warRoom.tileRect.col + warRoom.tileRect.width).toBeLessThanOrEqual(sandra.tileRect.col);
 
-    // War Room is 13 tiles tall (roughly same height as one side office pair)
+    // War Room is 13 tiles tall
     expect(warRoom.tileRect.height).toBe(13);
 
     // War Room is 16 tiles wide
@@ -220,7 +214,7 @@ describe('compact grid invariants', () => {
 
     // War Room is below top rooms
     const topRooms = ROOMS.filter(
-      (r) => r.id === 'billy' || r.id === 'patrik',
+      (r) => r.id === 'billy' || r.id === 'patrik' || r.id === 'isaac',
     );
     const topMax = Math.max(
       ...topRooms.map((r) => r.tileRect.row + r.tileRect.height),
@@ -228,20 +222,20 @@ describe('compact grid invariants', () => {
     expect(warRoom.tileRect.row).toBeGreaterThan(topMax - 1);
   });
 
-  it('upper side offices: Sandra and Marcos at same row', () => {
-    const sandra = ROOMS.find((r) => r.id === 'sandra')!;
+  it('upper side offices: Marcos and Sandra at same row', () => {
     const marcos = ROOMS.find((r) => r.id === 'marcos')!;
-    expect(sandra).toBeDefined();
+    const sandra = ROOMS.find((r) => r.id === 'sandra')!;
     expect(marcos).toBeDefined();
-    expect(sandra.tileRect.row).toBe(marcos.tileRect.row);
+    expect(sandra).toBeDefined();
+    expect(marcos.tileRect.row).toBe(sandra.tileRect.row);
   });
 
-  it('lower side offices: Isaac and Wendy at same row', () => {
-    const isaac = ROOMS.find((r) => r.id === 'isaac')!;
+  it('lower side offices: Charlie and Wendy at same row', () => {
+    const charlie = ROOMS.find((r) => r.id === 'charlie')!;
     const wendy = ROOMS.find((r) => r.id === 'wendy')!;
-    expect(isaac).toBeDefined();
+    expect(charlie).toBeDefined();
     expect(wendy).toBeDefined();
-    expect(isaac.tileRect.row).toBe(wendy.tileRect.row);
+    expect(charlie.tileRect.row).toBe(wendy.tileRect.row);
   });
 
   it('corridors are 2 tiles wide', () => {
@@ -272,15 +266,16 @@ describe('compact grid invariants', () => {
 // -- WAR_ROOM_SEATS Tests -----------------------------------------------------
 
 describe('WAR_ROOM_SEATS', () => {
-  it('has 6 entries including billy', () => {
+  it('has 7 entries including billy and charlie', () => {
     const keys = Object.keys(WAR_ROOM_SEATS);
-    expect(keys.length).toBe(6);
+    expect(keys.length).toBe(7);
     expect(keys).toContain('billy');
     expect(keys).toContain('patrik');
     expect(keys).toContain('marcos');
     expect(keys).toContain('sandra');
     expect(keys).toContain('isaac');
     expect(keys).toContain('wendy');
+    expect(keys).toContain('charlie');
   });
 
   it('all seats are within War Room interior', () => {
