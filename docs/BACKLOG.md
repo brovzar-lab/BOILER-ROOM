@@ -27,23 +27,58 @@ These patterns were studied from [pixel-agents](https://github.com/pablodelucca/
 
 ### P0 — In Progress (v2.0 Active)
 
-#### ART-01: LimeZu Character Sprites
-Replace 24x32 programmatic placeholder sprites with 32x32 LimeZu Modern Interiors character sprites. Walk/idle/sit/phone animations for all 7 characters.
-- **Status:** Atlas mapped, integration in progress
+#### ART-01: LimeZu Premade Character Sprites (Quick Win)
+Use the 20 premade 32x32 character sprites from LimeZu Character Generator as an immediate upgrade over programmatic placeholders. Each premade already has walk/idle/sit animations baked in. Assign one premade per agent based on visual fit.
+- **Status:** Atlas mapped, integration in progress. Premade sheets at `public/sprites/modern-interiors-paid/2_Characters/Character_Generator/0_Premade_Characters/32x32/`
 - **Files:** `limeZuCharFrames.ts`, `characters.ts`, `renderer.ts`
+- **Available:** 20 premade characters (Premade_Character_32x32_01 through _20)
 
-#### ART-02: LimeZu Environment Tiles
+#### ART-02: Custom Character Sprites via Character Generator (The Real Goal)
+Build unique custom characters for each agent using the LimeZu Character Generator layering system. Each character is composed by stacking PNG layers in order:
+1. **Body** (skin tone, build) — 9 body types
+2. **Eyes** (expression, color) — 7 eye styles
+3. **Outfit** (clothing, profession) — 15+ outfit sets with color variants
+4. **Hairstyle** (hair, hats) — 15+ styles with color variants
+5. **Accessory** (optional: backpack, hat, etc.)
+
+Layers are composited in a pixel art editor (Piskel, Aseprite) or at runtime via Canvas layering. This gives each character a distinct look that matches their persona:
+- **BILLY:** Executive body, sharp eyes, blazer outfit, styled hair — the boss
+- **Patrik (CFO):** Formal body, glasses (accessory), suit outfit, neat hair — conservative finance
+- **Marcos (Lawyer):** Suited body, reading glasses, formal outfit — always has documents
+- **Sandra (Producer):** Dynamic body, energetic eyes, creative outfit — production energy
+- **Isaac (Dev):** Casual body, focused eyes, hoodie/casual outfit — developer look
+- **Wendy (Coach):** Warm body, expressive eyes, smart-casual outfit — approachable
+- **Charlie (Designer):** Creative body, artistic eyes, casual-cool outfit — designer vibe
+
+**Two approaches:**
+1. **Offline compositing** (recommended first): Use Piskel/Aseprite to manually layer the PNGs, export 7 custom character sheets, drop them into `public/sprites/`. Simple, no code changes beyond updating sheet paths.
+2. **Runtime compositing** (stretch goal): Load individual layer PNGs at runtime, composite them onto offscreen canvases per character. Enables future customization UI where user could tweak agent appearances.
+
+- **Assets available locally:** `public/sprites/modern-interiors-paid/2_Characters/Character_Generator/` — Bodies, Eyes, Outfits, Hairstyles, Accessories all at 32x32
+- **Character Generator app also downloaded:** `Character Generator 2.0 Setup.exe` / Linux build (GUI tool for compositing)
+- **Complexity:** Medium (offline) / High (runtime)
+- **Files:** `limeZuCharFrames.ts` (sheet paths), `characters.ts` (animation frames)
+- **Req:** ART-04 in REQUIREMENTS.md
+
+#### ART-03: LimeZu Environment Tiles
 Replace colored rectangle floor/wall tiles with 16x16 LimeZu Modern Interiors environment tilesets. Floors, walls, furniture, decorations.
 - **Status:** Atlas mapped, `environment.png` updated, needs full integration
+- **Assets:** `public/sprites/modern-interiors-paid/1_Interiors/16x16/` — full room themes (Office, Kitchen, Bathroom, Living Room, etc.)
 - **Files:** `limeZuAtlas.ts`, `officeLayout.ts`, `renderer.ts`
 
-#### ART-03: LimeZu Conference Hall for War Room
+#### ART-04: LimeZu Conference Hall for War Room
 Use LimeZu Conference Hall assets (conference table, whiteboard, projector) for the War Room / Board Room.
 - **Files:** `limeZuAtlas.ts`, `officeLayout.ts`
 
-#### ART-04: LimeZu UI Elements
+#### ART-05: LimeZu UI Elements
 Integrate LimeZu UI sprite elements (speech bubbles, emote sprites, panel frames) into chat/deal panels for visual cohesion.
+- **Assets:** `public/sprites/modern-interiors-paid/4_User_Interface_Elements/`
 - **Files:** `limeZuAtlas.ts`, chat components
+
+#### ART-06: Animated Environment Objects
+Use LimeZu animated objects (ceiling fans, screen flickers, plant sway) for ambient life in the office. Assets at `public/sprites/modern-interiors-paid/3_Animated_objects/`.
+- **Req:** ART-03 in REQUIREMENTS.md
+- **Complexity:** Medium — need animation frame cycling in renderer for environment tiles
 
 ---
 
