@@ -10,7 +10,7 @@
  * for additive blending over the scene.
  */
 import { TILE_SIZE } from './types';
-import { FURNITURE, DECORATIONS } from './officeLayout';
+import { FURNITURE } from './officeLayout';
 
 // ── Glow Source Interface ────────────────────────────────────────────────────
 
@@ -84,10 +84,10 @@ function buildGlowSources(): GlowSource[] {
     pulse: true,
   });
 
-  // Rec area: warm ambient glow at water cooler (col 10, row 23)
+  // Break Room: warm ambient glow at water cooler (col 20, row 29)
   sources.push({
-    x: 10 * TILE_SIZE + TILE_SIZE / 2,
-    y: 23 * TILE_SIZE + TILE_SIZE / 2,
+    x: 20 * TILE_SIZE + TILE_SIZE / 2,
+    y: 29 * TILE_SIZE + TILE_SIZE / 2,
     radius: TILE_SIZE * 2,
     color: '255, 191, 64',
     type: 'ambient',

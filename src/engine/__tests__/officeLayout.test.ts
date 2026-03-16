@@ -14,7 +14,7 @@ import { isWalkable, findPath, getTileAt } from '../tileMap';
 // -- Room Furniture Tests -----------------------------------------------------
 
 describe('office furniture', () => {
-  it.skip('each room has at least 1 furniture item (desk at minimum)', () => {
+  it('each room has at least 1 furniture item (desk at minimum)', () => {
     for (const room of ROOMS) {
       const roomFurniture = FURNITURE.filter((f) => f.roomId === room.id);
       expect(
@@ -41,13 +41,13 @@ describe('office furniture', () => {
     }
   });
 
-  it.skip('War Room has a conference table furniture item', () => {
+  it('War Room has a conference table furniture item', () => {
     const warRoomFurniture = FURNITURE.filter((f) => f.roomId === 'war-room');
     const hasTable = warRoomFurniture.some((f) => f.type === 'table');
     expect(hasTable, 'War Room should have a conference table').toBe(true);
   });
 
-  it.skip("BILLY's office has a desk", () => {
+  it("BILLY's office has a desk", () => {
     const billyFurniture = FURNITURE.filter((f) => f.roomId === 'billy');
     const hasDesk = billyFurniture.some((f) => f.type === 'desk');
     expect(hasDesk, "BILLY's office should have a desk").toBe(true);
@@ -317,7 +317,7 @@ describe('WAR_ROOM_SEATS', () => {
     }
   });
 
-  it.skip('no seat position overlaps with conference table', () => {
+  it('no seat position overlaps with conference table', () => {
     // Find the conference table from FURNITURE
     const table = FURNITURE.find(
       (f) => f.roomId === 'war-room' && f.type === 'table',
@@ -355,7 +355,7 @@ describe('DECORATIONS', () => {
     }
   });
 
-  it.skip('has decorations for all expected rooms', () => {
+  it('has decorations for all expected rooms', () => {
     const roomsWithDecos = new Set(DECORATIONS.map((d) => d.roomId));
     expect(roomsWithDecos.has('patrik')).toBe(true);
     expect(roomsWithDecos.has('marcos')).toBe(true);

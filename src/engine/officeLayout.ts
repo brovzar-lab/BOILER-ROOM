@@ -258,8 +258,85 @@ export interface FurnitureItem {
  * Standard office layout: desk (2-3 wide) + chair + personality item.
  * Wendy's Coaching Room: couch + plants + secondary desk (coaching space, not corporate desk).
  */
-/** All furniture removed — rooms are clean/empty, characters only. */
-export const FURNITURE: FurnitureItem[] = [];
+export const FURNITURE: FurnitureItem[] = [
+  // ── Isaac's Office (col 1, row 2, 9×9) ──────────────────────────────────
+  // Interior: cols 2-8, rows 3-9. seatTile (5,6), billyStandTile (6,6)
+  { roomId: 'isaac', type: 'desk', col: 4, row: 5, width: 2, height: 1, atlasKey: 'desk-wood-2wide' },
+  { roomId: 'isaac', type: 'monitor', col: 4, row: 4, width: 1, height: 1, atlasKey: 'monitor' },
+  { roomId: 'isaac', type: 'bookshelf', col: 2, row: 3, width: 2, height: 2, renderHeight: 2, atlasKey: 'bookshelf-2tall' },
+  { roomId: 'isaac', type: 'plant', col: 8, row: 3, width: 1, height: 1, atlasKey: 'plant-potted' },
+  { roomId: 'isaac', type: 'filing-cabinet', col: 2, row: 5, width: 1, height: 2, renderHeight: 2, atlasKey: 'filing-cabinet' },
+
+  // ── BILLY's Office (col 16, row 2, 9×9) — CEO, fancier ─────────────────
+  // Interior: cols 17-23, rows 3-9. seatTile (20,6), billyStandTile (21,6)
+  { roomId: 'billy', type: 'desk', col: 18, row: 5, width: 3, height: 1, atlasKey: 'desk-wood-3wide' },
+  { roomId: 'billy', type: 'monitor', col: 19, row: 4, width: 1, height: 1, atlasKey: 'monitor' },
+  { roomId: 'billy', type: 'bookshelf', col: 17, row: 3, width: 2, height: 2, renderHeight: 2, atlasKey: 'bookshelf-2tall' },
+  { roomId: 'billy', type: 'plant', col: 23, row: 3, width: 1, height: 1, atlasKey: 'plant-potted' },
+  { roomId: 'billy', type: 'plant', col: 17, row: 8, width: 1, height: 1, atlasKey: 'plant-potted' },
+  { roomId: 'billy', type: 'filing-cabinet', col: 23, row: 5, width: 1, height: 2, renderHeight: 2, atlasKey: 'filing-cabinet' },
+
+  // ── Patrik's Office (col 32, row 2, 9×9) ────────────────────────────────
+  // Interior: cols 33-39, rows 3-9. seatTile (36,6), billyStandTile (35,6)
+  { roomId: 'patrik', type: 'desk', col: 35, row: 5, width: 2, height: 1, atlasKey: 'desk-wood-2wide' },
+  { roomId: 'patrik', type: 'monitor', col: 36, row: 4, width: 1, height: 1, atlasKey: 'monitor' },
+  { roomId: 'patrik', type: 'bookshelf', col: 33, row: 3, width: 2, height: 2, renderHeight: 2, atlasKey: 'bookshelf-2tall' },
+  { roomId: 'patrik', type: 'plant', col: 39, row: 3, width: 1, height: 1, atlasKey: 'plant-potted' },
+  { roomId: 'patrik', type: 'filing-cabinet', col: 33, row: 5, width: 1, height: 2, renderHeight: 2, atlasKey: 'filing-cabinet' },
+
+  // ── Marcos's Office (col 1, row 13, 9×9) ────────────────────────────────
+  // Interior: cols 2-8, rows 14-20. seatTile (5,17), billyStandTile (6,17)
+  { roomId: 'marcos', type: 'desk', col: 4, row: 16, width: 2, height: 1, atlasKey: 'desk-wood-2wide' },
+  { roomId: 'marcos', type: 'monitor', col: 4, row: 15, width: 1, height: 1, atlasKey: 'monitor' },
+  { roomId: 'marcos', type: 'bookshelf', col: 2, row: 14, width: 2, height: 2, renderHeight: 2, atlasKey: 'bookshelf-2tall' },
+  { roomId: 'marcos', type: 'plant', col: 8, row: 14, width: 1, height: 1, atlasKey: 'plant-potted' },
+  { roomId: 'marcos', type: 'filing-cabinet', col: 2, row: 16, width: 1, height: 2, renderHeight: 2, atlasKey: 'filing-cabinet' },
+
+  // ── War Room (col 12, row 14, 16×13) ────────────────────────────────────
+  // Interior: cols 13-26, rows 15-25. Conference table centered.
+  // WAR_ROOM_SEATS: billy(19,17), patrik(16,19), sandra(23,19),
+  //   marcos(16,21), isaac(23,21), wendy(19,23), charlie(20,23)
+  { roomId: 'war-room', type: 'table', col: 18, row: 18, width: 5, height: 3, atlasKey: 'conf-table' },
+  { roomId: 'war-room', type: 'whiteboard', col: 18, row: 15, width: 3, height: 2, renderHeight: 2, atlasKey: 'whiteboard' },
+  { roomId: 'war-room', type: 'plant', col: 13, row: 15, width: 2, height: 2, atlasKey: 'plant-large' },
+  { roomId: 'war-room', type: 'plant', col: 25, row: 15, width: 2, height: 2, atlasKey: 'plant-large' },
+  { roomId: 'war-room', type: 'water-cooler', col: 26, row: 22, width: 1, height: 2, renderHeight: 2, atlasKey: 'water-cooler' },
+
+  // ── Sandra's Office (col 32, row 13, 9×9) ───────────────────────────────
+  // Interior: cols 33-39, rows 14-20. seatTile (36,17), billyStandTile (35,17)
+  { roomId: 'sandra', type: 'desk', col: 35, row: 16, width: 2, height: 1, atlasKey: 'desk-wood-2wide' },
+  { roomId: 'sandra', type: 'monitor', col: 36, row: 15, width: 1, height: 1, atlasKey: 'monitor' },
+  { roomId: 'sandra', type: 'bookshelf', col: 37, row: 14, width: 2, height: 2, renderHeight: 2, atlasKey: 'bookshelf-2tall' },
+  { roomId: 'sandra', type: 'plant', col: 33, row: 14, width: 1, height: 1, atlasKey: 'plant-potted' },
+  { roomId: 'sandra', type: 'filing-cabinet', col: 33, row: 16, width: 1, height: 2, renderHeight: 2, atlasKey: 'filing-cabinet' },
+
+  // ── Charlie's Office (col 1, row 24, 9×9) ───────────────────────────────
+  // Interior: cols 2-8, rows 25-31. seatTile (5,28), billyStandTile (6,28)
+  { roomId: 'charlie', type: 'desk', col: 4, row: 27, width: 2, height: 1, atlasKey: 'desk-wood-2wide' },
+  { roomId: 'charlie', type: 'monitor', col: 4, row: 26, width: 1, height: 1, atlasKey: 'monitor' },
+  { roomId: 'charlie', type: 'bookshelf', col: 2, row: 25, width: 2, height: 2, renderHeight: 2, atlasKey: 'bookshelf-2tall' },
+  { roomId: 'charlie', type: 'plant', col: 8, row: 25, width: 1, height: 1, atlasKey: 'plant-potted' },
+  { roomId: 'charlie', type: 'filing-cabinet', col: 2, row: 27, width: 1, height: 2, renderHeight: 2, atlasKey: 'filing-cabinet' },
+
+  // ── Break Room (col 12, row 27, 10×6) ───────────────────────────────────
+  // Interior: cols 13-20, rows 28-31. seatTile (17,30), billyStandTile (16,30)
+  { roomId: 'break-room', type: 'couch', col: 13, row: 28, width: 3, height: 2, atlasKey: 'couch-2wide' },
+  { roomId: 'break-room', type: 'table', col: 16, row: 28, width: 2, height: 1, atlasKey: 'coffee-table' },
+  { roomId: 'break-room', type: 'water-cooler', col: 20, row: 28, width: 1, height: 2, renderHeight: 2, atlasKey: 'water-cooler' },
+  { roomId: 'break-room', type: 'plant', col: 19, row: 31, width: 1, height: 1, atlasKey: 'plant-potted' },
+
+  // ── WC (col 22, row 27, 6×6) ────────────────────────────────────────────
+  // Interior: cols 23-26, rows 28-31. seatTile (24,30), billyStandTile (25,30)
+  { roomId: 'wc', type: 'plant', col: 23, row: 28, width: 1, height: 1, atlasKey: 'plant-potted' },
+
+  // ── Wendy's Coaching Room (col 32, row 24, 9×9) ─────────────────────────
+  // Interior: cols 33-39, rows 25-31. seatTile (36,28), billyStandTile (35,28)
+  { roomId: 'wendy', type: 'desk', col: 35, row: 27, width: 2, height: 1, atlasKey: 'desk-wood-2wide' },
+  { roomId: 'wendy', type: 'monitor', col: 36, row: 26, width: 1, height: 1, atlasKey: 'monitor' },
+  { roomId: 'wendy', type: 'bookshelf', col: 37, row: 25, width: 2, height: 2, renderHeight: 2, atlasKey: 'bookshelf-2tall' },
+  { roomId: 'wendy', type: 'plant', col: 33, row: 25, width: 2, height: 2, atlasKey: 'plant-large' },
+  { roomId: 'wendy', type: 'filing-cabinet', col: 33, row: 27, width: 1, height: 2, renderHeight: 2, atlasKey: 'filing-cabinet' },
+];
 
 // -- War Room Seats -----------------------------------------------------------
 
@@ -300,8 +377,46 @@ export interface DecorationItem {
 /**
  * Centralized decoration data -- role-appropriate personality items per office.
  */
-/** All decorations removed — rooms are clean/empty. */
-export const DECORATIONS: DecorationItem[] = [];
+export const DECORATIONS: DecorationItem[] = [
+  // ── Isaac ─────────────────────────────────────────────────────────────────
+  { roomId: 'isaac', key: 'isaac-corkboard', col: 6, row: 3 },
+  { roomId: 'isaac', key: 'isaac-scripts', col: 7, row: 5 },
+  { roomId: 'isaac', key: 'coffee-mug', col: 5, row: 5 },
+
+  // ── BILLY (CEO) ───────────────────────────────────────────────────────────
+  { roomId: 'billy', key: 'billy-clapboard', col: 21, row: 3 },
+  { roomId: 'billy', key: 'billy-award', col: 22, row: 7 },
+  { roomId: 'billy', key: 'coffee-mug', col: 20, row: 5 },
+  { roomId: 'billy', key: 'pen-holder', col: 18, row: 4 },
+
+  // ── Patrik (CFO) ──────────────────────────────────────────────────────────
+  { roomId: 'patrik', key: 'patrik-chart', col: 37, row: 3 },
+  { roomId: 'patrik', key: 'patrik-calculator', col: 37, row: 5 },
+  { roomId: 'patrik', key: 'pen-holder', col: 35, row: 4 },
+
+  // ── Marcos ────────────────────────────────────────────────────────────────
+  { roomId: 'marcos', key: 'marcos-lawbooks', col: 6, row: 14 },
+  { roomId: 'marcos', key: 'marcos-gavel', col: 5, row: 16 },
+  { roomId: 'marcos', key: 'papers', col: 7, row: 16 },
+
+  // ── Sandra ────────────────────────────────────────────────────────────────
+  { roomId: 'sandra', key: 'sandra-whiteboard', col: 35, row: 14 },
+  { roomId: 'sandra', key: 'sandra-schedule', col: 37, row: 16 },
+  { roomId: 'sandra', key: 'photo-frame', col: 39, row: 16 },
+
+  // ── Charlie ───────────────────────────────────────────────────────────────
+  { roomId: 'charlie', key: 'postit-note', col: 6, row: 27 },
+  { roomId: 'charlie', key: 'water-glass', col: 5, row: 26 },
+
+  // ── Wendy ─────────────────────────────────────────────────────────────────
+  { roomId: 'wendy', key: 'wendy-motivational', col: 37, row: 27 },
+  { roomId: 'wendy', key: 'wendy-plant', col: 39, row: 30 },
+  { roomId: 'wendy', key: 'desk-plant', col: 35, row: 26 },
+
+  // ── War Room ──────────────────────────────────────────────────────────────
+  { roomId: 'war-room', key: 'papers', col: 19, row: 19 },
+  { roomId: 'war-room', key: 'water-glass', col: 21, row: 19 },
+];
 
 // -- Room Rugs ----------------------------------------------------------------
 
