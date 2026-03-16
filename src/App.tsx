@@ -5,19 +5,17 @@ import { useFileStore } from '@/store/fileStore';
 import { useOfficeStore } from '@/store/officeStore';
 import { migrateConversationsToDeals } from '@/services/persistence/migration';
 import { setOnFileClick } from '@/engine/input';
-import { Header } from '@/components/ui/Header';
-import { ChatPanel } from '@/components/chat/ChatPanel';
+import { LeftPanel } from '@/components/LeftPanel';
 import { FileViewer } from '@/components/FileViewer';
 import { OfficeCanvas } from '@/components/canvas/OfficeCanvas';
 import { RoomLabel } from '@/components/canvas/RoomLabel';
 import { ZoomControls } from '@/components/canvas/ZoomControls';
-import { DealSidebar } from '@/components/deal/DealSidebar';
 import { MigrationPrompt } from '@/components/deal/MigrationPrompt';
 import type { AgentId } from '@/types/agent';
 import { getAudioManager } from '@/engine/audioManager';
 
 const VALID_EXTENSIONS = new Set(['.pdf', '.docx', '.xlsx', '.xls']);
-const AGENT_IDS: AgentId[] = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
+const AGENT_IDS: AgentId[] = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy', 'charlie'];
 
 function isAgentRoom(id: string | null): id is AgentId {
   return id !== null && AGENT_IDS.includes(id as AgentId);
@@ -26,25 +24,16 @@ function isAgentRoom(id: string | null): id is AgentId {
 /**
  * Root application component.
  *
- * Full viewport height with dark background. Initializes deals and conversations
- * from IndexedDB on mount, then renders Header, DealSidebar (left), OfficeCanvas
- * (background layer), RoomLabel, ZoomControls, and ChatPanel (right overlay).
- *
- * Sidebar opens on app load for intentional deal selection before chatting.
+ * Two-column layout: LeftPanel (chat + projects, 320px left) and
+ * OfficeCanvas (flex-1 right). Top bar with LEMON STUDIOS branding.
  */
-/** Width threshold below which chat auto-collapses */
-const CHAT_COLLAPSE_WIDTH = 1400;
-
 function App() {
   const [ready, setReady] = useState(false);
-  const [chatOpen, setChatOpen] = useState(true);
   const [needsMigration, setNeedsMigration] = useState(false);
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [isDeskDragOver, setIsDeskDragOver] = useState(false);
   const deskFileInputRef = useRef<HTMLInputElement>(null);
   const mainRef = useRef<HTMLElement>(null);
-  /** Tracks whether user manually toggled chat (overrides auto-collapse until resize crosses threshold again) */
-  const userToggledChatRef = useRef(false);
 
   // Resolve which agent to upload to: active room if it's an agent, else first agent
   const resolveUploadAgent = useCallback((): AgentId => {
@@ -156,41 +145,6 @@ function App() {
     void init();
   }, []);
 
-  // Responsive chat collapse: observe main container width
-  useEffect(() => {
-    const el = mainRef.current;
-    if (!el) return;
-
-    let lastCrossedBelow = el.getBoundingClientRect().width < CHAT_COLLAPSE_WIDTH;
-
-    const observer = new ResizeObserver((entries) => {
-      const width = entries[0]?.contentRect.width ?? 0;
-      const nowBelow = width < CHAT_COLLAPSE_WIDTH;
-
-      // Only act when crossing the threshold (not on every resize)
-      if (nowBelow !== lastCrossedBelow) {
-        lastCrossedBelow = nowBelow;
-        userToggledChatRef.current = false; // reset manual override on threshold cross
-        setChatOpen(!nowBelow);
-      }
-    });
-
-    observer.observe(el);
-
-    // Initial check
-    const initWidth = el.getBoundingClientRect().width;
-    if (initWidth < CHAT_COLLAPSE_WIDTH) {
-      setChatOpen(false);
-    }
-
-    return () => observer.disconnect();
-  }, []);
-
-  const toggleChat = useCallback(() => {
-    userToggledChatRef.current = true;
-    setChatOpen((v) => !v);
-  }, []);
-
   const handleMigrate = async (action: 'general' | 'new-deal', dealName?: string) => {
     const dealState = useDealStore.getState();
 
@@ -234,12 +188,32 @@ function App() {
 
   return (
     <div className="h-screen bg-[--color-surface-bg] flex flex-col">
-      <Header />
-      <main ref={mainRef} className="flex-1 flex overflow-hidden min-h-0">
-        {/* Left sidebar: deals */}
-        <DealSidebar />
+      {/* Top bar */}
+      <div style={{
+        height: 60,
+        backgroundColor: '#000',
+        borderBottom: '4px solid #c68f6b',
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0 24px',
+        flexShrink: 0,
+      }}>
+        <span style={{
+          fontWeight: 800,
+          fontSize: 20,
+          color: '#e5c04b',
+          textShadow: '2px 2px 0 #d94a38',
+          letterSpacing: 2,
+          fontFamily: 'monospace',
+        }}>
+          LEMON STUDIOS
+        </span>
+      </div>
 
-        {/* Center: office canvas + desk drop zone */}
+      <main ref={mainRef} className="flex-1 flex overflow-hidden min-h-0">
+        <LeftPanel />
+
+        {/* Canvas area */}
         <div
           className="flex-1 relative overflow-hidden min-w-0"
           onDragOver={handleDeskDragOver}
@@ -286,57 +260,12 @@ function App() {
             Upload to desk
           </button>
 
-          {/* Chat expand button (visible when chat collapsed) */}
-          {!chatOpen && (
-            <button
-              onClick={toggleChat}
-              className="absolute top-3 right-3 z-20 flex items-center gap-2
-                px-3 py-2 rounded-lg
-                bg-[--color-surface-card]/90 border border-[--color-surface-border]
-                text-[--color-text-primary] text-sm font-medium
-                hover:bg-[--color-surface-elevated] backdrop-blur-sm
-                transition-all duration-200 cursor-pointer shadow-lg"
-              aria-label="Open chat panel"
-            >
-              {/* Chat bubble icon */}
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round"
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              Chat
-            </button>
-          )}
+          {/* FileViewer overlays canvas area */}
+          <FileViewer
+            fileId={selectedFileId}
+            onClose={() => setSelectedFileId(null)}
+          />
         </div>
-
-        {/* Right: chat panel -- responsive collapsible column */}
-        {chatOpen && (
-          <div className="w-[400px] max-w-[500px] shrink-0 flex flex-col min-h-0
-            border-l border-[--color-surface-border] relative
-            transition-all duration-200">
-            {/* Chat collapse button */}
-            <button
-              onClick={toggleChat}
-              className="absolute top-2 right-2 z-30 w-6 h-6
-                flex items-center justify-center rounded
-                bg-[--color-surface-card]/80 border border-[--color-surface-border]
-                text-[--color-text-muted] text-xs
-                hover:bg-[--color-surface-elevated] hover:text-[--color-text-primary]
-                transition-colors cursor-pointer"
-              aria-label="Collapse chat panel"
-              title="Collapse chat"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-              </svg>
-            </button>
-            <ChatPanel />
-            {/* FileViewer: overlays chat panel with higher z-index */}
-            <FileViewer
-              fileId={selectedFileId}
-              onClose={() => setSelectedFileId(null)}
-            />
-          </div>
-        )}
       </main>
 
       {/* Migration prompt modal */}

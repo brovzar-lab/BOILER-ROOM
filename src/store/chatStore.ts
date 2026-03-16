@@ -13,6 +13,7 @@ function createEmptyWarRoomStreaming(): Record<AgentId, WarRoomAgentStream> {
     sandra: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' },
     isaac: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' },
     wendy: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' },
+    charlie: { isStreaming: false, currentContent: '', error: null, abortController: null, status: 'idle' },
   };
 }
 

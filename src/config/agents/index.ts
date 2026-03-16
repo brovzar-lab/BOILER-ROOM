@@ -7,8 +7,8 @@ import type { AgentId } from '@/types/agent';
 
 type PersonaConfig = typeof patrikPersona;
 
-// All 5 agents registered as of Phase 11.
-export const agents: Record<AgentId, PersonaConfig> = {
+// All 5 core agents registered. Charlie placeholder pending persona config.
+export const agents: Partial<Record<AgentId, PersonaConfig>> = {
   patrik: patrikPersona,
   marcos: marcosPersona,
   sandra: sandraPersona,

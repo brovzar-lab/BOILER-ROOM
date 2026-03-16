@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { SHEET_PATHS, LIMEZU_ATLAS, sf } from '../limeZuAtlas';
-import type { SheetFrame } from '../limeZuAtlas';
+
 import { LIMEZU_CHARACTER_FRAMES, CHAR_SHEET_PATHS } from '../limeZuCharFrames';
 import { CHAR_SPRITE_W, CHAR_SPRITE_H } from '../types';
 

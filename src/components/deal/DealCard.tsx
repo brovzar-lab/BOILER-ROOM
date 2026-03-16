@@ -13,6 +13,7 @@ const AGENT_INITIALS: Record<AgentId, string> = {
   sandra: 'S',
   isaac: 'I',
   wendy: 'W',
+  charlie: 'C',
 };
 
 /**
