@@ -327,11 +327,12 @@ export const LIMEZU_ATLAS: Record<string, SheetFrame> = {
   'postit-note': sf('generic', 15, 1),
 
   // ── UI Elements ────────────────────────────────────────────────────────────
-  'emote-thinking': sf('ui-emotes', 0, 0),
-  'emote-exclamation': sf('ui-emotes', 2, 0),
-  'emote-question': sf('ui-emotes', 4, 0),
-  'emote-heart': sf('ui-emotes', 6, 0),
-  'emote-music': sf('ui-emotes', 8, 0),
+  // Emotes sheet: rows 0-3 are sparse/animated frames, rows 4+ are dense static emotes
+  'emote-thinking': sf('ui-emotes', 4, 0),      // thought bubble (verified 15 pixels)
+  'emote-exclamation': sf('ui-emotes', 0, 4),    // exclamation mark
+  'emote-question': sf('ui-emotes', 2, 4),       // question mark
+  'emote-heart': sf('ui-emotes', 4, 4),          // heart
+  'emote-music': sf('ui-emotes', 6, 4),          // music note
 
   // Speech bubbles (UI_16x16.png, 18 cols x 16 rows)
   'speech-bubble-left': sf('ui', 0, 8, 2, 2),

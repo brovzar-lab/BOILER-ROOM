@@ -7,7 +7,7 @@
 import { useEditorStore } from '@/store/editorStore';
 import { useOfficeStore } from '@/store/officeStore';
 import { screenToTile } from './camera';
-import { setTile, addFurniture, removeFurnitureAt, getFurnitureAt, OFFICE_TILE_MAP, FURNITURE } from './officeLayout';
+import { setTile, addFurniture, removeFurnitureAt, getFurnitureAt, OFFICE_TILE_MAP, FURNITURE, setTileStyle, clearTileStyle, getTileStyle } from './officeLayout';
 import { TileType, TILE_SIZE } from './types';
 import type { EditorAction } from '@/store/editorStore';
 import { saveLayoutToIDB } from './layoutSerializer';
@@ -15,7 +15,7 @@ import { saveLayoutToIDB } from './layoutSerializer';
 // ── Drag-paint state ────────────────────────────────────────────────────────
 
 let isPainting = false;
-let paintBatch: Array<{ col: number; row: number; oldType: TileType; newType: TileType }> = [];
+let paintBatch: Array<{ col: number; row: number; oldType: TileType; newType: TileType; oldStyle: string | null; newStyle: string | null }> = [];
 
 // ── Setup ───────────────────────────────────────────────────────────────────
 
@@ -80,13 +80,17 @@ export function setupEditorInputHandlers(canvas: HTMLCanvasElement): () => void 
       const action: EditorAction = {
         description: `Paint ${batch.length} tiles`,
         apply() {
-          for (const { col, row, newType } of batch) {
+          for (const { col, row, newType, newStyle } of batch) {
             setTile(col, row, newType);
+            if (newStyle) setTileStyle(col, row, newStyle);
+            else clearTileStyle(col, row);
           }
         },
         revert() {
-          for (const { col, row, oldType } of batch) {
+          for (const { col, row, oldType, oldStyle } of batch) {
             setTile(col, row, oldType);
+            if (oldStyle) setTileStyle(col, row, oldStyle);
+            else clearTileStyle(col, row);
           }
         },
       };
@@ -189,24 +193,35 @@ function applyPaintAt(col: number, row: number, tool: 'wall' | 'floor' | 'eraser
   if (col < 0 || col >= mapCols || row < 0 || row >= mapRows) return;
 
   const oldType = OFFICE_TILE_MAP[row]![col]!;
+  const oldStyle = getTileStyle(col, row);
   let newType: TileType;
+  let newStyle: string | null = null;
+
+  const store = useEditorStore.getState();
 
   if (tool === 'wall') {
     newType = TileType.WALL;
+    newStyle = store.selectedWallStyle;
   } else if (tool === 'floor') {
     newType = TileType.FLOOR;
+    newStyle = store.selectedFloorStyle;
   } else {
-    // eraser: wall/door → floor
+    // eraser: revert to floor, clear custom style
     newType = TileType.FLOOR;
+    newStyle = null;
   }
 
-  if (oldType === newType) return;
+  // Skip if same type AND same style
+  if (oldType === newType && oldStyle === newStyle) return;
 
   // Check if already in this batch (avoid duplicates during drag)
   if (paintBatch.some((b) => b.col === col && b.row === row)) return;
 
   setTile(col, row, newType);
-  paintBatch.push({ col, row, oldType, newType });
+  if (newStyle) setTileStyle(col, row, newStyle);
+  else clearTileStyle(col, row);
+
+  paintBatch.push({ col, row, oldType, newType, oldStyle, newStyle });
 }
 
 function applyDoor(col: number, row: number): void {

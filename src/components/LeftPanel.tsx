@@ -6,6 +6,7 @@ import { getAgent } from '@/config/agents';
 import type { AgentId, AgentStatus } from '@/types/agent';
 
 const AGENT_IDS: AgentId[] = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
+// TODO: Add 'charlie' once persona config exists in src/config/agents/
 
 type Tab = 'chat' | 'rooms';
 

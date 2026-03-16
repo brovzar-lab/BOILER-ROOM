@@ -706,12 +706,12 @@ function renderStatusOverlays(
 
     if (status === 'needs-attention') {
       // LimeZu speech bubble sprite above character head (screen coordinates)
-      // With 32x32 sprites, visual top is at ch.y - (CHAR_SPRITE_H - TILE_SIZE)
+      // Visual top of character head is ~30px above tile (not CHAR_SPRITE_H-TILE_SIZE=48)
       const bubbleSf = LIMEZU_ATLAS['speech-bubble-left'];
       if (bubbleSf) {
         const sheet = getEnvironmentSheetById(bubbleSf.sheetId);
         if (sheet) {
-          const charScreen = worldToScreen(ch.x + TILE_SIZE / 2, ch.y - (CHAR_SPRITE_H - TILE_SIZE));
+          const charScreen = worldToScreen(ch.x + TILE_SIZE / 2, ch.y - 30);
           const cx = Math.floor(charScreen.x);
           // Speech bubble is 2x2 tiles (32x32 in source). Scale by zoom * 0.8 for visual balance.
           const size = 16 * zoom * 0.8;
@@ -732,12 +732,12 @@ function renderStatusOverlays(
 
     if (status === 'thinking') {
       // LimeZu thinking emote sprite above character head (screen coordinates)
-      // With 32x32 sprites, visual top is at ch.y - (CHAR_SPRITE_H - TILE_SIZE)
+      // Visual top of character head is ~30px above tile
       const emoteSf = LIMEZU_ATLAS['emote-thinking'];
       if (emoteSf) {
         const sheet = getEnvironmentSheetById(emoteSf.sheetId);
         if (sheet) {
-          const charScreen = worldToScreen(ch.x + TILE_SIZE / 2, ch.y - (CHAR_SPRITE_H - TILE_SIZE));
+          const charScreen = worldToScreen(ch.x + TILE_SIZE / 2, ch.y - 30);
           const cx = Math.floor(charScreen.x);
           // Emote is 16x16. Scale by zoom * 0.8 (slightly smaller than a full tile)
           const size = 16 * zoom * 0.8;

@@ -19,7 +19,7 @@ const AGENT_IDS: AgentId[] = ['patrik', 'marcos', 'sandra', 'isaac', 'wendy'];
  * cross-visibility context on follow-up rounds.
  */
 export function useWarRoom() {
-  const [isGathering, setIsGathering] = useState(false);
+  const [isGathering] = useState(false);
   const activeStreamsRef = useRef(false);
 
   const warRoomStreaming = useChatStore((s) => s.warRoomStreaming);
@@ -60,8 +60,8 @@ export function useWarRoom() {
     // 2. Add user message to ALL 5 conversations (must await before streams - Pitfall 3)
     await Promise.all(
       AGENT_IDS.map((agentId) =>
-        store.addMessage(conversationIds[agentId], {
-          conversationId: conversationIds[agentId],
+        store.addMessage(conversationIds[agentId]!, {
+          conversationId: conversationIds[agentId]!,
           role: 'user',
           content,
           source: 'war-room',
@@ -99,7 +99,7 @@ export function useWarRoom() {
       // Track accumulated content per agent (onToken delivers individual tokens)
       let accumulated = '';
 
-      const convId = conversationIds[agentId];
+      const convId = conversationIds[agentId]!;
 
       // Get conversation for context
       const conversation = useChatStore.getState().conversations[convId];
@@ -107,7 +107,6 @@ export function useWarRoom() {
         ? conversation.messages.map((m) => ({ role: m.role, content: m.content }))
         : [{ role: 'user' as const, content }];
 
-      const crossBlock = crossVisibilityBlocks[agentId] || undefined;
 
       const executeStream = () =>
         sendStreamingMessage(

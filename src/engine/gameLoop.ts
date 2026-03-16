@@ -52,6 +52,9 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
   // Elapsed time in seconds for glow pulse animation
   let elapsedSeconds = 0;
 
+  // Editor mode transition tracking
+  let wasEditing = false;
+
   // Audio tracking state
   let footstepTimer = 0;
   let prevActiveRoomId: string | null = null;
@@ -127,6 +130,18 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
     if (!isEditing) {
       updateAllCharacters(dt, OFFICE_TILE_MAP);
     }
+
+    // When entering editor mode, auto-fit zoom to show entire office
+    if (isEditing && !wasEditing && canvasWidth > 0 && canvasHeight > 0) {
+      const fitZoom = computeAutoFitZoom(canvasWidth, canvasHeight);
+      state.camera.zoom = fitZoom;
+      state.camera.x = 0;
+      state.camera.y = 0;
+      state.camera.targetX = 0;
+      state.camera.targetY = 0;
+      useOfficeStore.getState().setZoomLevel(fitZoom);
+    }
+    wasEditing = isEditing;
 
     // --- Zoom tick: run state machine each frame ---
     const minZoom = computeAutoFitZoom(canvasWidth, canvasHeight);

@@ -215,16 +215,17 @@ function App() {
       <main ref={mainRef} className="flex-1 flex overflow-hidden min-h-0">
         <LeftPanel />
 
-        {/* Canvas area */}
-        <div
-          className="flex-1 relative overflow-hidden min-w-0"
-          onDragOver={handleDeskDragOver}
-          onDragLeave={handleDeskDragLeave}
-          onDrop={handleDeskDrop}
-        >
-          <OfficeCanvas />
+        {/* Canvas area — editor toolbar is outside the canvas container so it flows naturally */}
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           <EditorToolbar />
-          <RoomLabel />
+          <div
+            className="flex-1 relative overflow-hidden min-w-0"
+            onDragOver={handleDeskDragOver}
+            onDragLeave={handleDeskDragLeave}
+            onDrop={handleDeskDrop}
+          >
+            <OfficeCanvas />
+            <RoomLabel />
           <ZoomControls />
 
           {/* Edit Layout button (hidden in editor mode) */}
@@ -257,6 +258,7 @@ function App() {
             fileId={selectedFileId}
             onClose={() => setSelectedFileId(null)}
           />
+        </div>
         </div>
       </main>
 

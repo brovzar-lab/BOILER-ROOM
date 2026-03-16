@@ -267,6 +267,8 @@ export function setupInputHandlers(canvas: HTMLCanvasElement): () => void {
   let dragMoved = false;
 
   function handleMouseDown(e: MouseEvent): void {
+    // Editor mode handles its own mouse events
+    if (useEditorStore.getState().editorMode) return;
     // Only left-click drag (button 0), ignore if over UI
     if (e.button !== 0) return;
     dragStartX = e.clientX;
@@ -279,6 +281,8 @@ export function setupInputHandlers(canvas: HTMLCanvasElement): () => void {
   }
 
   function handleMouseMoveDrag(e: MouseEvent): void {
+    // Editor mode handles its own mouse events
+    if (useEditorStore.getState().editorMode) return;
     // Only start drag after 3px movement threshold to avoid interfering with clicks
     if (e.buttons !== 1) return;
     const dx = e.clientX - dragStartX;

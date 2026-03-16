@@ -4,9 +4,13 @@
  * Slate + Electric Blue palette, distinct from the main amber/gold theme.
  * Shows tools, undo/redo, grid size, save/done buttons.
  */
+import { useState, useRef, useEffect } from 'react';
 import { useEditorStore } from '@/store/editorStore';
 import type { EditorTool } from '@/store/editorStore';
 import { saveLayoutToIDB, downloadLayoutJSON } from '@/engine/layoutSerializer';
+import { resizeGridEdge } from '@/engine/officeLayout';
+import { LIMEZU_ATLAS } from '@/engine/limeZuAtlas';
+import { getEnvironmentSheetById } from '@/engine/spriteSheet';
 
 // ── Furniture Catalog ───────────────────────────────────────────────────────
 
@@ -71,6 +75,23 @@ const FURNITURE_CATEGORIES: Record<string, FurnitureCatalogItem[]> = {
     { id: 'papers', label: 'Papers' },
     { id: 'postit-note', label: 'Post-it' },
   ],
+  Characters: [
+    { id: 'metro-char-light', label: 'Character (Light)' },
+    { id: 'metro-char-medium', label: 'Character (Medium)' },
+    { id: 'metro-char-dark', label: 'Character (Dark)' },
+    { id: 'metro-hair-brown', label: 'Hair (Brown)' },
+    { id: 'metro-hair-blonde', label: 'Hair (Blonde)' },
+    { id: 'metro-hair-red', label: 'Hair (Red)' },
+    { id: 'metro-hair-orange', label: 'Hair (Orange)' },
+    { id: 'metro-hair-black', label: 'Hair (Black)' },
+    { id: 'metro-outfit-1', label: 'Outfit 1' },
+    { id: 'metro-outfit-2', label: 'Outfit 2' },
+    { id: 'metro-outfit-3', label: 'Outfit 3' },
+    { id: 'metro-outfit-4', label: 'Outfit 4' },
+    { id: 'metro-outfit-5', label: 'Outfit 5' },
+    { id: 'metro-outfit-6', label: 'Outfit 6' },
+    { id: 'metro-suit', label: 'Suit' },
+  ],
 };
 
 // ── Color palette ───────────────────────────────────────────────────────────
@@ -106,6 +127,127 @@ const TOOLS: ToolDef[] = [
   { id: 'grid-resize',   icon: '📐', label: 'Resize Grid',  shortcut: 'G', group: 'advanced' },
 ];
 
+// ── Floor Styles ────────────────────────────────────────────────────────────
+
+interface TileStyleItem {
+  id: string;
+  label: string;
+}
+
+const FLOOR_STYLES: TileStyleItem[] = [
+  // Band 0 — Neutral/warm
+  { id: 'floor-b0-white', label: 'White' },
+  { id: 'floor-b0-cream', label: 'Cream' },
+  { id: 'floor-b0-yellow', label: 'Yellow' },
+  { id: 'floor-b0-gold', label: 'Gold' },
+  { id: 'floor-b0-brown', label: 'Brown' },
+  { id: 'floor-b0-tan', label: 'Tan' },
+  { id: 'floor-b0-sand', label: 'Sand' },
+  { id: 'floor-b0-grey', label: 'Grey' },
+  { id: 'floor-b0-slate', label: 'Slate' },
+  { id: 'floor-b0-wood', label: 'Wood' },
+  { id: 'floor-b0-dark-wood', label: 'Dark Wood' },
+  { id: 'floor-b0-plank', label: 'Plank' },
+  // Band 1 — Patterns
+  { id: 'floor-b1-white', label: 'White Tile' },
+  { id: 'floor-b1-cream', label: 'Cream Tile' },
+  { id: 'floor-b1-pattern', label: 'Pattern' },
+  { id: 'floor-b1-checker', label: 'Checker' },
+  { id: 'floor-b1-brown', label: 'Brown Tile' },
+  { id: 'floor-b1-brick', label: 'Brick' },
+  { id: 'floor-b1-herring', label: 'Herringbone' },
+  { id: 'floor-b1-stone', label: 'Stone' },
+  { id: 'floor-b1-tile', label: 'Tile' },
+  { id: 'floor-b1-wood', label: 'Wood Tile' },
+  { id: 'floor-b1-dark', label: 'Dark Tile' },
+  { id: 'floor-b1-parquet', label: 'Parquet' },
+  // Band 2 — Red/warm
+  { id: 'floor-b2-pink', label: 'Pink' },
+  { id: 'floor-b2-rose', label: 'Rose' },
+  { id: 'floor-b2-red', label: 'Red' },
+  { id: 'floor-b2-orange', label: 'Orange' },
+  { id: 'floor-b2-terra', label: 'Terracotta' },
+  { id: 'floor-b2-clay', label: 'Clay' },
+  { id: 'floor-b2-mosaic', label: 'Mosaic' },
+  { id: 'floor-b2-blue-tile', label: 'Blue Tile' },
+  { id: 'floor-b2-diamond', label: 'Diamond' },
+  { id: 'floor-b2-marble', label: 'Marble' },
+  { id: 'floor-b2-granite', label: 'Granite' },
+  { id: 'floor-b2-concrete', label: 'Concrete' },
+  // Band 3 — Grey/dark
+  { id: 'floor-b3-grey', label: 'Light Grey' },
+  { id: 'floor-b3-steel', label: 'Steel' },
+  { id: 'floor-b3-silver', label: 'Silver' },
+  { id: 'floor-b3-dark-grey', label: 'Dark Grey' },
+  { id: 'floor-b3-charcoal', label: 'Charcoal' },
+  { id: 'floor-b3-cement', label: 'Cement' },
+  { id: 'floor-b3-grid', label: 'Grid' },
+  { id: 'floor-b3-checker', label: 'Grey Check' },
+  { id: 'floor-b3-tile', label: 'Grey Tile' },
+  { id: 'floor-b3-dark-tile', label: 'Dark Tile' },
+  { id: 'floor-b3-cobble', label: 'Cobble' },
+  { id: 'floor-b3-industrial', label: 'Industrial' },
+  // Band 4 — Cool/green/blue
+  { id: 'floor-b4-teal', label: 'Teal' },
+  { id: 'floor-b4-seafoam', label: 'Seafoam' },
+  { id: 'floor-b4-green', label: 'Green' },
+  { id: 'floor-b4-olive', label: 'Olive' },
+  { id: 'floor-b4-wood-green', label: 'Green Wood' },
+  { id: 'floor-b4-aqua', label: 'Aqua' },
+  { id: 'floor-b4-sky-tile', label: 'Sky Tile' },
+  { id: 'floor-b4-blue', label: 'Blue' },
+  { id: 'floor-b4-white-tile', label: 'White Tile' },
+  { id: 'floor-b4-light-blue', label: 'Light Blue' },
+  { id: 'floor-b4-pastel', label: 'Pastel' },
+  { id: 'floor-b4-mint', label: 'Mint' },
+  // Existing named
+  { id: 'floor-office', label: 'Office' },
+  { id: 'floor-warroom', label: 'War Room' },
+  { id: 'floor-hallway', label: 'Hallway' },
+  { id: 'floor-rec', label: 'Break Room' },
+];
+
+// ── Wall Styles ─────────────────────────────────────────────────────────────
+
+const WALL_STYLES: TileStyleItem[] = [
+  // Solid fills
+  { id: 'wall-white', label: 'White' },
+  { id: 'wall-cream', label: 'Cream' },
+  { id: 'wall-beige', label: 'Beige' },
+  { id: 'wall-yellow', label: 'Yellow' },
+  { id: 'wall-brown', label: 'Brown' },
+  { id: 'wall-dark-brown', label: 'Dark Brown' },
+  { id: 'wall-grey', label: 'Grey' },
+  { id: 'wall-dark-grey', label: 'Dark Grey' },
+  // Brick
+  { id: 'wall-white-brick', label: 'White Brick' },
+  { id: 'wall-cream-brick', label: 'Cream Brick' },
+  { id: 'wall-beige-brick', label: 'Beige Brick' },
+  { id: 'wall-yellow-brick', label: 'Yellow Brick' },
+  { id: 'wall-brown-brick', label: 'Brown Brick' },
+  { id: 'wall-dark-brown-brick', label: 'Dk Brown Brick' },
+  { id: 'wall-grey-brick', label: 'Grey Brick' },
+  { id: 'wall-dark-grey-brick', label: 'Dk Grey Brick' },
+  // Panel
+  { id: 'wall-white-panel', label: 'White Panel' },
+  { id: 'wall-cream-panel', label: 'Cream Panel' },
+  { id: 'wall-beige-panel', label: 'Beige Panel' },
+  { id: 'wall-yellow-panel', label: 'Yellow Panel' },
+  { id: 'wall-brown-panel', label: 'Brown Panel' },
+  { id: 'wall-dark-brown-panel', label: 'Dk Brown Panel' },
+  { id: 'wall-grey-panel', label: 'Grey Panel' },
+  { id: 'wall-dark-grey-panel', label: 'Dk Grey Panel' },
+  // Alt style
+  { id: 'wall-white-alt', label: 'White Alt' },
+  { id: 'wall-cream-alt', label: 'Cream Alt' },
+  { id: 'wall-beige-alt', label: 'Beige Alt' },
+  { id: 'wall-yellow-alt', label: 'Yellow Alt' },
+  { id: 'wall-brown-alt', label: 'Brown Alt' },
+  { id: 'wall-dark-brown-alt', label: 'Dk Brown Alt' },
+  { id: 'wall-grey-alt', label: 'Grey Alt' },
+  { id: 'wall-dark-grey-alt', label: 'Dk Grey Alt' },
+];
+
 // ── Component ───────────────────────────────────────────────────────────────
 
 export function EditorToolbar() {
@@ -123,15 +265,25 @@ export function EditorToolbar() {
   const selectedFurnitureId = useEditorStore((s) => s.selectedFurnitureId);
   const setSelectedFurniture = useEditorStore((s) => s.setSelectedFurniture);
 
+  const setGridDimensions = useEditorStore((s) => s.setGridDimensions);
+
+  const selectedFloorStyle = useEditorStore((s) => s.selectedFloorStyle);
+  const setSelectedFloorStyle = useEditorStore((s) => s.setSelectedFloorStyle);
+  const selectedWallStyle = useEditorStore((s) => s.selectedWallStyle);
+  const setSelectedWallStyle = useEditorStore((s) => s.setSelectedWallStyle);
+
   if (!editorMode) return null;
 
   const showFurnitureDropdown = activeTool === 'furniture';
+  const showGridResize = activeTool === 'grid-resize';
+  const showFloorPicker = activeTool === 'floor';
+  const showWallPicker = activeTool === 'wall';
 
   const primaryTools = TOOLS.filter((t) => t.group === 'primary');
   const advancedTools = TOOLS.filter((t) => t.group === 'advanced');
 
   return (
-    <div className="absolute top-0 left-0 right-0 z-30 flex flex-col" style={{ pointerEvents: 'auto' }}>
+    <div className="flex flex-col shrink-0">
       {/* Main toolbar */}
       <div
         className="flex items-center gap-1.5 px-3"
@@ -306,20 +458,7 @@ export function EditorToolbar() {
                     border: selectedFurnitureId === item.id ? `2px solid ${COLORS.accent}` : '1px solid rgba(59,130,246,0.2)',
                   }}
                 >
-                  <div
-                    className="rounded"
-                    style={{
-                      width: 28,
-                      height: 28,
-                      background: 'rgba(59,130,246,0.15)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 14,
-                    }}
-                  >
-                    🪑
-                  </div>
+                  <SpritePreview atlasKey={item.id} size={28} />
                   <span style={{ fontSize: 7, color: selectedFurnitureId === item.id ? '#93c5fd' : '#999', textAlign: 'center', lineHeight: 1.2 }}>
                     {item.label}
                   </span>
@@ -328,6 +467,34 @@ export function EditorToolbar() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Floor style picker */}
+      {showFloorPicker && (
+        <TileStylePicker
+          title="FLOOR STYLE"
+          items={FLOOR_STYLES}
+          selectedId={selectedFloorStyle}
+          onSelect={setSelectedFloorStyle}
+        />
+      )}
+
+      {/* Wall style picker */}
+      {showWallPicker && (
+        <TileStylePicker
+          title="WALL STYLE"
+          items={WALL_STYLES}
+          selectedId={selectedWallStyle}
+          onSelect={setSelectedWallStyle}
+        />
+      )}
+
+      {/* Grid resize dialog */}
+      {showGridResize && (
+        <GridResizePanel
+          gridDimensions={gridDimensions}
+          setGridDimensions={setGridDimensions}
+        />
       )}
 
       {/* Status bar */}
@@ -367,6 +534,227 @@ function ToolButton({
         <span style={{ fontSize: 8, color: COLORS.accent, marginLeft: 2 }}>▼</span>
       )}
     </button>
+  );
+}
+
+// ── Sprite Preview ──────────────────────────────────────────────────────────
+
+/** Renders a sprite frame from the atlas onto a small canvas. */
+function SpritePreview({ atlasKey, size = 28 }: { atlasKey: string; size?: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const entry = LIMEZU_ATLAS[atlasKey];
+    if (!entry) {
+      // Fallback: draw a placeholder
+      ctx.fillStyle = 'rgba(59,130,246,0.2)';
+      ctx.fillRect(0, 0, size, size);
+      return;
+    }
+
+    const sheet = getEnvironmentSheetById(entry.sheetId);
+    if (!sheet) {
+      // Sheet not loaded yet — draw placeholder
+      ctx.fillStyle = 'rgba(59,130,246,0.15)';
+      ctx.fillRect(0, 0, size, size);
+      ctx.fillStyle = 'rgba(59,130,246,0.4)';
+      ctx.font = `${size * 0.4}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('?', size / 2, size / 2);
+      return;
+    }
+
+    // Draw the sprite frame scaled to the preview size
+    const { x, y, w, h } = entry.frame;
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, size, size);
+    ctx.drawImage(sheet, x, y, w, h, 0, 0, size, size);
+  }, [atlasKey, size]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={size}
+      height={size}
+      style={{ width: size, height: size, imageRendering: 'pixelated', borderRadius: 3 }}
+    />
+  );
+}
+
+// ── Tile Style Picker ───────────────────────────────────────────────────────
+
+function TileStylePicker({
+  title,
+  items,
+  selectedId,
+  onSelect,
+}: {
+  title: string;
+  items: TileStyleItem[];
+  selectedId: string;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <div
+      className="flex flex-col"
+      style={{
+        background: `${COLORS.bg}ee`,
+        borderBottom: `1px solid ${COLORS.border}`,
+        fontFamily: 'monospace',
+        maxHeight: 180,
+      }}
+    >
+      <div className="flex items-center gap-2 px-3 pt-2 pb-1">
+        <span style={{ color: COLORS.accent, fontWeight: 'bold', fontSize: 9, letterSpacing: 1 }}>{title}</span>
+        <span style={{ color: '#555', fontSize: 9 }}>({items.length} styles)</span>
+      </div>
+      <div
+        className="grid gap-1 px-3 pb-2 overflow-y-auto"
+        style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(65px, 1fr))' }}
+      >
+        {items.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => onSelect(item.id)}
+            className="flex flex-col items-center gap-0.5 p-1 rounded transition-colors"
+            style={{
+              background: selectedId === item.id ? 'rgba(59,130,246,0.3)' : 'rgba(59,130,246,0.06)',
+              border: selectedId === item.id ? `2px solid ${COLORS.accent}` : '1px solid rgba(59,130,246,0.15)',
+            }}
+          >
+            <SpritePreview atlasKey={item.id} size={24} />
+            <span style={{ fontSize: 7, color: selectedId === item.id ? '#93c5fd' : '#888', textAlign: 'center', lineHeight: 1.1 }}>
+              {item.label}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Grid Resize Panel ───────────────────────────────────────────────────────
+
+function GridResizePanel({
+  gridDimensions,
+  setGridDimensions,
+}: {
+  gridDimensions: { cols: number; rows: number };
+  setGridDimensions: (cols: number, rows: number) => void;
+}) {
+  const handleResize = (edge: 'top' | 'bottom' | 'left' | 'right', amount: number) => {
+    resizeGridEdge(edge, amount);
+    // Recalculate dimensions from actual map
+    const newRows = (window as Record<string, unknown>).__tileMapRef
+      ? 0 // fallback
+      : amount !== 0
+        ? edge === 'top' || edge === 'bottom'
+          ? gridDimensions.rows + amount
+          : gridDimensions.rows
+        : gridDimensions.rows;
+    const newCols = edge === 'left' || edge === 'right'
+      ? gridDimensions.cols + amount
+      : gridDimensions.cols;
+    setGridDimensions(
+      Math.max(1, newCols),
+      Math.max(1, newRows),
+    );
+  };
+
+  const btnStyle = (color: string) => ({
+    background: color,
+    color: '#fff',
+    border: 'none',
+    borderRadius: 4,
+    width: 28,
+    height: 28,
+    fontSize: 14,
+    cursor: 'pointer' as const,
+    display: 'flex' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  });
+
+  const addBtn = btnStyle('rgba(59,130,246,0.4)');
+  const removeBtn = btnStyle('rgba(239,68,68,0.4)');
+
+  return (
+    <div
+      className="flex items-center gap-4 px-4 py-3"
+      style={{
+        background: `${COLORS.bg}ee`,
+        borderBottom: `1px solid ${COLORS.border}`,
+        fontFamily: 'monospace',
+      }}
+    >
+      <span style={{ color: COLORS.accent, fontWeight: 'bold', fontSize: 9, letterSpacing: 1 }}>RESIZE GRID</span>
+
+      {/* Visual directional controls */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+        {/* Top row */}
+        <div style={{ display: 'flex', gap: 2 }}>
+          <button onClick={() => handleResize('top', -1)} style={removeBtn} title="Remove row from top">−</button>
+          <button onClick={() => handleResize('top', 1)} style={addBtn} title="Add row to top">+</button>
+        </div>
+        <span style={{ color: '#555', fontSize: 8 }}>TOP</span>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        {/* Left controls */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+          <div style={{ display: 'flex', gap: 2 }}>
+            <button onClick={() => handleResize('left', -1)} style={removeBtn} title="Remove column from left">−</button>
+            <button onClick={() => handleResize('left', 1)} style={addBtn} title="Add column to left">+</button>
+          </div>
+          <span style={{ color: '#555', fontSize: 8 }}>LEFT</span>
+        </div>
+
+        {/* Grid preview */}
+        <div
+          style={{
+            width: 64,
+            height: 48,
+            background: 'rgba(59,130,246,0.1)',
+            border: `2px solid ${COLORS.accent}`,
+            borderRadius: 4,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: COLORS.accent,
+            fontSize: 12,
+            fontWeight: 'bold',
+          }}
+        >
+          {gridDimensions.cols}×{gridDimensions.rows}
+        </div>
+
+        {/* Right controls */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+          <div style={{ display: 'flex', gap: 2 }}>
+            <button onClick={() => handleResize('right', -1)} style={removeBtn} title="Remove column from right">−</button>
+            <button onClick={() => handleResize('right', 1)} style={addBtn} title="Add column to right">+</button>
+          </div>
+          <span style={{ color: '#555', fontSize: 8 }}>RIGHT</span>
+        </div>
+      </div>
+
+      {/* Bottom controls */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+        <span style={{ color: '#555', fontSize: 8 }}>BOTTOM</span>
+        <div style={{ display: 'flex', gap: 2 }}>
+          <button onClick={() => handleResize('bottom', -1)} style={removeBtn} title="Remove row from bottom">−</button>
+          <button onClick={() => handleResize('bottom', 1)} style={addBtn} title="Add row to bottom">+</button>
+        </div>
+      </div>
+
+      <span style={{ color: '#555', fontSize: 9, marginLeft: 8 }}>Click +/− to add or remove rows/columns from any edge</span>
+    </div>
   );
 }
 

@@ -133,19 +133,19 @@ export const LIMEZU_CHARACTER_FRAMES: Record<
   // Walk: rows 4-5 pair (even row 4 = head, odd row 5 = body) → 32x64 frame
   walk: buildPackedRow(4, 6),
 
-  // Work: rows 6-7 pair (phone/sit + equipment) → 32x64 frame
+  // Work: use idle frames (row 6-7 pair has broken lower half — equipment sprites not body)
   work: {
-    down:  [frame(0, 6), frame(1, 6), frame(2, 6), frame(3, 6)],
-    left:  [frame(0, 6), frame(1, 6), frame(2, 6), frame(3, 6)],
-    right: [frame(0, 6), frame(1, 6), frame(2, 6), frame(3, 6)],
-    up:    [frame(0, 6), frame(1, 6), frame(2, 6), frame(3, 6)],
+    down:  [frame(0, 2)],
+    left:  [frame(6, 2)],
+    right: [frame(12, 2)],
+    up:    [frame(18, 2)],
   },
 
-  // Talk: alternate between first two idle frames (rows 2-3 pair)
+  // Talk: use idle frames (same full-body sprites)
   talk: {
-    down:  [frame(0, 2), frame(1, 2)],
-    left:  [frame(6, 2), frame(7, 2)],
-    right: [frame(12, 2), frame(13, 2)],
-    up:    [frame(18, 2), frame(19, 2)],
+    down:  [frame(0, 2)],
+    left:  [frame(6, 2)],
+    right: [frame(12, 2)],
+    up:    [frame(18, 2)],
   },
 };

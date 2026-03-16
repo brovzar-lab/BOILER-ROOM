@@ -37,8 +37,9 @@ export interface EditorState {
   // Active tool
   activeTool: EditorTool;
 
-  // Floor style selection
+  // Floor/wall style selection
   selectedFloorStyle: string;
+  selectedWallStyle: string;
 
   // Furniture placement
   selectedFurnitureId: string | null;
@@ -62,6 +63,7 @@ export interface EditorState {
   undo: () => void;
   redo: () => void;
   setSelectedFloorStyle: (style: string) => void;
+  setSelectedWallStyle: (style: string) => void;
   setSelectedFurniture: (id: string | null) => void;
   setFurnitureCategory: (cat: string | null) => void;
   setGridDimensions: (cols: number, rows: number) => void;
@@ -75,6 +77,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   editorMode: false,
   activeTool: 'select',
   selectedFloorStyle: 'floor-office',
+  selectedWallStyle: 'wall-front',
   selectedFurnitureId: null,
   furnitureCategory: null,
   undoStack: [],
@@ -138,6 +141,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   setSelectedFloorStyle: (style) => set({ selectedFloorStyle: style }),
+
+  setSelectedWallStyle: (style) => set({ selectedWallStyle: style }),
 
   setSelectedFurniture: (id) => set({ selectedFurnitureId: id }),
 

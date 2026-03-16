@@ -15,8 +15,9 @@ import { OFFICE_TILE_MAP } from './officeLayout';
 export function computeAutoFitZoom(canvasWidth: number, canvasHeight: number): number {
   const mapCols = OFFICE_TILE_MAP[0]!.length;
   const mapRows = OFFICE_TILE_MAP.length;
-  const mapPixelW = mapCols * TILE_SIZE;
-  const mapPixelH = mapRows * TILE_SIZE;
+  // Add 5 tiles of padding on each side (10 total per axis)
+  const mapPixelW = (mapCols + 10) * TILE_SIZE;
+  const mapPixelH = (mapRows + 10) * TILE_SIZE;
 
   return Math.max(0.5, Math.min(canvasWidth / mapPixelW, canvasHeight / mapPixelH));
 }
@@ -66,7 +67,7 @@ export function createCamera(): Camera {
     zoom: 2,
     targetX: 0,
     targetY: 0,
-    followTarget: 'billy',
+    followTarget: null,
   };
 }
 
