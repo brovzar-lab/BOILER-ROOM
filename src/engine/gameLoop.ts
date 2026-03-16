@@ -8,11 +8,13 @@
  * The game loop receives an already-configured canvas.
  */
 import { useOfficeStore } from '@/store/officeStore';
+import { useEditorStore } from '@/store/editorStore';
 import { TILE_SIZE, ZOOM_OVERVIEW_THRESHOLD } from './types';
 import { updateCamera, computeAutoFitZoom } from './camera';
 import { updateAllCharacters } from './characters';
 import { OFFICE_TILE_MAP } from './officeLayout';
 import { renderFrame } from './renderer';
+import { renderEditorOverlay } from './editorRenderer';
 import { getAudioManager } from './audioManager';
 import { tickZoom, startAnimatedZoom } from './zoomController';
 import { zoomState, isDragging, userHasPanned, clearUserPan } from './input';
@@ -38,8 +40,10 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
   let prevWidth = 0;
   let prevHeight = 0;
 
-  // Auto-fit zoom tracking: true until user manually overrides via ZoomControls
-  let isAutoFitZoom = true;
+  // Startup zoom: 2.0x for clean pixel rendering. Auto-fit is the *minimum* zoom bound,
+  // not the starting zoom. Users can zoom out to auto-fit, but we don't start there.
+  const STARTUP_ZOOM = 2.0;
+  let isAutoFitZoom = false; // start false so user can override; fit-to-screen is auto-fit reset only
   let firstFrame = true;
 
   // Track quantized zoom to sync store only on 0.5-step changes
@@ -90,12 +94,18 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
       }
     }
 
-    // On first frame, apply auto-fit zoom
+    // On first frame, auto-fit zoom so entire office is visible
     if (firstFrame && prevWidth > 0 && prevHeight > 0) {
       firstFrame = false;
       const fitZoom = computeAutoFitZoom(prevWidth, prevHeight);
       state.camera.zoom = fitZoom;
       useOfficeStore.getState().setZoomLevel(fitZoom);
+
+      // Center on map (overview mode)
+      state.camera.x = 0;
+      state.camera.y = 0;
+      state.camera.targetX = 0;
+      state.camera.targetY = 0;
     }
 
     // Expose auto-fit reset via a module-level flag
@@ -112,8 +122,11 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
     const canvasWidth = prevWidth;
     const canvasHeight = prevHeight;
 
-    // Update all characters (movement, animation, room entry detection)
-    updateAllCharacters(dt, OFFICE_TILE_MAP);
+    // Skip character updates in editor mode (freeze in place)
+    const isEditing = useEditorStore.getState().editorMode;
+    if (!isEditing) {
+      updateAllCharacters(dt, OFFICE_TILE_MAP);
+    }
 
     // --- Zoom tick: run state machine each frame ---
     const minZoom = computeAutoFitZoom(canvasWidth, canvasHeight);
@@ -165,25 +178,9 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
     }
     prevAgentStatuses = { ...currentStatuses };
 
-    // Re-enable follow when BILLY starts walking (user clicked a room to navigate)
-    if (billy && billy.state === 'walk' && userHasPanned) {
-      clearUserPan();
-    }
-
-    // Camera follow: pause during active zoom, drag-to-pan, or manual pan
-    const zoomActive = zoomState.phase !== 'idle';
-    if (!zoomActive && !isDragging && !userHasPanned && billy && state.camera.followTarget === 'billy' && state.camera.zoom >= ZOOM_OVERVIEW_THRESHOLD) {
-      // Follow target: center of character's occupied tile (foot-center)
-      // Using foot-center keeps the ground plane natural with taller 24x32 sprites
-      const followX = billy.x + TILE_SIZE / 2;
-      const followY = billy.y + TILE_SIZE / 2;
-      state.camera.targetX = followX * state.camera.zoom - canvasWidth / 2;
-      state.camera.targetY = followY * state.camera.zoom - canvasHeight / 2;
-    } else if (state.camera.zoom < ZOOM_OVERVIEW_THRESHOLD) {
-      // Overview mode: center camera on the map
-      state.camera.targetX = 0;
-      state.camera.targetY = 0;
-    }
+    // Always keep camera centered on the map (overview mode — no follow)
+    state.camera.targetX = 0;
+    state.camera.targetY = 0;
 
     // Update camera (smooth follow toward target)
     updateCamera(state.camera, dt, canvasWidth, canvasHeight);
@@ -199,6 +196,11 @@ export function startGameLoop(canvas: HTMLCanvasElement): () => void {
       state.agentStatuses,
       elapsedSeconds,
     );
+
+    // Render editor overlay (grid lines, cursor, tile indicators) when editing
+    if (isEditing) {
+      renderEditorOverlay(ctx, state.camera, canvasWidth, canvasHeight);
+    }
 
     rafId = requestAnimationFrame(frame);
   }

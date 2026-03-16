@@ -8,6 +8,7 @@
  * Drag-and-drop routes PDF/DOCX files to the agent under the cursor.
  */
 import { useOfficeStore } from '@/store/officeStore';
+import { useEditorStore } from '@/store/editorStore';
 import { useFileStore } from '@/store/fileStore';
 import { screenToTile, computeAutoFitZoom } from './camera';
 import { getRoomAtTile, ROOMS, OFFICE_TILE_MAP } from './officeLayout';
@@ -97,6 +98,9 @@ export function setupInputHandlers(canvas: HTMLCanvasElement): () => void {
       return;
     }
 
+    // Editor mode handles its own clicks
+    if (useEditorStore.getState().editorMode) return;
+
     const rect = canvas.getBoundingClientRect();
     const cssX = e.clientX - rect.left;
     const cssY = e.clientY - rect.top;
@@ -154,6 +158,12 @@ export function setupInputHandlers(canvas: HTMLCanvasElement): () => void {
     // Don't trigger navigation while typing in chat input
     const tag = document.activeElement?.tagName;
     if (tag === 'TEXTAREA' || tag === 'INPUT') return;
+
+    // In editor mode, only allow zoom keys — editor handles tool keys separately
+    if (useEditorStore.getState().editorMode) {
+      // Allow zoom keys (z, 0, +, -, =) to pass through
+      if (!['z', 'Z', '0', '+', '=', '-'].includes(e.key)) return;
+    }
 
     if (e.key === 'z' || e.key === 'Z') {
       toggleZoom();

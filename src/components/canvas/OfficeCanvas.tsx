@@ -3,6 +3,8 @@ import { loadAllAssets } from '@/engine/spriteSheet';
 import { useOfficeStore } from '@/store/officeStore';
 import { startGameLoop } from '@/engine/gameLoop';
 import { setupInputHandlers } from '@/engine/input';
+import { setupEditorInputHandlers } from '@/engine/editorInput';
+import { loadLayoutFromIDB, deserializeLayout } from '@/engine/layoutSerializer';
 
 /**
  * React wrapper mounting the Canvas 2D engine.
@@ -20,6 +22,7 @@ export function OfficeCanvas() {
 
     let stopLoop: (() => void) | null = null;
     let cleanupInput: (() => void) | null = null;
+    let cleanupEditorInput: (() => void) | null = null;
     let resizeObserver: ResizeObserver | null = null;
     let cancelled = false;
 
@@ -56,6 +59,12 @@ export function OfficeCanvas() {
 
       if (cancelled) return;
 
+      // Load saved layout from IndexedDB (if any) before initializing characters
+      const savedLayout = await loadLayoutFromIDB();
+      if (savedLayout && !cancelled) {
+        deserializeLayout(savedLayout);
+      }
+
       // Initialize characters in the office store
       useOfficeStore.getState().initializeCharacters();
 
@@ -64,6 +73,9 @@ export function OfficeCanvas() {
 
       // Set up input handlers (click-to-walk, zoom toggle, hover)
       if (canvas) cleanupInput = setupInputHandlers(canvas);
+
+      // Set up editor input handlers (active only when editorMode is true)
+      if (canvas) cleanupEditorInput = setupEditorInputHandlers(canvas);
 
       // ResizeObserver: re-run HiDPI setup when container resizes
       resizeObserver = new ResizeObserver(() => {
@@ -80,6 +92,7 @@ export function OfficeCanvas() {
       cancelled = true;
       if (stopLoop) stopLoop();
       if (cleanupInput) cleanupInput();
+      if (cleanupEditorInput) cleanupEditorInput();
       if (resizeObserver) resizeObserver.disconnect();
     };
   }, []);

@@ -10,6 +10,8 @@ import { FileViewer } from '@/components/FileViewer';
 import { OfficeCanvas } from '@/components/canvas/OfficeCanvas';
 import { RoomLabel } from '@/components/canvas/RoomLabel';
 import { ZoomControls } from '@/components/canvas/ZoomControls';
+import { EditorToolbar } from '@/components/canvas/EditorToolbar';
+import { useEditorStore } from '@/store/editorStore';
 import { MigrationPrompt } from '@/components/deal/MigrationPrompt';
 import type { AgentId } from '@/types/agent';
 import { getAudioManager } from '@/engine/audioManager';
@@ -221,8 +223,12 @@ function App() {
           onDrop={handleDeskDrop}
         >
           <OfficeCanvas />
+          <EditorToolbar />
           <RoomLabel />
           <ZoomControls />
+
+          {/* Edit Layout button (hidden in editor mode) */}
+          <EditLayoutButton />
 
           {/* Desk drop zone overlay */}
           {isDeskDragOver && (
@@ -244,21 +250,7 @@ function App() {
             onChange={handleDeskFileInput}
           />
 
-          {/* Desk upload hint button */}
-          <button
-            onClick={() => deskFileInputRef.current?.click()}
-            className="absolute bottom-14 right-3 z-10 flex items-center gap-1.5
-              px-3 py-1.5 rounded-lg text-xs font-medium
-              bg-neutral-800/80 hover:bg-neutral-700/90 backdrop-blur-sm
-              text-neutral-400 hover:text-neutral-200 border border-neutral-700
-              transition-colors"
-            title="Upload file to desk"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
-            Upload to desk
-          </button>
+
 
           {/* FileViewer overlays canvas area */}
           <FileViewer
@@ -276,6 +268,30 @@ function App() {
         />
       )}
     </div>
+  );
+}
+
+// ── Edit Layout Button ──────────────────────────────────────────────────────
+
+function EditLayoutButton() {
+  const editorMode = useEditorStore((s) => s.editorMode);
+  const toggleEditorMode = useEditorStore((s) => s.toggleEditorMode);
+
+  if (editorMode) return null;
+
+  return (
+    <button
+      onClick={toggleEditorMode}
+      className="absolute bottom-14 left-3 z-10 flex items-center gap-1.5
+        px-3 py-1.5 rounded-lg text-xs font-medium
+        bg-[#151a24]/80 hover:bg-[#1a2030]/90 backdrop-blur-sm
+        text-[#60a5fa] hover:text-[#93c5fd] border border-[#3b82f655]
+        transition-colors"
+      title="Edit office layout"
+    >
+      <span>✏️</span>
+      Edit Layout
+    </button>
   );
 }
 

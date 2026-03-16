@@ -33,6 +33,7 @@ import { renderGlowEffects } from './glowEffects';
 import { computeTimeOfDay, applyFloorTint } from './timeOfDay';
 import { useFileStore } from '@/store/fileStore';
 import { dragOverRoomId, invalidDropMessage, invalidDropX, invalidDropY, hoverTileCol, hoverTileRow } from './input';
+import { useEditorStore } from '@/store/editorStore';
 
 /** Dark background matching the app dark theme */
 const BG_COLOR = '#0d0b09';
@@ -100,8 +101,6 @@ export function renderFrame(
     for (let col = minCol; col <= maxCol; col++) {
       const tile = tileRow[col];
       if (tile === undefined || tile === TileType.VOID) continue;
-      // WALL tiles are handled exclusively by renderWalls (solid fills, no sprites)
-      if (tile === TileType.WALL) continue;
 
       const x = col * TILE_SIZE;
       const y = row * TILE_SIZE;
@@ -164,16 +163,20 @@ export function renderFrame(
   // ── Reset to identity for UI overlays ──────────────────────────────────
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  // ── Layer 5: Status Overlays (speech bubbles, thinking dots) ──────────
-  renderStatusOverlays(ctx, characters, agentStatuses, zoom, worldToScreen);
+  // Skip game UI overlays in editor mode (editor has its own overlays)
+  const isEditing = useEditorStore.getState().editorMode;
+  if (!isEditing) {
+    // ── Layer 5: Status Overlays (speech bubbles, thinking dots) ────────
+    renderStatusOverlays(ctx, characters, agentStatuses, zoom, worldToScreen);
 
-  // ── Layer 5b: File Icons on Desks ──────────────────────────────────────
-  renderFileIcons(ctx, zoom, worldToScreen);
+    // ── Layer 5b: File Icons on Desks ────────────────────────────────────
+    renderFileIcons(ctx, zoom, worldToScreen);
 
-  // ── Layer 6: UI Overlays (room labels for all rooms at zoom >= 1.5x) ──
-  if (zoom >= ZOOM_OVERVIEW_THRESHOLD) {
-    for (const room of ROOMS) {
-      renderRoomLabel(ctx, room.id, zoom, worldToScreen);
+    // ── Layer 6: UI Overlays (room labels for all rooms at zoom >= 1.5x)
+    if (zoom >= ZOOM_OVERVIEW_THRESHOLD) {
+      for (const room of ROOMS) {
+        renderRoomLabel(ctx, room.id, zoom, worldToScreen);
+      }
     }
   }
 }
@@ -184,16 +187,15 @@ function getTileAtlasKey(tile: TileType, col: number, row: number): string {
   switch (tile) {
     case TileType.WALL:
       return 'wall-3d-front';
-    case TileType.DOOR:
-      return 'door';
+    case TileType.DOOR: {
+      const doorRoom = getRoomAtTile(col, row);
+      if (doorRoom?.id === 'war-room') return 'floor-warroom';
+      return 'floor-office';
+    }
     case TileType.FLOOR: {
       const room = getRoomAtTile(col, row);
       if (room?.id === 'war-room') return 'floor-warroom';
-      if (room?.id === 'break-room') return 'floor-rec';
-      if (room?.id === 'wc') return 'floor-hallway';
-      if (!room) {
-        return 'floor-hallway';
-      }
+      if (!room) return 'floor-hallway';
       return 'floor-office';
     }
     default:
@@ -284,12 +286,10 @@ const WALL_FACE_COLOR = '#a89f94';
 const WALL_SHADOW_H = 3;
 
 /**
- * Renders all WALL tiles as solid colored rectangles.
- * North-facing walls (those with a floor tile directly to the south) get a
- * darker 4-pixel "face" strip along their bottom edge to give the impression
- * of depth in the 3/4-perspective view. All other walls are a uniform fill.
- *
- * No sprite sheets are used — walls are always crisp and fully opaque.
+ * Renders 3/4 perspective depth effects on wall tiles.
+ * Wall body is drawn by the sprite atlas in Layer 2. This only adds:
+ *   - Darker face strip on south edge of north-facing walls
+ *   - Shadow on the floor tile directly below
  */
 function renderWalls(
   ctx: CanvasRenderingContext2D,
@@ -299,7 +299,7 @@ function renderWalls(
   maxRow: number,
 ): void {
   const mapRows = OFFICE_TILE_MAP.length;
-  const FACE_H = 4; // px: darker band at south edge of north-facing wall
+  const FACE_H = 4;
 
   for (let row = minRow; row <= maxRow; row++) {
     const tileRow = OFFICE_TILE_MAP[row];
@@ -313,18 +313,14 @@ function renderWalls(
 
       const hasSouthFloor = row + 1 < mapRows && isFloorOrDoor(OFFICE_TILE_MAP[row + 1]![col]!);
 
-      // Solid wall body
-      ctx.fillStyle = WALL_COLOR;
-      ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-
       if (hasSouthFloor) {
-        // Darker face strip at bottom of north-facing wall
-        ctx.fillStyle = WALL_FACE_COLOR;
+        // Darker face strip at bottom of north-facing wall (3/4 depth)
+        ctx.fillStyle = 'rgba(0,0,0,0.25)';
         ctx.fillRect(x, y + TILE_SIZE - FACE_H, TILE_SIZE, FACE_H);
 
-        // Subtle shadow on the floor tile directly below
+        // Shadow on the floor tile directly below
         const floorY = (row + 1) * TILE_SIZE;
-        ctx.fillStyle = 'rgba(0,0,0,0.12)';
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
         ctx.fillRect(x, floorY, TILE_SIZE, WALL_SHADOW_H);
       }
     }
@@ -761,12 +757,13 @@ function renderRoomLabel(
   if (!room) return;
 
   const r = room.tileRect;
+  // Position label at bottom-center of room interior (inside the room, not above)
   const labelScreen = worldToScreen(
     (r.col + r.width / 2) * TILE_SIZE,
-    r.row * TILE_SIZE,
+    (r.row + r.height - 1) * TILE_SIZE,
   );
   const labelX = Math.floor(labelScreen.x);
-  const labelY = Math.floor(labelScreen.y - 4 * zoom);
+  const labelY = Math.floor(labelScreen.y - 2 * zoom);
 
   const fontSize = LABEL_FONT_SIZE * zoom;
   ctx.font = `bold ${fontSize}px monospace`;
@@ -783,8 +780,6 @@ function renderRoomLabel(
     'wendy': 'Wendy -- Coach',
     'charlie': 'Charlie -- Designer',
     'war-room': 'War Room',
-    'break-room': 'Break Room',
-    'wc': 'WC',
   };
 
   // Background pill
